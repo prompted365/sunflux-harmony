@@ -1,6 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import PropertyForm from "@/components/PropertyForm";
+import SolarResults from "@/components/SolarResults";
 
 const Index = () => {
   return (
@@ -9,6 +10,7 @@ const Index = () => {
       <Hero />
       <div className="container mx-auto px-4 py-12">
         <PropertyForm />
+        <SolarResults />
       </div>
     </main>
   );

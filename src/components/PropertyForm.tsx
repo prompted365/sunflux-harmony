@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const PropertyForm = () => {
   const [loading, setLoading] = useState(false);
+  const [calculating, setCalculating] = useState(false);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     address: "",
@@ -30,13 +31,13 @@ const PropertyForm = () => {
         return;
       }
 
-      const { error } = await supabase.from("properties").insert({
+      const { data: property, error } = await supabase.from("properties").insert({
         user_id: user.id,
         address: formData.address,
         city: formData.city,
         state: formData.state,
         zip_code: formData.zipCode,
-      });
+      }).select().single();
 
       if (error) throw error;
 
@@ -44,6 +45,9 @@ const PropertyForm = () => {
         title: "Success",
         description: "Property submitted successfully",
       });
+
+      // Trigger solar calculation
+      await calculateSolar(property.id);
 
       setFormData({
         address: "",
@@ -59,6 +63,30 @@ const PropertyForm = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateSolar = async (propertyId: string) => {
+    setCalculating(true);
+    try {
+      const { error } = await supabase.functions.invoke('calculate-solar', {
+        body: { propertyId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Solar calculation initiated",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to initiate solar calculation",
+        variant: "destructive",
+      });
+    } finally {
+      setCalculating(false);
     }
   };
 
@@ -129,9 +157,9 @@ const PropertyForm = () => {
         <Button 
           type="submit" 
           className="w-full bg-primary hover:bg-primary/90"
-          disabled={loading}
+          disabled={loading || calculating}
         >
-          {loading ? "Submitting..." : "Submit Property"}
+          {loading ? "Submitting..." : calculating ? "Calculating Solar Potential..." : "Submit Property"}
         </Button>
       </form>
     </div>
