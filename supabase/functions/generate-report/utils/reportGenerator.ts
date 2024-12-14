@@ -1,6 +1,6 @@
-import OpenAI from "openai";
-import { systemPrompts, tools } from "./agents";
-import { generateReportHtml } from "./templates/mainTemplate";
+import OpenAI from "https://esm.sh/openai@4.28.0";
+import { systemPrompts, tools } from "./agents.ts";
+import { generateReportHtml } from "./templates/mainTemplate.ts";
 
 const openai = new OpenAI();
 

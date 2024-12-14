@@ -1,4 +1,4 @@
-import { ChatCompletionCreateParams } from "openai/resources/chat/completions";
+import { type ChatCompletionCreateParams } from "https://esm.sh/openai@4.28.0";
 
 export const systemPrompts = {
   dataProcessing: `You are a Data Processing Agent specialized in solar installation data. Your role is to:
@@ -28,12 +28,12 @@ export const tools: Record<string, ChatCompletionCreateParams.Function[]> = {
       parameters: {
         type: "object",
         properties: {
-          rawData: {
+          solarData: {
             type: "object",
-            description: "Raw Google Solar API response"
+            description: "Raw solar calculation data"
           }
         },
-        required: ["rawData"]
+        required: ["solarData"]
       }
     }
   ],
