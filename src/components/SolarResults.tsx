@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Json } from "@/integrations/supabase/types";
 
 interface SolarCalculation {
   id: string;
@@ -23,6 +24,15 @@ interface SolarCalculation {
   estimated_production: {
     yearlyEnergyDcKwh: number;
   } | null;
+}
+
+interface DatabaseSolarCalculation {
+  id: string;
+  status: string;
+  system_size: number | null;
+  irradiance_data: Json;
+  panel_layout: Json;
+  estimated_production: Json;
 }
 
 const SolarResults = () => {
@@ -55,6 +65,17 @@ const SolarResults = () => {
     };
   }, []);
 
+  const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalculation => {
+    return {
+      id: calc.id,
+      status: calc.status,
+      system_size: calc.system_size,
+      irradiance_data: calc.irradiance_data as SolarCalculation['irradiance_data'],
+      panel_layout: calc.panel_layout as SolarCalculation['panel_layout'],
+      estimated_production: calc.estimated_production as SolarCalculation['estimated_production']
+    };
+  };
+
   const fetchCalculations = async () => {
     try {
       const { data, error } = await supabase
@@ -71,7 +92,8 @@ const SolarResults = () => {
 
       if (error) throw error;
       
-      setCalculations(data || []);
+      const transformedData = (data || []).map(transformDatabaseCalculation);
+      setCalculations(transformedData);
     } catch (error) {
       toast({
         title: "Error",
@@ -121,7 +143,7 @@ const SolarResults = () => {
               
               {calc.status === 'completed' && (
                 <>
-                  {calc.system_size && (
+                  {calc.system_size != null && (
                     <div>
                       <p className="text-sm text-gray-500">System Size</p>
                       <p className="text-lg font-medium">{calc.system_size.toFixed(2)} kW</p>
