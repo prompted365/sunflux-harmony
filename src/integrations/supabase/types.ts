@@ -9,7 +9,145 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          state: string
+          updated_at: string
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          state: string
+          updated_at?: string
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          state?: string
+          updated_at?: string
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          calculation_id: string
+          created_at: string
+          file_path: string
+          id: string
+        }
+        Insert: {
+          calculation_id: string
+          created_at?: string
+          file_path: string
+          id?: string
+        }
+        Update: {
+          calculation_id?: string
+          created_at?: string
+          file_path?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solar_calculations: {
+        Row: {
+          created_at: string
+          estimated_production: Json | null
+          id: string
+          irradiance_data: Json | null
+          panel_layout: Json | null
+          property_id: string
+          status: string
+          system_size: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_production?: Json | null
+          id?: string
+          irradiance_data?: Json | null
+          panel_layout?: Json | null
+          property_id: string
+          status?: string
+          system_size?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_production?: Json | null
+          id?: string
+          irradiance_data?: Json | null
+          panel_layout?: Json | null
+          property_id?: string
+          status?: string
+          system_size?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solar_calculations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
