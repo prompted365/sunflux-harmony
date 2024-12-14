@@ -1,13 +1,17 @@
-import { ReportData } from './reportTemplate';
-import { DatabaseSolarCalculation } from '../../../src/components/solar/types/database';
+import { ReportData } from './reportTemplate.ts'
+import type { Database } from '../../../../src/integrations/supabase/types'
+
+type DatabaseSolarCalculation = Database['public']['Tables']['solar_calculations']['Row'] & {
+  properties: Database['public']['Tables']['properties']['Row']
+}
 
 export function transformCalculationToReportData(
   calculation: DatabaseSolarCalculation,
   propertyAddress: string
 ): ReportData {
-  const solarPotential = calculation.building_specs?.solarPotential || {};
-  const panelConfig = solarPotential.solarPanelConfigs?.[0] || {};
-  const financialAnalysis = solarPotential.financialAnalyses?.[0] || {};
+  const solarPotential = calculation.building_specs?.solarPotential || {}
+  const panelConfig = solarPotential.solarPanelConfigs?.[0] || {}
+  const financialAnalysis = solarPotential.financialAnalyses?.[0] || {}
 
   return {
     property: {
@@ -20,9 +24,9 @@ export function transformCalculationToReportData(
       panelCount: solarPotential.maxArrayPanelsCount || 0,
       annualProduction: panelConfig.yearlyEnergyDcKwh || 0,
       carbonOffset: (solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000,
-      roofSuitability: 95, // Calculate based on available metrics
+      roofSuitability: 95,
       availableArea: solarPotential.maxArrayAreaMeters2 || 0,
-      orientation: 'South-West', // Extract from panel configuration
+      orientation: 'South-West',
     },
     financial: {
       systemCost: financialAnalysis.cashPurchaseSavings?.outOfPocketCost?.units || 0,
@@ -41,18 +45,18 @@ export function transformCalculationToReportData(
         width: solarPotential.panelWidthMeters || 0,
       },
       annualSunHours: solarPotential.maxSunshineHoursPerYear || 0,
-      energyOffset: 95.4, // Calculate based on usage vs production
+      energyOffset: 95.4,
       dailyProduction: (panelConfig.yearlyEnergyDcKwh || 0) / 365,
       monthlyProduction: (panelConfig.yearlyEnergyDcKwh || 0) / 12,
-      systemEfficiency: 96.3, // Calculate based on actual vs theoretical output
+      systemEfficiency: 96.3,
     },
     summary: {
       totalEnergySavings: financialAnalysis.cashPurchaseSavings?.savings?.savingsLifetime?.units || 0,
       monthlySavings: (financialAnalysis.cashPurchaseSavings?.savings?.savingsYear1?.units || 0) / 12,
-      returnOnInvestment: 189, // Calculate from financial metrics
+      returnOnInvestment: 189,
       lifetimeProduction: (panelConfig.yearlyEnergyDcKwh || 0) * 20,
       totalCarbonOffset: ((solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000) * 20,
       treesEquivalent: Math.round(((solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000) * 20 / 21.7),
     },
-  };
+  }
 }

@@ -46,13 +46,13 @@ export interface ReportData {
 
 export function generateReportHtml(data: ReportData): string {
   return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <style>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+        <style>
         :root {
             --primary: #00B2B2;
             --primary-light: #33c3c3;
@@ -284,42 +284,42 @@ export function generateReportHtml(data: ReportData): string {
                 grid-template-columns: 1fr;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Solar Installation Proposal</h1>
-        <p>Generated on: ${data.property.generatedDate}</p>
-        <p>${data.property.address}</p>
-    </div>
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Solar Installation Proposal</h1>
+            <p>Generated on: ${data.property.generatedDate}</p>
+            <p>${data.property.address}</p>
+        </div>
 
-    <div class="card">
-        <div class="section-title">Property Analysis</div>
-        <div class="imagery-grid">
-            <div class="imagery-box">
-                <img src="${data.property.satelliteImage}" alt="Satellite View">
-                <div class="imagery-overlay">Satellite View</div>
+        <div class="card">
+            <div class="section-title">Property Analysis</div>
+            <div class="imagery-grid">
+                <div class="imagery-box">
+                    <img src="${data.property.satelliteImage}" alt="Satellite View">
+                    <div class="imagery-overlay">Satellite View</div>
+                </div>
+                <div class="imagery-box">
+                    <img src="${data.property.solarAnalysisImage}" alt="Solar Analysis">
+                    <div class="imagery-overlay">Solar Potential Analysis</div>
+                </div>
             </div>
-            <div class="imagery-box">
-                <img src="${data.property.solarAnalysisImage}" alt="Solar Analysis">
-                <div class="imagery-overlay">Solar Potential Analysis</div>
+            <div class="solar-stats">
+                <div class="stat-item">
+                    <div class="stat-value">${data.systemMetrics.roofSuitability}%</div>
+                    <div class="stat-label">Roof Suitability</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.systemMetrics.availableArea} m²</div>
+                    <div class="stat-label">Available Area</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.systemMetrics.orientation}</div>
+                    <div class="stat-label">Optimal Orientation</div>
+                </div>
             </div>
         </div>
-        <div class="solar-stats">
-            <div class="stat-item">
-                <div class="stat-value">${data.systemMetrics.roofSuitability}%</div>
-                <div class="stat-label">Roof Suitability</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">${data.systemMetrics.availableArea} m²</div>
-                <div class="stat-label">Available Area</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">${data.systemMetrics.orientation}</div>
-                <div class="stat-label">Optimal Orientation</div>
-            </div>
-        </div>
-    </div>
 
     <div class="grid">
         <div class="metric-box blue-bg">
@@ -455,63 +455,63 @@ export function generateReportHtml(data: ReportData): string {
         </div>
     </div>
 
-    <script>
-        // Initialize ROI Chart
-        window.addEventListener('load', function() {
-            const ctx = document.getElementById('roiChart').getContext('2d');
-            const labels = Array.from({length: 20}, (_, i) => \`Year \${i + 1}\`);
-            const initialCost = ${data.financial.netCost}; // After tax credits
-            const annualSavings = ${data.financial.annualSavings}; // Estimated annual utility savings
+        <script>
+            // Initialize ROI Chart
+            window.addEventListener('load', function() {
+                const ctx = document.getElementById('roiChart').getContext('2d');
+                const labels = Array.from({length: 20}, (_, i) => \`Year \${i + 1}\`);
+                const initialCost = ${data.financial.netCost}; // After tax credits
+                const annualSavings = ${data.financial.annualSavings}; // Estimated annual utility savings
 
-            const data = labels.map((_, i) => {
-                const totalSavings = annualSavings * (i + 1);
-                const netValue = totalSavings - initialCost;
-                return netValue;
-            });
+                const data = labels.map((_, i) => {
+                    const totalSavings = annualSavings * (i + 1);
+                    const netValue = totalSavings - initialCost;
+                    return netValue;
+                });
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Net Financial Position ($)',
-                        data: data,
-                        borderColor: '#00B2B2',
-                        backgroundColor: 'rgba(0, 178, 178, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let value = context.parsed.y;
-                                    return \`Net Position: \$\${value.toLocaleString()}\`;
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Net Financial Position ($)',
+                            data: data,
+                            borderColor: '#00B2B2',
+                            backgroundColor: 'rgba(0, 178, 178, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let value = context.parsed.y;
+                                        return \`Net Position: \$\${value.toLocaleString()}\`;
+                                    }
                                 }
                             }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '\$' + value.toLocaleString();
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
                                 }
                             }
                         }
                     }
-                }
+                });
             });
-        });
-    </script>
-</body>
-</html>
-  `;
+        </script>
+    </body>
+    </html>
+  `
 }
