@@ -106,10 +106,13 @@ export type Database = {
       }
       solar_calculations: {
         Row: {
+          building_specs: Json | null
           created_at: string
           estimated_production: Json | null
+          financial_analysis: Json | null
           id: string
           irradiance_data: Json | null
+          panel_config: Json | null
           panel_layout: Json | null
           property_id: string
           status: string
@@ -117,10 +120,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          building_specs?: Json | null
           created_at?: string
           estimated_production?: Json | null
+          financial_analysis?: Json | null
           id?: string
           irradiance_data?: Json | null
+          panel_config?: Json | null
           panel_layout?: Json | null
           property_id: string
           status?: string
@@ -128,10 +134,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          building_specs?: Json | null
           created_at?: string
           estimated_production?: Json | null
+          financial_analysis?: Json | null
           id?: string
           irradiance_data?: Json | null
+          panel_config?: Json | null
           panel_layout?: Json | null
           property_id?: string
           status?: string
