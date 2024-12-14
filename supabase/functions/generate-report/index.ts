@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { createClient } from '@supabase/supabase-js'
 import { generateReportHtml } from './utils/reportTemplate.ts'
 import { transformCalculationToReportData } from './utils/dataTransformer.ts'
 
@@ -50,7 +50,7 @@ serve(async (req) => {
     const reportData = transformCalculationToReportData(calculation, propertyAddress)
     const htmlContent = generateReportHtml(reportData)
 
-    // Store the HTML report
+    // Store the HTML report with correct content type
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const fileName = `report_${calculationId}_${timestamp}.html`
     const filePath = `reports/${fileName}`
@@ -59,7 +59,7 @@ serve(async (req) => {
       .storage
       .from('reports')
       .upload(filePath, htmlContent, {
-        contentType: 'text/html',
+        contentType: 'text/html; charset=utf-8',
         upsert: false
       })
 
@@ -67,18 +67,11 @@ serve(async (req) => {
       throw new Error('Failed to upload report')
     }
 
-    // Create signed URL for viewing with the correct content type
+    // Create signed URL for viewing
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7, {
-        download: false,
-        transform: {
-          metadata: {
-            'content-type': 'text/html'
-          }
-        }
-      })
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days expiry
 
     if (urlError) {
       throw new Error('Failed to generate report URL')
@@ -96,6 +89,7 @@ serve(async (req) => {
       throw new Error('Failed to save report reference')
     }
 
+    // Return the URL with HTML content type
     return new Response(
       JSON.stringify({ 
         message: 'Report generated successfully',
@@ -105,8 +99,7 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json'
-        },
-        status: 200 
+        }
       }
     )
 

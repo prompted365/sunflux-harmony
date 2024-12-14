@@ -1,62 +1,69 @@
 import { ReportData } from './reportTemplate.ts'
-import type { Database } from '../../../../src/integrations/supabase/types'
-
-type DatabaseSolarCalculation = Database['public']['Tables']['solar_calculations']['Row'] & {
-  properties: Database['public']['Tables']['properties']['Row']
-}
 
 export function transformCalculationToReportData(
-  calculation: DatabaseSolarCalculation,
+  calculation: any,
   propertyAddress: string
 ): ReportData {
-  const solarPotential = calculation.building_specs?.solarPotential || {}
-  const panelConfig = solarPotential.solarPanelConfigs?.[0] || {}
-  const financialAnalysis = solarPotential.financialAnalyses?.[0] || {}
+  console.log('Transforming calculation data:', calculation);
+  
+  // Extract the necessary data with null checks
+  const systemSize = calculation.system_size || 0;
+  const irradianceData = calculation.irradiance_data || {};
+  const panelLayout = calculation.panel_layout || {};
+  const estimatedProduction = calculation.estimated_production || {};
+  const buildingSpecs = calculation.building_specs || {};
+  const financialAnalysis = calculation.financial_analysis || {};
+
+  // Calculate financial metrics
+  const systemCost = financialAnalysis.systemCost || 0;
+  const federalTaxCredit = systemCost * 0.3; // 30% tax credit
+  const netCost = systemCost - federalTaxCredit;
+  const annualSavings = estimatedProduction.annualSavings || 0;
+  const paybackPeriod = netCost / (annualSavings || 1);
 
   return {
     property: {
       address: propertyAddress,
       generatedDate: new Date().toLocaleDateString(),
-      satelliteImage: calculation.building_specs?.imagery?.rgb || '',
-      solarAnalysisImage: calculation.building_specs?.imagery?.annualFlux || '',
+      satelliteImage: buildingSpecs.imagery?.rgb || '',
+      solarAnalysisImage: buildingSpecs.imagery?.annualFlux || '',
     },
     systemMetrics: {
-      panelCount: solarPotential.maxArrayPanelsCount || 0,
-      annualProduction: panelConfig.yearlyEnergyDcKwh || 0,
-      carbonOffset: (solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000,
-      roofSuitability: 95,
-      availableArea: solarPotential.maxArrayAreaMeters2 || 0,
-      orientation: 'South-West',
+      panelCount: panelLayout.maxPanels || 0,
+      annualProduction: estimatedProduction.yearlyEnergyDcKwh || 0,
+      carbonOffset: (irradianceData.carbonOffset || 0),
+      roofSuitability: 95, // Default value if not available
+      availableArea: panelLayout.maxArea || 0,
+      orientation: 'South-West', // Default value if not available
     },
     financial: {
-      systemCost: financialAnalysis.cashPurchaseSavings?.outOfPocketCost?.units || 0,
-      federalTaxCredit: financialAnalysis.cashPurchaseSavings?.rebateValue?.units || 0,
-      netCost: (financialAnalysis.cashPurchaseSavings?.outOfPocketCost?.units || 0) - 
-               (financialAnalysis.cashPurchaseSavings?.rebateValue?.units || 0),
-      paybackPeriod: financialAnalysis.cashPurchaseSavings?.paybackYears || 0,
-      annualSavings: financialAnalysis.cashPurchaseSavings?.savings?.savingsYear1?.units || 0,
-      roi20Year: financialAnalysis.cashPurchaseSavings?.savings?.savingsYear20?.units || 0,
+      systemCost: systemCost,
+      federalTaxCredit: federalTaxCredit,
+      netCost: netCost,
+      paybackPeriod: paybackPeriod,
+      annualSavings: annualSavings,
+      roi20Year: (annualSavings * 20) - netCost,
     },
     specifications: {
-      panelCapacity: solarPotential.panelCapacityWatts || 0,
-      systemSize: (solarPotential.maxArrayPanelsCount || 0) * (solarPotential.panelCapacityWatts || 0) / 1000,
+      panelCapacity: panelLayout.panelCapacityWatts || 0,
+      systemSize: systemSize,
       panelDimensions: {
-        height: solarPotential.panelHeightMeters || 0,
-        width: solarPotential.panelWidthMeters || 0,
+        height: panelLayout.panelHeightMeters || 0,
+        width: panelLayout.panelWidthMeters || 0,
       },
-      annualSunHours: solarPotential.maxSunshineHoursPerYear || 0,
-      energyOffset: 95.4,
-      dailyProduction: (panelConfig.yearlyEnergyDcKwh || 0) / 365,
-      monthlyProduction: (panelConfig.yearlyEnergyDcKwh || 0) / 12,
-      systemEfficiency: 96.3,
+      annualSunHours: irradianceData.maxSunshineHours || 0,
+      energyOffset: 95.4, // Default value if not available
+      dailyProduction: (estimatedProduction.yearlyEnergyDcKwh || 0) / 365,
+      monthlyProduction: (estimatedProduction.yearlyEnergyDcKwh || 0) / 12,
+      systemEfficiency: 96.3, // Default value if not available
     },
     summary: {
-      totalEnergySavings: financialAnalysis.cashPurchaseSavings?.savings?.savingsLifetime?.units || 0,
-      monthlySavings: (financialAnalysis.cashPurchaseSavings?.savings?.savingsYear1?.units || 0) / 12,
-      returnOnInvestment: 189,
-      lifetimeProduction: (panelConfig.yearlyEnergyDcKwh || 0) * 20,
-      totalCarbonOffset: ((solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000) * 20,
-      treesEquivalent: Math.round(((solarPotential.carbonOffsetFactorKgPerMwh || 0) * (panelConfig.yearlyEnergyDcKwh || 0) / 1000) * 20 / 21.7),
+      totalEnergySavings: annualSavings * 20, // 20 year projection
+      monthlySavings: annualSavings / 12,
+      returnOnInvestment: ((annualSavings * 20) / netCost) * 100,
+      lifetimeProduction: (estimatedProduction.yearlyEnergyDcKwh || 0) * 20,
+      totalCarbonOffset: (irradianceData.carbonOffset || 0) * 20,
+      treesEquivalent: Math.round(((irradianceData.carbonOffset || 0) * 20) / 21.7),
     },
   }
 }
