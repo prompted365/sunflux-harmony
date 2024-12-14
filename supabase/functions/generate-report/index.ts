@@ -38,11 +38,12 @@ Deno.serve(async (req) => {
         estimated_production,
         properties (
           id,
-          user_id,
           address,
           city,
           state,
-          zip_code
+          zip_code,
+          latitude,
+          longitude
         )
       `)
       .eq('id', calculationId)
@@ -54,6 +55,38 @@ Deno.serve(async (req) => {
     }
 
     console.log('Calculation data fetched:', calculation);
+
+    // Fetch RGB image data from Google Solar API
+    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
+    if (!apiKey) {
+      throw new Error('Google Cloud API key not found');
+    }
+
+    const location = {
+      latitude: calculation.properties.latitude,
+      longitude: calculation.properties.longitude
+    };
+
+    // Fetch data layers for visualization
+    const dataLayersResponse = await fetch(
+      `https://solar.googleapis.com/v1/dataLayers:get?` +
+      `location.latitude=${location.latitude}&` +
+      `location.longitude=${location.longitude}&` +
+      `radius_meters=100&` +
+      `required_quality=LOW&` +
+      `key=${apiKey}`
+    );
+
+    const dataLayers = await dataLayersResponse.json();
+    console.log('Data layers fetched:', dataLayers);
+
+    // Get RGB image for visualization
+    let rgbImageBase64 = '';
+    if (dataLayers.rgbUrl) {
+      const rgbResponse = await fetch(`${dataLayers.rgbUrl}&key=${apiKey}`);
+      const rgbBuffer = await rgbResponse.arrayBuffer();
+      rgbImageBase64 = btoa(String.fromCharCode(...new Uint8Array(rgbBuffer)));
+    }
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`;
     
@@ -88,13 +121,14 @@ Deno.serve(async (req) => {
       propertyAddress,
       systemSpecs,
       financialMetrics,
-      environmentalImpact
+      environmentalImpact,
+      rgbImageBase64
     );
 
     // Generate a unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `solar_report_${calculationId}_${timestamp}.pdf`;
-    const filePath = `${calculation.properties.user_id}/${fileName}`;
+    const filePath = `reports/${fileName}`;
 
     console.log('Uploading PDF to storage:', filePath);
 

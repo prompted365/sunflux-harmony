@@ -10,30 +10,29 @@ export interface FinancialMetrics {
 }
 
 export function calculateFinancialMetrics(
-  systemSize: number | null,
-  financialDetails: any,
+  systemSize: number,
+  annualProduction: number,
   utilityRate: number = 0.15, // Average utility rate per kWh
   annualUtilityInflation: number = 0.03 // 3% annual utility rate increase
 ): FinancialMetrics {
   const systemCostPerWatt = 2.95; // Industry average cost per watt
-  const totalSystemCost = (systemSize || 0) * 1000 * systemCostPerWatt;
+  const totalSystemCost = systemSize * 1000 * systemCostPerWatt;
   const federalTaxCredit = totalSystemCost * 0.30;
   const netSystemCost = totalSystemCost - federalTaxCredit;
 
-  // Use actual financial data if available
-  const annualSavings = financialDetails?.initialAcKwhPerYear * utilityRate || 0;
-  const monthlyBillSavings = financialDetails?.monthlyBill?.units || annualSavings / 12;
+  // Calculate annual savings based on production and utility rate
+  const annualSavings = annualProduction * utilityRate;
+  const monthlyBillSavings = annualSavings / 12;
   
   // Calculate 20-year projections with utility rate inflation
   let twentyYearSavings = 0;
   let inflationAdjustedSavings = 0;
   let currentRate = utilityRate;
-  const annualProduction = financialDetails?.initialAcKwhPerYear || 0;
 
   for (let year = 1; year <= 20; year++) {
     const yearSavings = annualProduction * currentRate;
     twentyYearSavings += yearSavings;
-    inflationAdjustedSavings += yearSavings / Math.pow(1.05, year);
+    inflationAdjustedSavings += yearSavings / Math.pow(1.05, year); // 5% discount rate
     currentRate *= (1 + annualUtilityInflation);
   }
 
