@@ -95,7 +95,6 @@ serve(async (req) => {
       throw new Error('Failed to save report reference')
     }
 
-    // Return the URL with HTML content type
     return new Response(
       JSON.stringify({ 
         message: 'Report generated successfully',
