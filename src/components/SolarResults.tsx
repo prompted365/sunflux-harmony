@@ -10,7 +10,7 @@ interface SolarCalculation {
   irradiance_data: {
     maxSunshineHours: number;
     carbonOffset: number;
-  };
+  } | null;
   panel_layout: {
     maxPanels: number;
     maxArea: number;
@@ -18,10 +18,10 @@ interface SolarCalculation {
       height: number;
       width: number;
     };
-  };
+  } | null;
   estimated_production: {
     yearlyEnergyDcKwh: number;
-  };
+  } | null;
 }
 
 const SolarResults = () => {
@@ -69,7 +69,16 @@ const SolarResults = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCalculations(data || []);
+      
+      // Type assertion to ensure the data matches our interface
+      const typedData = data?.map(calc => ({
+        ...calc,
+        irradiance_data: calc.irradiance_data as SolarCalculation['irradiance_data'],
+        panel_layout: calc.panel_layout as SolarCalculation['panel_layout'],
+        estimated_production: calc.estimated_production as SolarCalculation['estimated_production']
+      })) || [];
+      
+      setCalculations(typedData);
     } catch (error) {
       toast({
         title: "Error",
@@ -96,11 +105,11 @@ const SolarResults = () => {
                 </span>
               </div>
               
-              {calc.status === 'completed' && (
+              {calc.status === 'completed' && calc.irradiance_data && calc.estimated_production && (
                 <>
                   <div>
                     <p className="text-sm text-gray-500">System Size</p>
-                    <p className="text-lg font-medium">{calc.system_size.toFixed(2)} kW</p>
+                    <p className="text-lg font-medium">{calc.system_size?.toFixed(2)} kW</p>
                   </div>
                   
                   <div>
@@ -112,7 +121,7 @@ const SolarResults = () => {
                   
                   <div>
                     <p className="text-sm text-gray-500">Maximum Panels</p>
-                    <p className="text-lg font-medium">{calc.panel_layout.maxPanels}</p>
+                    <p className="text-lg font-medium">{calc.panel_layout?.maxPanels}</p>
                   </div>
                   
                   <div>

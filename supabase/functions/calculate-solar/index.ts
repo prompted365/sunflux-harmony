@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
 
   try {
     const { propertyId } = await req.json()
+    console.log('Received request for property:', propertyId)
 
     if (!propertyId) {
       throw new Error('Property ID is required')
@@ -47,8 +48,11 @@ Deno.serve(async (req) => {
       .single()
 
     if (propertyError || !property) {
+      console.error('Property fetch error:', propertyError)
       throw new Error('Property not found')
     }
+
+    console.log('Found property:', property)
 
     // Create initial solar calculation record
     const { data: calculation, error: calculationError } = await supabaseClient
@@ -61,37 +65,49 @@ Deno.serve(async (req) => {
       .single()
 
     if (calculationError) {
+      console.error('Calculation creation error:', calculationError)
       throw new Error('Failed to create calculation record')
     }
 
     // Construct the Google Solar API request
     const address = `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
     const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY')
-    const encodedAddress = encodeURIComponent(address)
     
-    const response = await fetch(
-      `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.address=${encodedAddress}&key=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    if (!apiKey) {
+      console.error('Google Cloud API key not found')
+      throw new Error('API key configuration missing')
+    }
+
+    const encodedAddress = encodeURIComponent(address)
+    const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.address=${encodedAddress}&key=${apiKey}`
+    
+    console.log('Calling Google Solar API for address:', address)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
     if (!response.ok) {
-      throw new Error('Failed to fetch solar data')
+      const errorText = await response.text()
+      console.error('Google Solar API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      throw new Error(`Google Solar API error: ${response.status} ${response.statusText}`)
     }
 
     const solarData: BuildingInsightsResponse = await response.json()
+    console.log('Received solar data:', solarData)
 
     // Update calculation with results
     const { error: updateError } = await supabaseClient
       .from('solar_calculations')
       .update({
         status: 'completed',
-        latitude: solarData.center.latitude,
-        longitude: solarData.center.longitude,
         irradiance_data: {
           maxSunshineHours: solarData.solarPotential.maxSunshineHoursPerYear,
           carbonOffset: solarData.solarPotential.carbonOffsetFactorKgPerMwh
@@ -104,7 +120,7 @@ Deno.serve(async (req) => {
             width: solarData.solarPotential.panelWidthMeters
           }
         },
-        system_size: solarData.solarPotential.panelCapacityWatts * solarData.solarPotential.maxArrayPanelsCount / 1000, // Convert to kW
+        system_size: solarData.solarPotential.panelCapacityWatts * solarData.solarPotential.maxArrayPanelsCount / 1000,
         estimated_production: {
           yearlyEnergyDcKwh: solarData.solarPotential.yearlyEnergyDcKwh
         }
@@ -112,10 +128,11 @@ Deno.serve(async (req) => {
       .eq('id', calculation.id)
 
     if (updateError) {
+      console.error('Calculation update error:', updateError)
       throw new Error('Failed to update calculation results')
     }
 
-    // Also update property with lat/long if not already set
+    // Update property with lat/long if not already set
     if (!property.latitude || !property.longitude) {
       await supabaseClient
         .from('properties')
@@ -138,6 +155,7 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Function error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
