@@ -18,6 +18,7 @@ interface GeoTiff {
 
 export async function downloadAndProcessImage(url: string, apiKey: string): Promise<Uint8Array | null> {
   try {
+    console.log('Downloading image from URL:', url);
     const solarUrl = url.includes('solar.googleapis.com') ? url + `&key=${apiKey}` : url;
     const response = await fetch(solarUrl);
     

@@ -1,49 +1,49 @@
+import { BuildingSpecs } from './imagery';
+
+export interface IrradianceData {
+  maxSunshineHours: number;
+  carbonOffset: number;
+  annualSunlight?: number;
+}
+
+export interface PanelLayout {
+  maxPanels: number;
+  maxArea: number;
+  panelDimensions: {
+    height: number;
+    width: number;
+  };
+  optimalConfiguration?: {
+    panelCount: number;
+    yearlyEnergy: number;
+    segments?: any[];
+  };
+}
+
+export interface EstimatedProduction {
+  yearlyEnergyDcKwh: number | null;
+  monthlyBill: string | null;
+  financialDetails?: {
+    initialCost: number | null;
+    federalIncentive: number | null;
+    monthlyBillSavings: number | null;
+    paybackYears: number | null;
+    lifetimeSavings: number | null;
+    firstYearSavings: number | null;
+  };
+  environmentalImpact?: {
+    carbonOffset: number;
+    treesEquivalent: number;
+    homesEquivalent: number;
+  };
+}
+
 export interface SolarCalculation {
   id: string;
   status: string;
   system_size: number | null;
-  irradiance_data: {
-    maxSunshineHours: number;
-    carbonOffset: number;
-  } | null;
-  panel_layout: {
-    maxPanels: number;
-    maxArea: number;
-    panelDimensions: {
-      height: number;
-      width: number;
-    };
-  } | null;
-  estimated_production: {
-    yearlyEnergyDcKwh: number;
-  } | null;
-  financial_analysis: {
-    totalCost: number;
-    federalIncentive: number;
-    monthlyBillSavings: number;
-    paybackYears: number;
-    lifetimeSavings: number;
-  } | null;
-  panel_config: {
-    capacityWatts: number;
-    dimensions: {
-      height: number;
-      width: number;
-    };
-    lifetimeYears: number;
-  } | null;
-  building_specs: {
-    imageryDate: {
-      year: number;
-      month: number;
-      day: number;
-    };
-    imagery: {
-      dsm: string | null;
-      rgb: string | null;
-      mask: string | null;
-      annualFlux: string | null;
-      monthlyFlux: string | null;
-    };
-  } | null;
+  irradiance_data: IrradianceData | null;
+  panel_layout: PanelLayout | null;
+  estimated_production: EstimatedProduction | null;
+  building_specs: BuildingSpecs | null;
 }

@@ -67,6 +67,20 @@ Deno.serve(async (req) => {
       property.longitude = coordinates.lng;
     }
 
+    // Create initial solar calculation record
+    const { data: calculation, error: calcError } = await supabaseClient
+      .from('solar_calculations')
+      .insert({
+        property_id: propertyId,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (calcError || !calculation) {
+      throw new Error('Failed to create solar calculation record');
+    }
+
     // Fetch solar data from Google Solar API
     const solarData = await fetchSolarData(property.latitude, property.longitude);
     
