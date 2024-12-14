@@ -19,6 +19,82 @@ interface SolarCalculation {
   };
 }
 
+function calculateFinancialMetrics(calculation: SolarCalculation) {
+  const avgElectricityRate = 0.15;
+  const annualProduction = calculation.estimated_production.yearlyEnergyDcKwh;
+  const annualSavings = annualProduction * avgElectricityRate;
+  const systemCostPerWatt = 2.95;
+  const totalSystemCost = calculation.system_size * 1000 * systemCostPerWatt;
+  const federalTaxCredit = totalSystemCost * 0.30;
+  const netSystemCost = totalSystemCost - federalTaxCredit;
+  const paybackPeriod = netSystemCost / annualSavings;
+
+  return {
+    totalSystemCost,
+    federalTaxCredit,
+    netSystemCost,
+    annualSavings,
+    paybackPeriod
+  };
+}
+
+function calculateEnvironmentalImpact(calculation: SolarCalculation) {
+  const annualProduction = calculation.estimated_production.yearlyEnergyDcKwh;
+  const carbonOffset = calculation.irradiance_data.carbonOffset * annualProduction / 1000;
+  const treesEquivalent = carbonOffset / 20;
+
+  return {
+    carbonOffset,
+    treesEquivalent: Math.round(treesEquivalent)
+  };
+}
+
+function generatePDF(calculation: SolarCalculation, propertyAddress: string) {
+  const doc = new jsPDF();
+  const financials = calculateFinancialMetrics(calculation);
+  const environmental = calculateEnvironmentalImpact(calculation);
+  
+  // Title
+  doc.setFontSize(24);
+  doc.text('Solar Installation Report', 105, 20, { align: 'center' });
+  
+  // Property Information
+  doc.setFontSize(14);
+  doc.text(`Property Address: ${propertyAddress}`, 20, 40);
+
+  // System Specifications
+  doc.setFontSize(18);
+  doc.text('System Specifications', 20, 70);
+
+  doc.setFontSize(12);
+  doc.text(`System Size: ${calculation.system_size.toFixed(2)} kW`, 20, 85);
+  doc.text(`Annual Production: ${calculation.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh`, 20, 95);
+  doc.text(`Number of Panels: ${calculation.panel_layout.maxPanels}`, 20, 105);
+  doc.text(`Array Area: ${calculation.panel_layout.maxArea.toFixed(1)} m²`, 20, 115);
+  doc.text(`Annual Sunshine Hours: ${calculation.irradiance_data.maxSunshineHours.toFixed(0)} hours`, 20, 125);
+
+  // Financial Analysis
+  doc.setFontSize(18);
+  doc.text('Financial Analysis', 20, 155);
+  
+  doc.setFontSize(12);
+  doc.text(`Estimated System Cost: $${financials.totalSystemCost.toFixed(2)}`, 20, 170);
+  doc.text(`Federal Tax Credit (30%): $${financials.federalTaxCredit.toFixed(2)}`, 20, 180);
+  doc.text(`Net System Cost: $${financials.netSystemCost.toFixed(2)}`, 20, 190);
+  doc.text(`Annual Energy Savings: $${financials.annualSavings.toFixed(2)}`, 20, 200);
+  doc.text(`Estimated Payback Period: ${financials.paybackPeriod.toFixed(1)} years`, 20, 210);
+
+  // Environmental Impact
+  doc.setFontSize(18);
+  doc.text('Environmental Impact', 20, 230);
+  
+  doc.setFontSize(12);
+  doc.text(`Annual CO2 Reduction: ${environmental.carbonOffset.toFixed(2)} metric tons`, 20, 245);
+  doc.text(`Equivalent to Planting: ${environmental.treesEquivalent} trees`, 20, 255);
+
+  return doc;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -60,59 +136,10 @@ Deno.serve(async (req) => {
       throw new Error('Failed to fetch calculation data')
     }
 
+    const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`;
+    
     // Generate PDF
-    const doc = new jsPDF();
-    
-    // Add content to PDF
-    doc.setFontSize(24);
-    doc.text('Solar Installation Report', 105, 20, { align: 'center' });
-    
-    doc.setFontSize(14);
-    doc.text(`Property Address: ${calculation.properties.address}`, 20, 40);
-    doc.text(`${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`, 20, 50);
-
-    doc.setFontSize(18);
-    doc.text('System Specifications', 20, 70);
-
-    doc.setFontSize(12);
-    doc.text(`System Size: ${calculation.system_size.toFixed(2)} kW`, 20, 85);
-    doc.text(`Annual Production: ${calculation.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh`, 20, 95);
-    doc.text(`Number of Panels: ${calculation.panel_layout.maxPanels}`, 20, 105);
-    doc.text(`Array Area: ${calculation.panel_layout.maxArea.toFixed(1)} m²`, 20, 115);
-    doc.text(`Annual Sunshine Hours: ${calculation.irradiance_data.maxSunshineHours.toFixed(0)} hours`, 20, 125);
-    doc.text(`Carbon Offset: ${calculation.irradiance_data.carbonOffset.toFixed(2)} kg/MWh`, 20, 135);
-
-    // Calculate and add financial metrics
-    const avgElectricityRate = 0.15; // $0.15 per kWh (average US rate)
-    const annualProduction = calculation.estimated_production.yearlyEnergyDcKwh;
-    const annualSavings = annualProduction * avgElectricityRate;
-    const systemCostPerWatt = 2.95; // Average cost per watt installed
-    const totalSystemCost = calculation.system_size * 1000 * systemCostPerWatt;
-    const federalTaxCredit = totalSystemCost * 0.30; // 30% federal tax credit
-    const netSystemCost = totalSystemCost - federalTaxCredit;
-    const paybackPeriod = netSystemCost / annualSavings;
-
-    doc.setFontSize(18);
-    doc.text('Financial Analysis', 20, 155);
-    
-    doc.setFontSize(12);
-    doc.text(`Estimated System Cost: $${totalSystemCost.toFixed(2)}`, 20, 170);
-    doc.text(`Federal Tax Credit (30%): $${federalTaxCredit.toFixed(2)}`, 20, 180);
-    doc.text(`Net System Cost: $${netSystemCost.toFixed(2)}`, 20, 190);
-    doc.text(`Annual Energy Savings: $${annualSavings.toFixed(2)}`, 20, 200);
-    doc.text(`Estimated Payback Period: ${paybackPeriod.toFixed(1)} years`, 20, 210);
-
-    // Add environmental impact
-    const treesEquivalent = (calculation.irradiance_data.carbonOffset * annualProduction / 1000) / 20; // Average tree absorbs 20kg CO2 per year
-
-    doc.setFontSize(18);
-    doc.text('Environmental Impact', 20, 230);
-    
-    doc.setFontSize(12);
-    doc.text(`Annual CO2 Reduction: ${(calculation.irradiance_data.carbonOffset * annualProduction / 1000).toFixed(2)} metric tons`, 20, 245);
-    doc.text(`Equivalent to Planting: ${Math.round(treesEquivalent)} trees`, 20, 255);
-
-    // Convert PDF to bytes
+    const doc = generatePDF(calculation, propertyAddress);
     const pdfBytes = doc.output('arraybuffer');
 
     // Generate a unique filename

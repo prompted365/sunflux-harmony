@@ -1,48 +1,13 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { SolarCalculation } from "./types";
-import { Loader2, FileText, Sun, Zap, Grid, Ruler, Clock, Leaf } from "lucide-react";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import SolarMetrics from "./SolarMetrics";
+import GenerateReportButton from "./GenerateReportButton";
 
 interface SolarResultCardProps {
   calc: SolarCalculation;
 }
 
 const SolarResultCard = ({ calc }: SolarResultCardProps) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
-
-  const handleGenerateReport = async () => {
-    try {
-      setIsGenerating(true);
-      
-      const { data, error } = await supabase.functions.invoke('generate-report', {
-        body: { calculationId: calc.id }
-      });
-
-      if (error) throw error;
-
-      // Open the PDF in a new tab
-      window.open(data.downloadUrl, '_blank');
-
-      toast({
-        title: "Success",
-        description: "Report generated successfully",
-      });
-    } catch (error) {
-      console.error('Report generation error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate report",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
@@ -67,93 +32,8 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
 
         {calc.status === 'completed' && (
           <>
-            <div className="grid grid-cols-2 gap-4">
-              {calc.system_size != null && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Sun className="w-4 h-4 mr-2" />
-                    <span className="text-sm">System Size</span>
-                  </div>
-                  <p className="text-lg font-semibold">{calc.system_size.toFixed(2)} kW</p>
-                </div>
-              )}
-              
-              {calc.estimated_production?.yearlyEnergyDcKwh && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Zap className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Annual Production</span>
-                  </div>
-                  <p className="text-lg font-semibold">
-                    {calc.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh
-                  </p>
-                </div>
-              )}
-              
-              {calc.panel_layout?.maxPanels && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Grid className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Panel Count</span>
-                  </div>
-                  <p className="text-lg font-semibold">{calc.panel_layout.maxPanels}</p>
-                </div>
-              )}
-              
-              {calc.panel_layout?.maxArea && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Ruler className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Array Area</span>
-                  </div>
-                  <p className="text-lg font-semibold">
-                    {calc.panel_layout.maxArea.toFixed(1)} m²
-                  </p>
-                </div>
-              )}
-              
-              {calc.irradiance_data?.maxSunshineHours && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Clock className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Annual Sunshine</span>
-                  </div>
-                  <p className="text-lg font-semibold">
-                    {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
-                  </p>
-                </div>
-              )}
-              
-              {calc.irradiance_data?.carbonOffset && (
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-500">
-                    <Leaf className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Carbon Offset</span>
-                  </div>
-                  <p className="text-lg font-semibold">
-                    {calc.irradiance_data.carbonOffset.toFixed(2)} kg/MWh
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <Button
-              onClick={handleGenerateReport}
-              disabled={isGenerating}
-              className="w-full"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Report...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Generate PDF Report
-                </>
-              )}
-            </Button>
+            <SolarMetrics calc={calc} />
+            <GenerateReportButton calculationId={calc.id} />
           </>
         )}
 
