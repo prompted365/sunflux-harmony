@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { generateReportHtml } from './utils/reportTemplate.ts'
 import { transformCalculationToReportData } from './utils/dataTransformer.ts'
 
@@ -71,7 +71,13 @@ serve(async (req) => {
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days expiry
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7, { // 7 days expiry
+        transform: {
+          metadata: {
+            'content-type': 'text/html; charset=utf-8'
+          }
+        }
+      })
 
     if (urlError) {
       throw new Error('Failed to generate report URL')
