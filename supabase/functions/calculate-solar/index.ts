@@ -69,19 +69,25 @@ Deno.serve(async (req) => {
       throw new Error('Failed to create calculation record')
     }
 
-    // Construct the Google Solar API request
-    const address = `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
+    // Format and validate address components
+    if (!property.address || !property.city || !property.state || !property.zip_code) {
+      throw new Error('Invalid property address: missing required components')
+    }
+
+    // Properly format the address string
+    const formattedAddress = `${property.address.trim()}, ${property.city.trim()}, ${property.state.trim()} ${property.zip_code.trim()}`
+    console.log('Formatted address:', formattedAddress)
+
     const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY')
-    
     if (!apiKey) {
       console.error('Google Cloud API key not found')
       throw new Error('API key configuration missing')
     }
 
-    const encodedAddress = encodeURIComponent(address)
+    const encodedAddress = encodeURIComponent(formattedAddress)
     const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.address=${encodedAddress}&key=${apiKey}`
     
-    console.log('Calling Google Solar API for address:', address)
+    console.log('Calling Google Solar API with URL:', url)
     
     const response = await fetch(url, {
       method: 'GET',
@@ -95,9 +101,10 @@ Deno.serve(async (req) => {
       console.error('Google Solar API error:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorText
+        error: errorText,
+        url: url.replace(apiKey, '[REDACTED]') // Log URL without API key
       })
-      throw new Error(`Google Solar API error: ${response.status} ${response.statusText}`)
+      throw new Error(`Google Solar API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const solarData: BuildingInsightsResponse = await response.json()
