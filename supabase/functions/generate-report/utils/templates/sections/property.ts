@@ -18,7 +18,7 @@ export function generatePropertySection(data: any): string {
           <div class="stat-label">Roof Suitability</div>
         </div>
         <div class="stat-item">
-          <div class="stat-value">${formatNumber(data.systemMetrics.availableArea, 2)} m²</div>
+          <div class="stat-value">${data.systemMetrics.availableArea} m²</div>
           <div class="stat-label">Available Area</div>
         </div>
         <div class="stat-item">

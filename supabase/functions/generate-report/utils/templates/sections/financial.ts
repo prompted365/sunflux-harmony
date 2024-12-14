@@ -1,4 +1,7 @@
 export function generateFinancialSection(data: any): string {
+  const formatCurrency = (num: number) => 
+    num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
   return `
     <div class="card">
       <div class="section-title">Financial Analysis</div>
@@ -20,7 +23,7 @@ export function generateFinancialSection(data: any): string {
         </div>
         <div class="financial-box">
           <div class="metric-title">Payback Period</div>
-          <div class="metric-value">${formatNumber(data.financial.paybackPeriod, 1)} years</div>
+          <div class="metric-value">${data.financial.paybackPeriod.toFixed(1)} years</div>
           <div class="metric-subtitle">Break-even timeline</div>
         </div>
       </div>

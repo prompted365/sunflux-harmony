@@ -1,10 +1,10 @@
-import { generateHeaderSection } from './sections/header';
-import { generatePropertySection } from './sections/property';
-import { generateMetricsSection } from './sections/metrics';
-import { generateFinancialSection } from './sections/financial';
-import { generateSystemSection } from './sections/system';
-import { generateStyles } from './styles';
-import { generateChartScript } from './charts';
+import { generateHeaderSection } from './sections/header.ts';
+import { generatePropertySection } from './sections/property.ts';
+import { generateMetricsSection } from './sections/metrics.ts';
+import { generateFinancialSection } from './sections/financial.ts';
+import { generateSystemSection } from './sections/system.ts';
+import { generateStyles } from './styles.ts';
+import { generateChartScript } from './charts.ts';
 
 export function generateReportHtml(data: any): string {
   return `

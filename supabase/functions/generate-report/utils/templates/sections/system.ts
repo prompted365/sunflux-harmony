@@ -7,38 +7,38 @@ export function generateSystemSection(data: any): string {
           <h3>Installation Specifications</h3>
           <div class="spec-item">
             <span>Panel Capacity:</span>
-            <strong>${formatNumber(data.specifications.panelCapacity)} watts</strong>
+            <strong>${data.specifications.panelCapacity} watts</strong>
           </div>
           <div class="spec-item">
             <span>System Size:</span>
-            <strong>${formatNumber(data.specifications.systemSize, 1)} kW</strong>
+            <strong>${data.specifications.systemSize.toFixed(1)} kW</strong>
           </div>
           <div class="spec-item">
             <span>Panel Dimensions:</span>
-            <strong>${formatNumber(data.specifications.panelDimensions.height, 2)}m × ${formatNumber(data.specifications.panelDimensions.width, 2)}m</strong>
+            <strong>${data.specifications.panelDimensions.height}m × ${data.specifications.panelDimensions.width}m</strong>
           </div>
           <div class="spec-item">
             <span>Annual Sun Hours:</span>
-            <strong>${formatNumber(data.specifications.annualSunHours)} hours</strong>
+            <strong>${data.specifications.annualSunHours} hours</strong>
           </div>
         </div>
         <div>
           <h3>Performance Metrics</h3>
           <div class="spec-item">
             <span>Energy Offset:</span>
-            <strong>${formatNumber(data.specifications.energyOffset, 1)}%</strong>
+            <strong>${data.specifications.energyOffset.toFixed(1)}%</strong>
           </div>
           <div class="spec-item">
             <span>Daily Production:</span>
-            <strong>${formatNumber(data.specifications.dailyProduction, 1)} kWh</strong>
+            <strong>${data.specifications.dailyProduction.toFixed(1)} kWh</strong>
           </div>
           <div class="spec-item">
             <span>Monthly Production:</span>
-            <strong>${formatNumber(data.specifications.monthlyProduction, 1)} kWh</strong>
+            <strong>${data.specifications.monthlyProduction.toFixed(1)} kWh</strong>
           </div>
           <div class="spec-item">
             <span>System Efficiency:</span>
-            <strong>${formatNumber(data.specifications.systemEfficiency, 1)}%</strong>
+            <strong>${data.specifications.systemEfficiency.toFixed(1)}%</strong>
           </div>
         </div>
       </div>
