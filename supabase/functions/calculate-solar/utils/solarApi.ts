@@ -1,25 +1,10 @@
-interface SolarApiResponse {
-  solarPotential: {
-    maxArrayPanelsCount: number;
-    maxArrayAreaMeters2: number;
-    maxSunshineHoursPerYear: number;
-    carbonOffsetFactorKgPerMwh: number;
-    panelCapacityWatts: number;
-  };
-  financialAnalyses: Array<{
-    monthlyBill: { units: string };
-    financialDetails?: {
-      initialAcKwhPerYear: number;
-      federalIncentive: { units: string };
-    };
-  }>;
-}
-
 export async function fetchSolarData(latitude: number, longitude: number): Promise<SolarApiResponse> {
   const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
   if (!apiKey) {
     throw new Error('Google Cloud API key not configured');
   }
+
+  console.log('Fetching solar data for coordinates:', { latitude, longitude });
 
   // Get building insights
   const buildingInsightsResponse = await fetch(
@@ -38,31 +23,23 @@ export async function fetchSolarData(latitude: number, longitude: number): Promi
     throw new Error('Failed to fetch building insights: ' + JSON.stringify(buildingData));
   }
 
-  // Get data layers for visualization
-  const dataLayersResponse = await fetch(
-    `https://solar.googleapis.com/v1/dataLayers:get?` +
-    new URLSearchParams({
-      'location.latitude': latitude.toString(),
-      'location.longitude': longitude.toString(),
-      'radius_meters': '100',
-      'required_quality': 'LOW',
-      key: apiKey,
-    })
-  );
-
-  const layersData = await dataLayersResponse.json();
-
-  if (!dataLayersResponse.ok) {
-    console.error('Data layers error:', layersData);
-    throw new Error('Failed to fetch data layers: ' + JSON.stringify(layersData));
-  }
+  console.log('Received solar data:', buildingData);
 
   return buildingData;
 }
 
 export function processSolarData(data: SolarApiResponse) {
   const solarPotential = data.solarPotential;
-  const financialData = data.financialAnalyses?.[3] || null; // Using the $35 monthly bill scenario
+  
+  // Find the most relevant financial analysis (using $35 monthly bill scenario as default)
+  const financialData = data.financialAnalyses?.find(analysis => 
+    analysis.monthlyBill?.units === "35"
+  ) || data.financialAnalyses?.[3] || null;
+
+  // Find the optimal panel configuration
+  const optimalConfig = solarPotential.solarPanelConfigs?.reduce((best, current) => {
+    return (current.yearlyEnergyDcKwh > (best?.yearlyEnergyDcKwh || 0)) ? current : best;
+  }, null);
 
   return {
     status: 'completed',
@@ -70,6 +47,7 @@ export function processSolarData(data: SolarApiResponse) {
     irradiance_data: {
       maxSunshineHours: solarPotential.maxSunshineHoursPerYear,
       carbonOffset: solarPotential.carbonOffsetFactorKgPerMwh,
+      annualSunlight: solarPotential.wholeRoofStats.sunshineQuantiles[5], // median value
     },
     panel_layout: {
       maxPanels: solarPotential.maxArrayPanelsCount,
@@ -77,12 +55,97 @@ export function processSolarData(data: SolarApiResponse) {
       panelDimensions: {
         height: solarPotential.panelHeightMeters,
         width: solarPotential.panelWidthMeters,
-      }
+      },
+      optimalConfiguration: optimalConfig ? {
+        panelCount: optimalConfig.panelsCount,
+        yearlyEnergy: optimalConfig.yearlyEnergyDcKwh,
+        segments: optimalConfig.roofSegmentSummaries,
+      } : null,
     },
     estimated_production: {
-      yearlyEnergyDcKwh: financialData?.financialDetails?.initialAcKwhPerYear || null,
+      yearlyEnergyDcKwh: optimalConfig?.yearlyEnergyDcKwh || null,
       monthlyBill: financialData?.monthlyBill?.units || null,
-      financialDetails: financialData?.financialDetails || null,
+      financialDetails: {
+        initialCost: financialData?.cashPurchaseSavings?.outOfPocketCost || null,
+        federalIncentive: financialData?.cashPurchaseSavings?.rebateValue || null,
+        monthlyBillSavings: financialData?.monthlyBill?.units || null,
+        paybackYears: financialData?.cashPurchaseSavings?.paybackYears || null,
+        lifetimeSavings: financialData?.cashPurchaseSavings?.savings?.savingsLifetime || null,
+        firstYearSavings: financialData?.cashPurchaseSavings?.savings?.savingsYear1 || null,
+      },
+      environmentalImpact: {
+        carbonOffset: (optimalConfig?.yearlyEnergyDcKwh || 0) * (solarPotential.carbonOffsetFactorKgPerMwh / 1000),
+        treesEquivalent: Math.round(((optimalConfig?.yearlyEnergyDcKwh || 0) * (solarPotential.carbonOffsetFactorKgPerMwh / 1000)) * 45), // EPA estimate: 1 tree absorbs ~22kg CO2 per year
+        homesEquivalent: Math.round((optimalConfig?.yearlyEnergyDcKwh || 0) / 10700), // Average US home uses 10,700 kWh per year
+      }
     }
   };
+}
+
+interface SolarApiResponse {
+  name: string;
+  center: {
+    latitude: number;
+    longitude: number;
+  };
+  solarPotential: {
+    maxArrayPanelsCount: number;
+    maxArrayAreaMeters2: number;
+    maxSunshineHoursPerYear: number;
+    carbonOffsetFactorKgPerMwh: number;
+    wholeRoofStats: {
+      areaMeters2: number;
+      sunshineQuantiles: number[];
+      groundAreaMeters2: number;
+    };
+    panelCapacityWatts: number;
+    panelHeightMeters: number;
+    panelWidthMeters: number;
+    panelLifetimeYears: number;
+    solarPanelConfigs: Array<{
+      panelsCount: number;
+      yearlyEnergyDcKwh: number;
+      roofSegmentSummaries: Array<{
+        pitchDegrees: number;
+        azimuthDegrees: number;
+        panelsCount: number;
+        yearlyEnergyDcKwh: number;
+        segmentIndex: number;
+      }>;
+    }>;
+  };
+  financialAnalyses: Array<{
+    monthlyBill: {
+      currencyCode: string;
+      units: string;
+    };
+    financialDetails?: {
+      initialAcKwhPerYear: number;
+      federalIncentive: {
+        currencyCode: string;
+        units: string;
+      };
+    };
+    cashPurchaseSavings?: {
+      outOfPocketCost: {
+        currencyCode: string;
+        units: string;
+      };
+      rebateValue: {
+        currencyCode: string;
+        units: string;
+      };
+      paybackYears: number;
+      savings: {
+        savingsYear1: {
+          currencyCode: string;
+          units: string;
+        };
+        savingsLifetime: {
+          currencyCode: string;
+          units: string;
+        };
+      };
+    };
+  }>;
 }
