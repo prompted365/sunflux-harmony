@@ -1,33 +1,34 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { calculateFinancialMetrics } from './utils/financialCalculations.ts';
-import { calculateEnvironmentalImpact } from './utils/environmentalCalculations.ts';
-import { generatePDF } from './utils/pdfGenerator.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
+import { calculateFinancialMetrics } from './utils/financialCalculations.ts'
+import { calculateEnvironmentalImpact } from './utils/environmentalCalculations.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { calculationId } = await req.json();
-    console.log('Generating report for calculation:', calculationId);
+    const { calculationId } = await req.json()
+    console.log('Starting report generation for calculation:', calculationId)
     
     if (!calculationId) {
-      throw new Error('Calculation ID is required');
+      throw new Error('Calculation ID is required')
     }
 
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
     // Fetch calculation data with property information
-    const { data: calculation, error: calcError } = await supabaseClient
+    const { data: calculation, error: calcError } = await supabase
       .from('solar_calculations')
       .select(`
         *,
@@ -42,30 +43,30 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('id', calculationId)
-      .single();
+      .single()
 
     if (calcError || !calculation) {
-      console.error('Failed to fetch calculation:', calcError);
-      throw new Error('Failed to fetch calculation data');
+      console.error('Failed to fetch calculation:', calcError)
+      throw new Error('Failed to fetch calculation data')
     }
 
-    console.log('Calculation data fetched:', calculation);
+    console.log('Calculation data fetched:', calculation)
 
-    const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`;
+    const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
     // Calculate metrics
-    const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
-    const carbonOffsetRate = calculation.irradiance_data?.carbonOffset || 0;
+    const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0
+    const carbonOffsetRate = calculation.irradiance_data?.carbonOffset || 0
 
     const financialMetrics = calculateFinancialMetrics(
       calculation.system_size || 0,
       annualProduction
-    );
+    )
 
     const environmentalImpact = calculateEnvironmentalImpact(
       annualProduction,
       carbonOffsetRate
-    );
+    )
 
     // System specifications
     const systemSpecs = {
@@ -75,64 +76,110 @@ Deno.serve(async (req) => {
       arrayArea: calculation.panel_layout?.maxArea || 0,
       sunshineHours: calculation.irradiance_data?.maxSunshineHours || 0,
       efficiency: calculation.system_size ? (annualProduction / (calculation.system_size * 1000)) * 100 : 0
-    };
+    }
 
-    console.log('Generating PDF with specs:', systemSpecs);
+    console.log('Generating PDF with specs:', systemSpecs)
 
-    // Generate PDF without image for now
-    const pdfBytes = await generatePDF(
-      propertyAddress,
-      systemSpecs,
-      financialMetrics,
-      environmentalImpact
-    );
+    // Generate PDF
+    const doc = new jsPDF()
+    
+    // Title
+    doc.setFontSize(24)
+    doc.text('Solar Installation Report', 105, 20, { align: 'center' })
+    
+    // Property Information
+    doc.setFontSize(12)
+    doc.text(`Property Address: ${propertyAddress}`, 20, 40)
+
+    // System Specifications
+    doc.setFontSize(18)
+    doc.text('System Specifications', 20, 60)
+    
+    doc.setFontSize(12)
+    doc.text([
+      `System Size: ${systemSpecs.systemSize.toFixed(2)} kW`,
+      `Annual Production: ${systemSpecs.annualProduction.toFixed(2)} kWh`,
+      `Number of Panels: ${systemSpecs.panelCount}`,
+      `Array Area: ${systemSpecs.arrayArea.toFixed(1)} m²`,
+      `Annual Sunshine Hours: ${systemSpecs.sunshineHours.toFixed(0)} hours`,
+      `System Efficiency: ${systemSpecs.efficiency.toFixed(1)}%`
+    ], 20, 75)
+
+    // Financial Analysis
+    doc.setFontSize(18)
+    doc.text('Financial Analysis', 20, 120)
+    
+    doc.setFontSize(12)
+    doc.text([
+      `Total System Cost: $${financialMetrics.totalSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `Federal Tax Credit: $${financialMetrics.federalTaxCredit.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `Net System Cost: $${financialMetrics.netSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `Monthly Bill Savings: $${financialMetrics.monthlyBillSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `Annual Energy Savings: $${financialMetrics.annualSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `20-Year Total Savings: $${financialMetrics.twentyYearSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+      `Payback Period: ${financialMetrics.paybackPeriod.toFixed(1)} years`
+    ], 20, 135)
+
+    // Environmental Impact
+    doc.setFontSize(18)
+    doc.text('Environmental Impact', 20, 190)
+    
+    doc.setFontSize(12)
+    doc.text([
+      `CO₂ Reduction: ${environmentalImpact.carbonOffset.toFixed(2)} metric tons per year`,
+      `Equivalent to Planting: ${environmentalImpact.treesEquivalent.toLocaleString()} trees`,
+      `Powers Equivalent of: ${environmentalImpact.homesEquivalent} average homes`,
+      `Gasoline Saved: ${environmentalImpact.gasSaved.toLocaleString()} gallons per year`
+    ], 20, 205)
+
+    const pdfBytes = doc.output('arraybuffer')
 
     // Generate a unique filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `solar_report_${calculationId}_${timestamp}.pdf`;
-    const filePath = `reports/${fileName}`;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const fileName = `solar_report_${calculationId}_${timestamp}.pdf`
+    const filePath = `reports/${fileName}`
 
-    console.log('Uploading PDF to storage:', filePath);
+    console.log('Uploading PDF to storage:', filePath)
 
     // Upload to Supabase Storage
-    const { error: uploadError } = await supabaseClient
+    const { error: uploadError } = await supabase
       .storage
       .from('reports')
       .upload(filePath, pdfBytes, {
         contentType: 'application/pdf',
         upsert: false
-      });
+      })
 
     if (uploadError) {
-      console.error('Failed to upload PDF:', uploadError);
-      throw new Error('Failed to upload PDF');
+      console.error('Failed to upload PDF:', uploadError)
+      throw new Error('Failed to upload PDF')
     }
 
     // Create signed URL for download
-    const { data: { signedUrl }, error: urlError } = await supabaseClient
+    const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+      .createSignedUrl(filePath, 60 * 60) // 1 hour expiry
 
     if (urlError) {
-      console.error('Failed to generate download URL:', urlError);
-      throw new Error('Failed to generate download URL');
+      console.error('Failed to generate download URL:', urlError)
+      throw new Error('Failed to generate download URL')
     }
 
     // Save report reference in database
-    const { error: reportError } = await supabaseClient
+    const { error: reportError } = await supabase
       .from('reports')
       .insert({
         calculation_id: calculationId,
         file_path: filePath
-      });
+      })
 
     if (reportError) {
-      console.error('Failed to save report reference:', reportError);
-      throw new Error('Failed to save report reference');
+      console.error('Failed to save report reference:', reportError)
+      throw new Error('Failed to save report reference')
     }
 
-    console.log('Report generated successfully');
+    console.log('Report generated successfully')
 
     return new Response(
       JSON.stringify({ 
@@ -140,19 +187,25 @@ Deno.serve(async (req) => {
         downloadUrl: signedUrl
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
         status: 200 
       }
-    );
+    )
 
   } catch (error) {
-    console.error('Report generation error:', error);
+    console.error('Report generation error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
       }
-    );
+    )
   }
-});
+})
