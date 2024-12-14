@@ -5,25 +5,34 @@ interface EnvironmentalImpact {
   gasSaved: number;
 }
 
-export function calculateEnvironmentalImpact(
-  solarData: any,
-  annualProduction: number
-): EnvironmentalImpact {
-  const solarPotential = solarData?.solarPotential || {};
-  const carbonOffsetRate = solarPotential.carbonOffsetFactorKgPerMwh || 0;
+export function calculateEnvironmentalImpact(calculation: any): EnvironmentalImpact {
+  console.log('Calculating environmental impact from:', JSON.stringify(calculation, null, 2));
   
-  // Convert kWh to MWh and calculate carbon offset
-  const carbonOffset = (annualProduction / 1000) * (carbonOffsetRate / 1000);
+  const solarPotential = calculation?.solarPotential || {};
+  const panelConfig = solarPotential.solarPanelConfigs?.[0] || {};
   
-  // Environmental equivalencies with null checks
-  const treesEquivalent = Math.round(carbonOffset * 45); // EPA estimate: 1 metric ton CO2 = ~45 trees
-  const homesEquivalent = Math.round(annualProduction / 10700); // Average US home uses 10,700 kWh/year
-  const gasSaved = Math.round(carbonOffset * 113); // EPA estimate: 1 metric ton CO2 = 113 gallons of gas
+  // Calculate annual energy production in MWh
+  const annualEnergyMwh = (panelConfig.yearlyEnergyDcKwh || 0) / 1000;
+  
+  // Calculate carbon offset using the carbon offset factor
+  const carbonOffset = (annualEnergyMwh * (solarPotential.carbonOffsetFactorKgPerMwh || 0)) / 1000;
+  
+  // Calculate equivalent trees (EPA estimate: 1 tree absorbs ~22kg CO2 per year)
+  const treesEquivalent = Math.round(carbonOffset * 1000 / 22);
+  
+  // Calculate equivalent homes (Average US home uses 10,700 kWh per year)
+  const homesEquivalent = Math.round((panelConfig.yearlyEnergyDcKwh || 0) / 10700);
+  
+  // Calculate equivalent gallons of gas saved (EPA: 8.887 kg CO2 per gallon)
+  const gasSaved = Math.round((carbonOffset * 1000) / 8.887);
 
-  return {
+  const impact = {
     carbonOffset,
     treesEquivalent,
     homesEquivalent,
     gasSaved
   };
+
+  console.log('Calculated environmental impact:', impact);
+  return impact;
 }

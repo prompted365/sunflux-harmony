@@ -7,24 +7,31 @@ interface SystemSpecs {
   efficiency: number;
 }
 
-export function calculateSystemSpecs(solarData: any): SystemSpecs {
-  const solarPotential = solarData?.solarPotential || {};
+export function calculateSystemSpecs(calculation: any): SystemSpecs {
+  console.log('Calculating system specs from:', JSON.stringify(calculation, null, 2));
   
-  // Find optimal panel configuration with null checks
-  const optimalConfig = solarPotential.solarPanelConfigs?.reduce((best: any, current: any) => {
-    return (current?.yearlyEnergyDcKwh > (best?.yearlyEnergyDcKwh || 0)) ? current : best;
-  }, null);
-
+  const solarPotential = calculation?.solarPotential || {};
+  const panelConfig = solarPotential.solarPanelConfigs?.[0] || {};
+  
+  // Calculate system size (kW)
   const systemSize = ((solarPotential.maxArrayPanelsCount || 0) * (solarPotential.panelCapacityWatts || 0)) / 1000;
-  const annualProduction = optimalConfig?.yearlyEnergyDcKwh || 0;
+  
+  // Get annual production from the optimal panel configuration
+  const annualProduction = panelConfig.yearlyEnergyDcKwh || 0;
+  
+  // Get panel count
   const panelCount = solarPotential.maxArrayPanelsCount || 0;
+  
+  // Get array area
   const arrayArea = solarPotential.maxArrayAreaMeters2 || 0;
+  
+  // Get sunshine hours
   const sunshineHours = solarPotential.maxSunshineHoursPerYear || 0;
   
-  // Calculate system efficiency with null check
+  // Calculate system efficiency
   const efficiency = systemSize > 0 ? (annualProduction / (systemSize * 1000)) * 100 : 0;
 
-  return {
+  const specs = {
     systemSize,
     annualProduction,
     panelCount,
@@ -32,4 +39,7 @@ export function calculateSystemSpecs(solarData: any): SystemSpecs {
     sunshineHours,
     efficiency
   };
+
+  console.log('Calculated system specs:', specs);
+  return specs;
 }

@@ -48,15 +48,21 @@ serve(async (req) => {
       throw new Error('Failed to fetch calculation data')
     }
 
-    console.log('Calculation data fetched:', calculation)
+    console.log('Raw calculation data:', JSON.stringify(calculation, null, 2));
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
     // Calculate metrics using utility functions with proper error handling
     try {
       const systemSpecs = calculateSystemSpecs(calculation)
-      const financialMetrics = calculateFinancialMetrics(calculation, systemSpecs.systemSize)
-      const environmentalImpact = calculateEnvironmentalImpact(calculation, systemSpecs.annualProduction)
+      const financialMetrics = calculateFinancialMetrics(calculation)
+      const environmentalImpact = calculateEnvironmentalImpact(calculation)
+
+      console.log('Generating PDF with metrics:', {
+        systemSpecs,
+        financialMetrics,
+        environmentalImpact
+      });
 
       // Generate PDF
       const doc = new jsPDF()
