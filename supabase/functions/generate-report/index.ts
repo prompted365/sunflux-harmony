@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
 import { calculateFinancialMetrics } from './utils/financialCalculations.ts'
 import { calculateEnvironmentalImpact } from './utils/environmentalCalculations.ts'
+import { calculateSystemSpecs } from './utils/systemSpecifications.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,13 +34,10 @@ serve(async (req) => {
       .select(`
         *,
         properties (
-          id,
           address,
           city,
           state,
-          zip_code,
-          latitude,
-          longitude
+          zip_code
         )
       `)
       .eq('id', calculationId)
@@ -54,31 +52,10 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Calculate metrics
-    const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0
-    const carbonOffsetRate = calculation.irradiance_data?.carbonOffset || 0
-
-    const financialMetrics = calculateFinancialMetrics(
-      calculation.system_size || 0,
-      annualProduction
-    )
-
-    const environmentalImpact = calculateEnvironmentalImpact(
-      annualProduction,
-      carbonOffsetRate
-    )
-
-    // System specifications
-    const systemSpecs = {
-      systemSize: calculation.system_size || 0,
-      annualProduction: calculation.estimated_production?.yearlyEnergyDcKwh || 0,
-      panelCount: calculation.panel_layout?.maxPanels || 0,
-      arrayArea: calculation.panel_layout?.maxArea || 0,
-      sunshineHours: calculation.irradiance_data?.maxSunshineHours || 0,
-      efficiency: calculation.system_size ? (annualProduction / (calculation.system_size * 1000)) * 100 : 0
-    }
-
-    console.log('Generating PDF with specs:', systemSpecs)
+    // Calculate metrics using utility functions
+    const systemSpecs = calculateSystemSpecs(calculation)
+    const financialMetrics = calculateFinancialMetrics(calculation, systemSpecs.systemSize)
+    const environmentalImpact = calculateEnvironmentalImpact(calculation, systemSpecs.annualProduction)
 
     // Generate PDF
     const doc = new jsPDF()
@@ -133,8 +110,6 @@ serve(async (req) => {
     ], 20, 205)
 
     const pdfBytes = doc.output('arraybuffer')
-
-    // Generate a unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const fileName = `solar_report_${calculationId}_${timestamp}.pdf`
     const filePath = `reports/${fileName}`

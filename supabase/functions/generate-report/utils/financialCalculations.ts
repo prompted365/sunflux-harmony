@@ -1,60 +1,44 @@
-export interface FinancialMetrics {
+interface FinancialMetrics {
   totalSystemCost: number;
   federalTaxCredit: number;
   netSystemCost: number;
+  monthlyBillSavings: number;
   annualSavings: number;
   paybackPeriod: number;
-  monthlyBillSavings: number;
   twentyYearSavings: number;
-  inflationAdjustedSavings: number;
 }
 
 export function calculateFinancialMetrics(
-  systemSize: number,
-  annualProduction: number,
-  utilityRate: number = 0.15, // Average utility rate per kWh
-  annualUtilityInflation: number = 0.03 // 3% annual utility rate increase
+  solarData: any,
+  systemSize: number
 ): FinancialMetrics {
-  // Ensure we have valid numbers
-  systemSize = Number(systemSize) || 0;
-  annualProduction = Number(annualProduction) || 0;
-  
-  console.log('Calculating financials for:', { systemSize, annualProduction });
+  // Find the most relevant financial analysis (using $35 monthly bill scenario as default)
+  const financialAnalysis = solarData.solarPotential.financialAnalyses?.find(
+    (analysis: any) => analysis.monthlyBill?.units === "35"
+  ) || solarData.solarPotential.financialAnalyses?.[0];
 
-  const systemCostPerWatt = 2.95; // Industry average cost per watt
-  const totalSystemCost = systemSize * 1000 * systemCostPerWatt;
-  const federalTaxCredit = totalSystemCost * 0.30;
+  const cashPurchase = financialAnalysis?.cashPurchaseSavings || {};
+  
+  // Calculate costs and savings
+  const totalSystemCost = Number(cashPurchase.outOfPocketCost?.units || 0);
+  const federalTaxCredit = Number(cashPurchase.rebateValue?.units || 0);
   const netSystemCost = totalSystemCost - federalTaxCredit;
-
-  // Calculate annual savings based on production and utility rate
-  const annualSavings = annualProduction * utilityRate;
-  const monthlyBillSavings = annualSavings / 12;
   
-  // Calculate 20-year projections with utility rate inflation
-  let twentyYearSavings = 0;
-  let inflationAdjustedSavings = 0;
-  let currentRate = utilityRate;
+  // Monthly and annual savings
+  const monthlyBillSavings = Number(financialAnalysis?.monthlyBill?.units || 0);
+  const annualSavings = monthlyBillSavings * 12;
+  
+  // Payback period and lifetime savings
+  const paybackPeriod = Number(cashPurchase.paybackYears || 0);
+  const twentyYearSavings = Number(cashPurchase.savings?.savingsYear20?.units || 0);
 
-  for (let year = 1; year <= 20; year++) {
-    const yearSavings = annualProduction * currentRate;
-    twentyYearSavings += yearSavings;
-    inflationAdjustedSavings += yearSavings / Math.pow(1.05, year); // 5% discount rate
-    currentRate *= (1 + annualUtilityInflation);
-  }
-
-  const paybackPeriod = annualSavings > 0 ? netSystemCost / annualSavings : 0;
-
-  const results = {
+  return {
     totalSystemCost,
     federalTaxCredit,
     netSystemCost,
+    monthlyBillSavings,
     annualSavings,
     paybackPeriod,
-    monthlyBillSavings,
-    twentyYearSavings,
-    inflationAdjustedSavings
+    twentyYearSavings
   };
-
-  console.log('Financial calculation results:', results);
-  return results;
 }
