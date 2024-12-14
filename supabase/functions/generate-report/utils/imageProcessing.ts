@@ -1,6 +1,6 @@
-import * as geotiff from 'geotiff';
-import * as geokeysToProj4 from 'geotiff-geokeys-to-proj4';
-import proj4 from 'proj4';
+import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
+import * as geokeysToProj4 from 'https://esm.sh/geotiff-geokeys-to-proj4@2024.4.13';
+import proj4 from 'https://esm.sh/proj4@2.15.0';
 
 interface Bounds {
   north: number;
