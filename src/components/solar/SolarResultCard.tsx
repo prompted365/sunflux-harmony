@@ -1,12 +1,48 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { SolarCalculation } from "./types";
 import { Icons } from "@/components/ui/icons";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SolarResultCardProps {
   calc: SolarCalculation;
 }
 
 const SolarResultCard = ({ calc }: SolarResultCardProps) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
+
+  const handleGenerateReport = async () => {
+    try {
+      setIsGenerating(true);
+      
+      const { data, error } = await supabase.functions.invoke('generate-report', {
+        body: { calculationId: calc.id }
+      });
+
+      if (error) throw error;
+
+      // Open the PDF in a new tab
+      window.open(data.downloadUrl, '_blank');
+
+      toast({
+        title: "Success",
+        description: "Report generated successfully",
+      });
+    } catch (error) {
+      console.error('Report generation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
@@ -30,75 +66,95 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         </div>
 
         {calc.status === 'completed' && (
-          <div className="grid grid-cols-2 gap-4">
-            {calc.system_size != null && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.sun className="w-4 h-4 mr-2" />
-                  <span className="text-sm">System Size</span>
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              {calc.system_size != null && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.sun className="w-4 h-4 mr-2" />
+                    <span className="text-sm">System Size</span>
+                  </div>
+                  <p className="text-lg font-semibold">{calc.system_size.toFixed(2)} kW</p>
                 </div>
-                <p className="text-lg font-semibold">{calc.system_size.toFixed(2)} kW</p>
-              </div>
-            )}
-            
-            {calc.estimated_production?.yearlyEnergyDcKwh && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.zap className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Annual Production</span>
+              )}
+              
+              {calc.estimated_production?.yearlyEnergyDcKwh && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.zap className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Annual Production</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {calc.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh
+                  </p>
                 </div>
-                <p className="text-lg font-semibold">
-                  {calc.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh
-                </p>
-              </div>
-            )}
-            
-            {calc.panel_layout?.maxPanels && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.grid className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Panel Count</span>
+              )}
+              
+              {calc.panel_layout?.maxPanels && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.grid className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Panel Count</span>
+                  </div>
+                  <p className="text-lg font-semibold">{calc.panel_layout.maxPanels}</p>
                 </div>
-                <p className="text-lg font-semibold">{calc.panel_layout.maxPanels}</p>
-              </div>
-            )}
-            
-            {calc.panel_layout?.maxArea && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.ruler className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Array Area</span>
+              )}
+              
+              {calc.panel_layout?.maxArea && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.ruler className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Array Area</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {calc.panel_layout.maxArea.toFixed(1)} m²
+                  </p>
                 </div>
-                <p className="text-lg font-semibold">
-                  {calc.panel_layout.maxArea.toFixed(1)} m²
-                </p>
-              </div>
-            )}
-            
-            {calc.irradiance_data?.maxSunshineHours && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.clock className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Annual Sunshine</span>
+              )}
+              
+              {calc.irradiance_data?.maxSunshineHours && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.clock className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Annual Sunshine</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
+                  </p>
                 </div>
-                <p className="text-lg font-semibold">
-                  {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
-                </p>
-              </div>
-            )}
-            
-            {calc.irradiance_data?.carbonOffset && (
-              <div className="space-y-1">
-                <div className="flex items-center text-gray-500">
-                  <Icons.leaf className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Carbon Offset</span>
+              )}
+              
+              {calc.irradiance_data?.carbonOffset && (
+                <div className="space-y-1">
+                  <div className="flex items-center text-gray-500">
+                    <Icons.leaf className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Carbon Offset</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {calc.irradiance_data.carbonOffset.toFixed(2)} kg/MWh
+                  </p>
                 </div>
-                <p className="text-lg font-semibold">
-                  {calc.irradiance_data.carbonOffset.toFixed(2)} kg/MWh
-                </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleGenerateReport}
+              disabled={isGenerating}
+              className="w-full"
+            >
+              {isGenerating ? (
+                <>
+                  <Icons.loader className="mr-2 h-4 w-4 animate-spin" />
+                  Generating Report...
+                </>
+              ) : (
+                <>
+                  <Icons.fileText className="mr-2 h-4 w-4" />
+                  Generate PDF Report
+                </>
+              )}
+            </Button>
+          </>
         )}
 
         {calc.status === 'pending' && (
