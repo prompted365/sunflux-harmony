@@ -1,122 +1,31 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
-
-interface SolarCalculation {
-  id: string;
-  status: string;
-  system_size: number | null;
-  irradiance_data: {
-    maxSunshineHours: number;
-    carbonOffset: number;
-  } | null;
-  panel_layout: {
-    maxPanels: number;
-    maxArea: number;
-  } | null;
-  estimated_production: {
-    yearlyEnergyDcKwh: number;
-  } | null;
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { calculateFinancialMetrics } from './utils/financialCalculations.ts';
+import { calculateEnvironmentalImpact } from './utils/environmentalCalculations.ts';
+import { generatePDF } from './utils/pdfGenerator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-function calculateFinancialMetrics(calculation: SolarCalculation) {
-  const avgElectricityRate = 0.15;
-  const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
-  const annualSavings = annualProduction * avgElectricityRate;
-  const systemCostPerWatt = 2.95;
-  const totalSystemCost = (calculation.system_size || 0) * 1000 * systemCostPerWatt;
-  const federalTaxCredit = totalSystemCost * 0.30;
-  const netSystemCost = totalSystemCost - federalTaxCredit;
-  const paybackPeriod = netSystemCost / (annualSavings || 1); // Prevent division by zero
-
-  return {
-    totalSystemCost,
-    federalTaxCredit,
-    netSystemCost,
-    annualSavings,
-    paybackPeriod
-  };
-}
-
-function calculateEnvironmentalImpact(calculation: SolarCalculation) {
-  const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
-  const carbonOffset = ((calculation.irradiance_data?.carbonOffset || 0) * annualProduction) / 1000;
-  const treesEquivalent = carbonOffset / 20;
-
-  return {
-    carbonOffset,
-    treesEquivalent: Math.round(treesEquivalent)
-  };
-}
-
-function generatePDF(calculation: SolarCalculation, propertyAddress: string) {
-  const doc = new jsPDF();
-  const financials = calculateFinancialMetrics(calculation);
-  const environmental = calculateEnvironmentalImpact(calculation);
-  
-  // Title
-  doc.setFontSize(24);
-  doc.text('Solar Installation Report', 105, 20, { align: 'center' });
-  
-  // Property Information
-  doc.setFontSize(14);
-  doc.text(`Property Address: ${propertyAddress}`, 20, 40);
-
-  // System Specifications
-  doc.setFontSize(18);
-  doc.text('System Specifications', 20, 70);
-
-  doc.setFontSize(12);
-  doc.text(`System Size: ${calculation.system_size?.toFixed(2) || 'N/A'} kW`, 20, 85);
-  doc.text(`Annual Production: ${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2) || 'N/A'} kWh`, 20, 95);
-  doc.text(`Number of Panels: ${calculation.panel_layout?.maxPanels || 'N/A'}`, 20, 105);
-  doc.text(`Array Area: ${calculation.panel_layout?.maxArea?.toFixed(1) || 'N/A'} m²`, 20, 115);
-  doc.text(`Annual Sunshine Hours: ${calculation.irradiance_data?.maxSunshineHours?.toFixed(0) || 'N/A'} hours`, 20, 125);
-
-  // Financial Analysis
-  doc.setFontSize(18);
-  doc.text('Financial Analysis', 20, 155);
-  
-  doc.setFontSize(12);
-  doc.text(`Estimated System Cost: $${financials.totalSystemCost.toFixed(2)}`, 20, 170);
-  doc.text(`Federal Tax Credit (30%): $${financials.federalTaxCredit.toFixed(2)}`, 20, 180);
-  doc.text(`Net System Cost: $${financials.netSystemCost.toFixed(2)}`, 20, 190);
-  doc.text(`Annual Energy Savings: $${financials.annualSavings.toFixed(2)}`, 20, 200);
-  doc.text(`Estimated Payback Period: ${financials.paybackPeriod.toFixed(1)} years`, 20, 210);
-
-  // Environmental Impact
-  doc.setFontSize(18);
-  doc.text('Environmental Impact', 20, 230);
-  
-  doc.setFontSize(12);
-  doc.text(`Annual CO2 Reduction: ${environmental.carbonOffset.toFixed(2)} metric tons`, 20, 245);
-  doc.text(`Equivalent to Planting: ${environmental.treesEquivalent} trees`, 20, 255);
-
-  return doc;
-}
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { calculationId } = await req.json()
+    const { calculationId } = await req.json();
     
     if (!calculationId) {
-      throw new Error('Calculation ID is required')
+      throw new Error('Calculation ID is required');
     }
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // Fetch calculation data
+    // Fetch calculation data with property information
     const { data: calculation, error: calcError } = await supabaseClient
       .from('solar_calculations')
       .select(`
@@ -127,6 +36,8 @@ Deno.serve(async (req) => {
         panel_layout,
         estimated_production,
         properties (
+          id,
+          user_id,
           address,
           city,
           state,
@@ -134,18 +45,46 @@ Deno.serve(async (req) => {
         )
       `)
       .eq('id', calculationId)
-      .single()
+      .single();
 
     if (calcError || !calculation) {
       console.error('Failed to fetch calculation:', calcError);
-      throw new Error('Failed to fetch calculation data')
+      throw new Error('Failed to fetch calculation data');
     }
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`;
     
+    // Calculate metrics
+    const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
+    const carbonOffsetRate = calculation.irradiance_data?.carbonOffset || 0;
+
+    const financialMetrics = calculateFinancialMetrics(
+      calculation.system_size,
+      annualProduction
+    );
+
+    const environmentalImpact = calculateEnvironmentalImpact(
+      annualProduction,
+      carbonOffsetRate
+    );
+
+    // System specifications
+    const systemSpecs = {
+      systemSize: calculation.system_size,
+      annualProduction: calculation.estimated_production?.yearlyEnergyDcKwh || null,
+      panelCount: calculation.panel_layout?.maxPanels || null,
+      arrayArea: calculation.panel_layout?.maxArea || null,
+      sunshineHours: calculation.irradiance_data?.maxSunshineHours || null,
+      efficiency: calculation.system_size ? (annualProduction / (calculation.system_size * 1000)) * 100 : null
+    };
+
     // Generate PDF
-    const doc = generatePDF(calculation, propertyAddress);
-    const pdfBytes = doc.output('arraybuffer');
+    const pdfBytes = generatePDF(
+      propertyAddress,
+      systemSpecs,
+      financialMetrics,
+      environmentalImpact
+    );
 
     // Generate a unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
