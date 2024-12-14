@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { geocodeAddress } from './utils/geocoding.ts';
 import { fetchSolarData, processSolarData } from './utils/solarApi.ts';
+import { downloadAndProcessImage } from './utils/imageProcessing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,25 +67,20 @@ Deno.serve(async (req) => {
       property.longitude = coordinates.lng;
     }
 
-    // Create solar calculation record
-    const { data: calculation, error: calculationError } = await supabaseClient
-      .from('solar_calculations')
-      .insert({
-        property_id: propertyId,
-        status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (calculationError || !calculation) {
-      throw new Error('Failed to create solar calculation record');
-    }
-
     // Fetch solar data from Google Solar API
     const solarData = await fetchSolarData(property.latitude, property.longitude);
     
-    // Process the solar data
-    const processedData = processSolarData(solarData);
+    // Download and store imagery
+    const imageryUrls = await processAndStoreImagery(solarData, propertyId, supabaseClient);
+    
+    // Process the solar data with imagery URLs
+    const processedData = {
+      ...processSolarData(solarData),
+      building_specs: {
+        ...processSolarData(solarData).building_specs,
+        imagery: imageryUrls
+      }
+    };
 
     // Update solar calculation with processed data
     const { error: updateError } = await supabaseClient
@@ -109,3 +105,51 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function processAndStoreImagery(solarData: any, propertyId: string, supabase: any) {
+  const imageryUrls = {
+    dsm: null,
+    rgb: null,
+    mask: null,
+    annualFlux: null,
+    monthlyFlux: null
+  };
+
+  try {
+    // Process each image type
+    const imageTypes = {
+      dsm: solarData.dsmUrl,
+      rgb: solarData.rgbUrl,
+      mask: solarData.maskUrl,
+      annualFlux: solarData.annualFluxUrl,
+      monthlyFlux: solarData.monthlyFluxUrl
+    };
+
+    for (const [type, url] of Object.entries(imageTypes)) {
+      if (url) {
+        const imageData = await downloadAndProcessImage(url, Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? '');
+        if (imageData) {
+          const filePath = `${propertyId}/${type}.png`;
+          const { error: uploadError } = await supabase.storage
+            .from('solar_imagery')
+            .upload(filePath, imageData, {
+              contentType: 'image/png',
+              upsert: true
+            });
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('solar_imagery')
+              .getPublicUrl(filePath);
+            
+            imageryUrls[type as keyof typeof imageryUrls] = publicUrl;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error processing imagery:', error);
+  }
+
+  return imageryUrls;
+}
