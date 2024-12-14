@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
 
   try {
     const { calculationId } = await req.json();
+    console.log('Generating report for calculation:', calculationId);
     
     if (!calculationId) {
       throw new Error('Calculation ID is required');
@@ -52,6 +53,8 @@ Deno.serve(async (req) => {
       throw new Error('Failed to fetch calculation data');
     }
 
+    console.log('Calculation data fetched:', calculation);
+
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`;
     
     // Calculate metrics
@@ -59,7 +62,7 @@ Deno.serve(async (req) => {
     const carbonOffsetRate = calculation.irradiance_data?.carbonOffset || 0;
 
     const financialMetrics = calculateFinancialMetrics(
-      calculation.system_size,
+      calculation.system_size || 0,
       annualProduction
     );
 
@@ -70,16 +73,18 @@ Deno.serve(async (req) => {
 
     // System specifications
     const systemSpecs = {
-      systemSize: calculation.system_size,
-      annualProduction: calculation.estimated_production?.yearlyEnergyDcKwh || null,
-      panelCount: calculation.panel_layout?.maxPanels || null,
-      arrayArea: calculation.panel_layout?.maxArea || null,
-      sunshineHours: calculation.irradiance_data?.maxSunshineHours || null,
-      efficiency: calculation.system_size ? (annualProduction / (calculation.system_size * 1000)) * 100 : null
+      systemSize: calculation.system_size || 0,
+      annualProduction: calculation.estimated_production?.yearlyEnergyDcKwh || 0,
+      panelCount: calculation.panel_layout?.maxPanels || 0,
+      arrayArea: calculation.panel_layout?.maxArea || 0,
+      sunshineHours: calculation.irradiance_data?.maxSunshineHours || 0,
+      efficiency: calculation.system_size ? (annualProduction / (calculation.system_size * 1000)) * 100 : 0
     };
 
+    console.log('Generating PDF with specs:', systemSpecs);
+
     // Generate PDF
-    const pdfBytes = generatePDF(
+    const pdfBytes = await generatePDF(
       propertyAddress,
       systemSpecs,
       financialMetrics,
@@ -90,6 +95,8 @@ Deno.serve(async (req) => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `solar_report_${calculationId}_${timestamp}.pdf`;
     const filePath = `${calculation.properties.user_id}/${fileName}`;
+
+    console.log('Uploading PDF to storage:', filePath);
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabaseClient
@@ -128,6 +135,8 @@ Deno.serve(async (req) => {
       console.error('Failed to save report reference:', reportError);
       throw new Error('Failed to save report reference');
     }
+
+    console.log('Report generated successfully');
 
     return new Response(
       JSON.stringify({ 
