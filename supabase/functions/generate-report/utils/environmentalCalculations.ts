@@ -1,4 +1,4 @@
-interface EnvironmentalImpact {
+export interface EnvironmentalImpact {
   carbonOffset: number;
   treesEquivalent: number;
   homesEquivalent: number;
@@ -9,15 +9,26 @@ export function calculateEnvironmentalImpact(
   annualProduction: number,
   carbonOffsetRate: number
 ): EnvironmentalImpact {
-  const carbonOffset = (carbonOffsetRate * annualProduction) / 1000;
-  const treesEquivalent = carbonOffset * 46.3; // EPA: 1 metric ton CO2 = 46.3 trees
-  const homesEquivalent = annualProduction / 10632; // Average home uses 10,632 kWh annually
-  const gasSaved = (carbonOffset * 113.7); // EPA: 1 metric ton CO2 = 113.7 gallons of gasoline
+  // Convert kWh to MWh for carbon calculations
+  const annualProductionMWh = annualProduction / 1000;
+  
+  // Calculate carbon offset in metric tons
+  const carbonOffset = (annualProductionMWh * carbonOffsetRate) / 1000;
+  
+  // Environmental equivalencies based on EPA calculations
+  // Average tree absorbs about 0.039 metric tons CO2 per year
+  const treesEquivalent = Math.round(carbonOffset / 0.039);
+  
+  // Average US home uses about 10,715 kWh per year
+  const homesEquivalent = Math.round(annualProduction / 10715);
+  
+  // Each gallon of gasoline produces about 8.887 kg CO2
+  const gasSaved = Math.round(carbonOffset * 1000 / 8.887);
 
   return {
     carbonOffset,
-    treesEquivalent: Math.round(treesEquivalent),
-    homesEquivalent: Number(homesEquivalent.toFixed(1)),
-    gasSaved: Math.round(gasSaved)
+    treesEquivalent,
+    homesEquivalent,
+    gasSaved
   };
 }

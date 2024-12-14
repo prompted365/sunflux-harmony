@@ -1,4 +1,4 @@
-interface FinancialMetrics {
+export interface FinancialMetrics {
   totalSystemCost: number;
   federalTaxCredit: number;
   netSystemCost: number;
@@ -12,11 +12,11 @@ interface FinancialMetrics {
 export function calculateFinancialMetrics(
   systemSize: number | null,
   annualProduction: number,
-  utilityRate: number = 0.15,
-  annualUtilityInflation: number = 0.03
+  utilityRate: number = 0.15, // Average utility rate per kWh
+  annualUtilityInflation: number = 0.03 // 3% annual utility rate increase
 ): FinancialMetrics {
   // System costs
-  const systemCostPerWatt = 2.95;
+  const systemCostPerWatt = 2.95; // Industry average cost per watt
   const totalSystemCost = (systemSize || 0) * 1000 * systemCostPerWatt;
   const federalTaxCredit = totalSystemCost * 0.30;
   const netSystemCost = totalSystemCost - federalTaxCredit;
