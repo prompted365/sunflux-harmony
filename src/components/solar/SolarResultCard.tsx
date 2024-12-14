@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SolarCalculation } from "./types";
-import { Icons } from "@/components/ui/icons";
+import { Loader2, FileText, Sun, Zap, Grid, Ruler, Clock, Leaf } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -71,7 +71,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.system_size != null && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.sun className="w-4 h-4 mr-2" />
+                    <Sun className="w-4 h-4 mr-2" />
                     <span className="text-sm">System Size</span>
                   </div>
                   <p className="text-lg font-semibold">{calc.system_size.toFixed(2)} kW</p>
@@ -81,7 +81,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.estimated_production?.yearlyEnergyDcKwh && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.zap className="w-4 h-4 mr-2" />
+                    <Zap className="w-4 h-4 mr-2" />
                     <span className="text-sm">Annual Production</span>
                   </div>
                   <p className="text-lg font-semibold">
@@ -93,7 +93,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.panel_layout?.maxPanels && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.grid className="w-4 h-4 mr-2" />
+                    <Grid className="w-4 h-4 mr-2" />
                     <span className="text-sm">Panel Count</span>
                   </div>
                   <p className="text-lg font-semibold">{calc.panel_layout.maxPanels}</p>
@@ -103,7 +103,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.panel_layout?.maxArea && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.ruler className="w-4 h-4 mr-2" />
+                    <Ruler className="w-4 h-4 mr-2" />
                     <span className="text-sm">Array Area</span>
                   </div>
                   <p className="text-lg font-semibold">
@@ -115,7 +115,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.irradiance_data?.maxSunshineHours && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.clock className="w-4 h-4 mr-2" />
+                    <Clock className="w-4 h-4 mr-2" />
                     <span className="text-sm">Annual Sunshine</span>
                   </div>
                   <p className="text-lg font-semibold">
@@ -127,7 +127,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               {calc.irradiance_data?.carbonOffset && (
                 <div className="space-y-1">
                   <div className="flex items-center text-gray-500">
-                    <Icons.leaf className="w-4 h-4 mr-2" />
+                    <Leaf className="w-4 h-4 mr-2" />
                     <span className="text-sm">Carbon Offset</span>
                   </div>
                   <p className="text-lg font-semibold">
@@ -144,12 +144,12 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
             >
               {isGenerating ? (
                 <>
-                  <Icons.loader className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Generating Report...
                 </>
               ) : (
                 <>
-                  <Icons.fileText className="mr-2 h-4 w-4" />
+                  <FileText className="mr-2 h-4 w-4" />
                   Generate PDF Report
                 </>
               )}
