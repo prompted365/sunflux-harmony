@@ -52,123 +52,129 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Calculate metrics using utility functions
-    const systemSpecs = calculateSystemSpecs(calculation)
-    const financialMetrics = calculateFinancialMetrics(calculation, systemSpecs.systemSize)
-    const environmentalImpact = calculateEnvironmentalImpact(calculation, systemSpecs.annualProduction)
+    // Calculate metrics using utility functions with proper error handling
+    try {
+      const systemSpecs = calculateSystemSpecs(calculation)
+      const financialMetrics = calculateFinancialMetrics(calculation, systemSpecs.systemSize)
+      const environmentalImpact = calculateEnvironmentalImpact(calculation, systemSpecs.annualProduction)
 
-    // Generate PDF
-    const doc = new jsPDF()
-    
-    // Title
-    doc.setFontSize(24)
-    doc.text('Solar Installation Report', 105, 20, { align: 'center' })
-    
-    // Property Information
-    doc.setFontSize(12)
-    doc.text(`Property Address: ${propertyAddress}`, 20, 40)
+      // Generate PDF
+      const doc = new jsPDF()
+      
+      // Title
+      doc.setFontSize(24)
+      doc.text('Solar Installation Report', 105, 20, { align: 'center' })
+      
+      // Property Information
+      doc.setFontSize(12)
+      doc.text(`Property Address: ${propertyAddress}`, 20, 40)
 
-    // System Specifications
-    doc.setFontSize(18)
-    doc.text('System Specifications', 20, 60)
-    
-    doc.setFontSize(12)
-    doc.text([
-      `System Size: ${systemSpecs.systemSize.toFixed(2)} kW`,
-      `Annual Production: ${systemSpecs.annualProduction.toFixed(2)} kWh`,
-      `Number of Panels: ${systemSpecs.panelCount}`,
-      `Array Area: ${systemSpecs.arrayArea.toFixed(1)} m²`,
-      `Annual Sunshine Hours: ${systemSpecs.sunshineHours.toFixed(0)} hours`,
-      `System Efficiency: ${systemSpecs.efficiency.toFixed(1)}%`
-    ], 20, 75)
+      // System Specifications
+      doc.setFontSize(18)
+      doc.text('System Specifications', 20, 60)
+      
+      doc.setFontSize(12)
+      doc.text([
+        `System Size: ${systemSpecs.systemSize.toFixed(2)} kW`,
+        `Annual Production: ${systemSpecs.annualProduction.toFixed(2)} kWh`,
+        `Number of Panels: ${systemSpecs.panelCount}`,
+        `Array Area: ${systemSpecs.arrayArea.toFixed(1)} m²`,
+        `Annual Sunshine Hours: ${systemSpecs.sunshineHours.toFixed(0)} hours`,
+        `System Efficiency: ${systemSpecs.efficiency.toFixed(1)}%`
+      ], 20, 75)
 
-    // Financial Analysis
-    doc.setFontSize(18)
-    doc.text('Financial Analysis', 20, 120)
-    
-    doc.setFontSize(12)
-    doc.text([
-      `Total System Cost: $${financialMetrics.totalSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `Federal Tax Credit: $${financialMetrics.federalTaxCredit.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `Net System Cost: $${financialMetrics.netSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `Monthly Bill Savings: $${financialMetrics.monthlyBillSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `Annual Energy Savings: $${financialMetrics.annualSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `20-Year Total Savings: $${financialMetrics.twentyYearSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
-      `Payback Period: ${financialMetrics.paybackPeriod.toFixed(1)} years`
-    ], 20, 135)
+      // Financial Analysis
+      doc.setFontSize(18)
+      doc.text('Financial Analysis', 20, 120)
+      
+      doc.setFontSize(12)
+      doc.text([
+        `Total System Cost: $${financialMetrics.totalSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `Federal Tax Credit: $${financialMetrics.federalTaxCredit.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `Net System Cost: $${financialMetrics.netSystemCost.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `Monthly Bill Savings: $${financialMetrics.monthlyBillSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `Annual Energy Savings: $${financialMetrics.annualSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `20-Year Total Savings: $${financialMetrics.twentyYearSavings.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+        `Payback Period: ${financialMetrics.paybackPeriod.toFixed(1)} years`
+      ], 20, 135)
 
-    // Environmental Impact
-    doc.setFontSize(18)
-    doc.text('Environmental Impact', 20, 190)
-    
-    doc.setFontSize(12)
-    doc.text([
-      `CO₂ Reduction: ${environmentalImpact.carbonOffset.toFixed(2)} metric tons per year`,
-      `Equivalent to Planting: ${environmentalImpact.treesEquivalent.toLocaleString()} trees`,
-      `Powers Equivalent of: ${environmentalImpact.homesEquivalent} average homes`,
-      `Gasoline Saved: ${environmentalImpact.gasSaved.toLocaleString()} gallons per year`
-    ], 20, 205)
+      // Environmental Impact
+      doc.setFontSize(18)
+      doc.text('Environmental Impact', 20, 190)
+      
+      doc.setFontSize(12)
+      doc.text([
+        `CO₂ Reduction: ${environmentalImpact.carbonOffset.toFixed(2)} metric tons per year`,
+        `Equivalent to Planting: ${environmentalImpact.treesEquivalent.toLocaleString()} trees`,
+        `Powers Equivalent of: ${environmentalImpact.homesEquivalent} average homes`,
+        `Gasoline Saved: ${environmentalImpact.gasSaved.toLocaleString()} gallons per year`
+      ], 20, 205)
 
-    const pdfBytes = doc.output('arraybuffer')
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const fileName = `solar_report_${calculationId}_${timestamp}.pdf`
-    const filePath = `reports/${fileName}`
+      const pdfBytes = doc.output('arraybuffer')
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const fileName = `solar_report_${calculationId}_${timestamp}.pdf`
+      const filePath = `reports/${fileName}`
 
-    console.log('Uploading PDF to storage:', filePath)
+      console.log('Uploading PDF to storage:', filePath)
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase
-      .storage
-      .from('reports')
-      .upload(filePath, pdfBytes, {
-        contentType: 'application/pdf',
-        upsert: false
-      })
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase
+        .storage
+        .from('reports')
+        .upload(filePath, pdfBytes, {
+          contentType: 'application/pdf',
+          upsert: false
+        })
 
-    if (uploadError) {
-      console.error('Failed to upload PDF:', uploadError)
-      throw new Error('Failed to upload PDF')
-    }
-
-    // Create signed URL for download
-    const { data: { signedUrl }, error: urlError } = await supabase
-      .storage
-      .from('reports')
-      .createSignedUrl(filePath, 60 * 60) // 1 hour expiry
-
-    if (urlError) {
-      console.error('Failed to generate download URL:', urlError)
-      throw new Error('Failed to generate download URL')
-    }
-
-    // Save report reference in database
-    const { error: reportError } = await supabase
-      .from('reports')
-      .insert({
-        calculation_id: calculationId,
-        file_path: filePath
-      })
-
-    if (reportError) {
-      console.error('Failed to save report reference:', reportError)
-      throw new Error('Failed to save report reference')
-    }
-
-    console.log('Report generated successfully')
-
-    return new Response(
-      JSON.stringify({ 
-        message: 'Report generated successfully',
-        downloadUrl: signedUrl
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
-        status: 200 
+      if (uploadError) {
+        console.error('Failed to upload PDF:', uploadError)
+        throw new Error('Failed to upload PDF')
       }
-    )
+
+      // Create signed URL for download
+      const { data: { signedUrl }, error: urlError } = await supabase
+        .storage
+        .from('reports')
+        .createSignedUrl(filePath, 60 * 60) // 1 hour expiry
+
+      if (urlError) {
+        console.error('Failed to generate download URL:', urlError)
+        throw new Error('Failed to generate download URL')
+      }
+
+      // Save report reference in database
+      const { error: reportError } = await supabase
+        .from('reports')
+        .insert({
+          calculation_id: calculationId,
+          file_path: filePath
+        })
+
+      if (reportError) {
+        console.error('Failed to save report reference:', reportError)
+        throw new Error('Failed to save report reference')
+      }
+
+      console.log('Report generated successfully')
+
+      return new Response(
+        JSON.stringify({ 
+          message: 'Report generated successfully',
+          downloadUrl: signedUrl
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json'
+          },
+          status: 200 
+        }
+      )
+
+    } catch (error) {
+      console.error('Error during report generation:', error)
+      throw error
+    }
 
   } catch (error) {
     console.error('Report generation error:', error)
