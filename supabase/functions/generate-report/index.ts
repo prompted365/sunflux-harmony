@@ -67,11 +67,18 @@ serve(async (req) => {
       throw new Error('Failed to upload report')
     }
 
-    // Create signed URL for viewing
+    // Create signed URL for viewing with the correct content type
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days expiry
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7, {
+        download: false,
+        transform: {
+          metadata: {
+            'content-type': 'text/html'
+          }
+        }
+      })
 
     if (urlError) {
       throw new Error('Failed to generate report URL')
