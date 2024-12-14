@@ -1,194 +1,123 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { corsHeaders } from '../_shared/cors.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-interface BuildingInsightsResponse {
-  name: string;
-  center: {
-    latitude: number;
-    longitude: number;
-  };
-  confidence: number;
-  solarPotential: {
-    maxArrayPanelsCount: number;
-    maxArrayAreaMeters2: number;
-    maxSunshineHoursPerYear: number;
-    carbonOffsetFactorKgPerMwh: number;
-    panelCapacityWatts: number;
-    panelHeightMeters: number;
-    panelWidthMeters: number;
-    yearlyEnergyDcKwh: number;
-  };
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { propertyId } = await req.json()
-    console.log('Received request for property:', propertyId)
-
+    const { propertyId } = await req.json();
+    
     if (!propertyId) {
-      throw new Error('Property ID is required')
+      throw new Error('Property ID is required');
     }
 
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // Fetch property details
+    // Get property details
     const { data: property, error: propertyError } = await supabaseClient
       .from('properties')
       .select('*')
       .eq('id', propertyId)
-      .single()
+      .single();
 
     if (propertyError || !property) {
-      console.error('Property fetch error:', propertyError)
-      throw new Error('Property not found')
+      throw new Error('Failed to fetch property details');
     }
 
-    console.log('Found property:', property)
-
-    // Create initial solar calculation record
-    const { data: calculation, error: calculationError } = await supabaseClient
-      .from('solar_calculations')
-      .insert({
-        property_id: propertyId,
-        status: 'processing'
-      })
-      .select()
-      .single()
-
-    if (calculationError) {
-      console.error('Calculation creation error:', calculationError)
-      throw new Error('Failed to create calculation record')
-    }
-
-    // Format and validate address components
-    if (!property.address || !property.city || !property.state || !property.zip_code) {
-      throw new Error('Invalid property address: missing required components')
-    }
-
-    // First, geocode the address using Google Geocoding API
-    const formattedAddress = `${property.address.trim()}, ${property.city.trim()}, ${property.state.trim()} ${property.zip_code.trim()}`
-    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY')
-    
+    // Call Google Solar API
+    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
     if (!apiKey) {
-      console.error('Google Cloud API key not found')
-      throw new Error('API key configuration missing')
+      throw new Error('Google Cloud API key not configured');
     }
 
-    console.log('Geocoding address:', formattedAddress)
-    
-    const geocodeResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(formattedAddress)}&key=${apiKey}`
-    )
-
-    if (!geocodeResponse.ok) {
-      const errorText = await geocodeResponse.text()
-      console.error('Geocoding error:', errorText)
-      throw new Error(`Geocoding error: ${geocodeResponse.status} ${geocodeResponse.statusText}`)
-    }
-
-    const geocodeData = await geocodeResponse.json()
-    
-    if (!geocodeData.results || geocodeData.results.length === 0) {
-      throw new Error('Address not found')
-    }
-
-    const location = geocodeData.results[0].geometry.location
-    console.log('Geocoded coordinates:', location)
-
-    // Now call the Solar API with the coordinates
-    const solarUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${location.lat}&location.longitude=${location.lng}&key=${apiKey}`
-    
-    console.log('Calling Google Solar API...')
-    
-    const response = await fetch(solarUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Google Solar API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText,
-        url: solarUrl.replace(apiKey, '[REDACTED]')
+    // Get building insights
+    const buildingInsightsResponse = await fetch(
+      `https://solar.googleapis.com/v1/buildingInsights:findClosest?` +
+      new URLSearchParams({
+        'location.latitude': property.latitude.toString(),
+        'location.longitude': property.longitude.toString(),
+        key: apiKey,
       })
-      throw new Error(`Google Solar API error: ${response.status} ${response.statusText} - ${errorText}`)
+    );
+
+    const buildingData = await buildingInsightsResponse.json();
+    
+    if (!buildingInsightsResponse.ok) {
+      throw new Error('Failed to fetch building insights: ' + JSON.stringify(buildingData));
     }
 
-    const solarData: BuildingInsightsResponse = await response.json()
-    console.log('Received solar data:', solarData)
+    // Get data layers for visualization
+    const dataLayersResponse = await fetch(
+      `https://solar.googleapis.com/v1/dataLayers:get?` +
+      new URLSearchParams({
+        'location.latitude': property.latitude.toString(),
+        'location.longitude': property.longitude.toString(),
+        'radius_meters': '100',
+        'required_quality': 'LOW',
+        key: apiKey,
+      })
+    );
 
-    // Update calculation with results
+    const layersData = await dataLayersResponse.json();
+
+    if (!dataLayersResponse.ok) {
+      throw new Error('Failed to fetch data layers: ' + JSON.stringify(layersData));
+    }
+
+    // Extract relevant data
+    const solarPotential = buildingData.solarPotential;
+    const financialData = buildingData.financialAnalyses?.[3] || null; // Using the $35 monthly bill scenario
+
+    // Update solar calculation
     const { error: updateError } = await supabaseClient
       .from('solar_calculations')
       .update({
         status: 'completed',
+        system_size: (solarPotential.maxArrayPanelsCount * solarPotential.panelCapacityWatts) / 1000,
         irradiance_data: {
-          maxSunshineHours: solarData.solarPotential.maxSunshineHoursPerYear,
-          carbonOffset: solarData.solarPotential.carbonOffsetFactorKgPerMwh
+          maxSunshineHours: solarPotential.maxSunshineHoursPerYear,
+          carbonOffset: solarPotential.carbonOffsetFactorKgPerMwh,
+          rgbUrl: layersData.rgbUrl,
         },
         panel_layout: {
-          maxPanels: solarData.solarPotential.maxArrayPanelsCount,
-          maxArea: solarData.solarPotential.maxArrayAreaMeters2,
+          maxPanels: solarPotential.maxArrayPanelsCount,
+          maxArea: solarPotential.maxArrayAreaMeters2,
           panelDimensions: {
-            height: solarData.solarPotential.panelHeightMeters,
-            width: solarData.solarPotential.panelWidthMeters
+            height: solarPotential.panelHeightMeters,
+            width: solarPotential.panelWidthMeters,
           }
         },
-        system_size: solarData.solarPotential.panelCapacityWatts * solarData.solarPotential.maxArrayPanelsCount / 1000,
         estimated_production: {
-          yearlyEnergyDcKwh: solarData.solarPotential.yearlyEnergyDcKwh
+          yearlyEnergyDcKwh: financialData?.financialDetails?.initialAcKwhPerYear || null,
+          monthlyBill: financialData?.monthlyBill?.units || null,
+          financialDetails: financialData?.financialDetails || null,
         }
       })
-      .eq('id', calculation.id)
+      .eq('property_id', propertyId);
 
     if (updateError) {
-      console.error('Calculation update error:', updateError)
-      throw new Error('Failed to update calculation results')
-    }
-
-    // Update property with lat/long if not already set
-    if (!property.latitude || !property.longitude) {
-      await supabaseClient
-        .from('properties')
-        .update({
-          latitude: solarData.center.latitude,
-          longitude: solarData.center.longitude
-        })
-        .eq('id', propertyId)
+      throw updateError;
     }
 
     return new Response(
-      JSON.stringify({ 
-        message: 'Solar calculation completed successfully',
-        calculationId: calculation.id 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    )
+      JSON.stringify({ message: 'Solar calculation completed successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Solar calculation error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
-    )
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    );
   }
-})
+});

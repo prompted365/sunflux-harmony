@@ -1,6 +1,7 @@
 import { jsPDF } from 'https://esm.sh/jspdf@2.5.1';
 import type { FinancialMetrics } from './financialCalculations.ts';
 import type { EnvironmentalImpact } from './environmentalCalculations.ts';
+import { downloadAndProcessImage } from './imageProcessing.ts';
 
 interface SystemSpecs {
   systemSize: number | null;
@@ -9,14 +10,16 @@ interface SystemSpecs {
   arrayArea: number | null;
   sunshineHours: number | null;
   efficiency: number | null;
+  rgbUrl?: string;
 }
 
-export function generatePDF(
+export async function generatePDF(
   propertyAddress: string,
   systemSpecs: SystemSpecs,
   financials: FinancialMetrics,
-  environmental: EnvironmentalImpact
-): ArrayBuffer {
+  environmental: EnvironmentalImpact,
+  apiKey: string
+): Promise<ArrayBuffer> {
   const doc = new jsPDF();
   
   // Title
@@ -27,9 +30,21 @@ export function generatePDF(
   doc.setFontSize(14);
   doc.text(`Property Address: ${propertyAddress}`, 20, 40);
 
-  // System Specifications
+  // Add solar image if available
+  if (systemSpecs.rgbUrl) {
+    try {
+      const imageData = await downloadAndProcessImage(systemSpecs.rgbUrl, apiKey);
+      if (imageData) {
+        doc.addImage(imageData, 'PNG', 20, 50, 170, 100);
+      }
+    } catch (error) {
+      console.error('Failed to add solar image to PDF:', error);
+    }
+  }
+
+  // System Specifications (adjusted Y position to account for image)
   doc.setFontSize(18);
-  doc.text('System Specifications', 20, 60);
+  doc.text('System Specifications', 20, 160);
 
   doc.setFontSize(12);
   doc.text([
@@ -39,11 +54,11 @@ export function generatePDF(
     `Array Area: ${systemSpecs.arrayArea?.toFixed(1) || 'N/A'} m²`,
     `Annual Sunshine Hours: ${systemSpecs.sunshineHours?.toFixed(0) || 'N/A'} hours`,
     `System Efficiency: ${systemSpecs.efficiency?.toFixed(1) || 'N/A'}%`
-  ], 20, 75);
+  ], 20, 175);
 
   // Financial Analysis
   doc.setFontSize(18);
-  doc.text('Financial Analysis', 20, 120);
+  doc.text('Financial Analysis', 20, 220);
   
   doc.setFontSize(12);
   doc.text([
@@ -58,7 +73,7 @@ export function generatePDF(
     `  • 20-Year Total Savings: $${financials.twentyYearSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
     `  • Present Value of Savings: $${financials.inflationAdjustedSavings.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,
     `  • Estimated Payback Period: ${financials.paybackPeriod.toFixed(1)} years`
-  ], 20, 135);
+  ], 20, 235);
 
   // Environmental Impact
   doc.setFontSize(18);
