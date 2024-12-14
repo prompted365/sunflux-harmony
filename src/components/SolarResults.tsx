@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SolarCalculation {
   id: string;
   status: string;
-  system_size: number;
+  system_size: number | null;
   irradiance_data: {
     maxSunshineHours: number;
     carbonOffset: number;
@@ -26,13 +27,13 @@ interface SolarCalculation {
 
 const SolarResults = () => {
   const [calculations, setCalculations] = useState<SolarCalculation[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch initial calculations
     fetchCalculations();
 
-    // Subscribe to new calculations
+    // Subscribe to real-time updates
     const channel = supabase
       .channel('solar_calculations')
       .on(
@@ -70,23 +71,36 @@ const SolarResults = () => {
 
       if (error) throw error;
       
-      // Type assertion to ensure the data matches our interface
-      const typedData = data?.map(calc => ({
-        ...calc,
-        irradiance_data: calc.irradiance_data as SolarCalculation['irradiance_data'],
-        panel_layout: calc.panel_layout as SolarCalculation['panel_layout'],
-        estimated_production: calc.estimated_production as SolarCalculation['estimated_production']
-      })) || [];
-      
-      setCalculations(typedData);
+      setCalculations(data || []);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to fetch solar calculations",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 mt-8">
+        <h2 className="text-2xl font-bold text-gray-900">Solar Calculations</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-[250px]" />
+                <Skeleton className="h-4 w-[200px]" />
+                <Skeleton className="h-4 w-[150px]" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 mt-8">
@@ -105,32 +119,55 @@ const SolarResults = () => {
                 </span>
               </div>
               
-              {calc.status === 'completed' && calc.irradiance_data && calc.estimated_production && (
+              {calc.status === 'completed' && (
                 <>
-                  <div>
-                    <p className="text-sm text-gray-500">System Size</p>
-                    <p className="text-lg font-medium">{calc.system_size?.toFixed(2)} kW</p>
-                  </div>
+                  {calc.system_size && (
+                    <div>
+                      <p className="text-sm text-gray-500">System Size</p>
+                      <p className="text-lg font-medium">{calc.system_size.toFixed(2)} kW</p>
+                    </div>
+                  )}
                   
-                  <div>
-                    <p className="text-sm text-gray-500">Annual Production</p>
-                    <p className="text-lg font-medium">
-                      {calc.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh
-                    </p>
-                  </div>
+                  {calc.estimated_production && (
+                    <div>
+                      <p className="text-sm text-gray-500">Annual Production</p>
+                      <p className="text-lg font-medium">
+                        {calc.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh
+                      </p>
+                    </div>
+                  )}
                   
-                  <div>
-                    <p className="text-sm text-gray-500">Maximum Panels</p>
-                    <p className="text-lg font-medium">{calc.panel_layout?.maxPanels}</p>
-                  </div>
+                  {calc.panel_layout && (
+                    <div>
+                      <p className="text-sm text-gray-500">Maximum Panels</p>
+                      <p className="text-lg font-medium">{calc.panel_layout.maxPanels}</p>
+                    </div>
+                  )}
                   
-                  <div>
-                    <p className="text-sm text-gray-500">Sunshine Hours (Annual)</p>
-                    <p className="text-lg font-medium">
-                      {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
-                    </p>
-                  </div>
+                  {calc.irradiance_data && (
+                    <>
+                      <div>
+                        <p className="text-sm text-gray-500">Sunshine Hours (Annual)</p>
+                        <p className="text-lg font-medium">
+                          {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Carbon Offset</p>
+                        <p className="text-lg font-medium">
+                          {calc.irradiance_data.carbonOffset.toFixed(2)} kg/MWh
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </>
+              )}
+
+              {calc.status === 'pending' && (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
               )}
             </div>
           </Card>
