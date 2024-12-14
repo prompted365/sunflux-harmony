@@ -1,33 +1,37 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { corsHeaders } from '../_shared/cors.ts'
 import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
 
 interface SolarCalculation {
   id: string;
   status: string;
-  system_size: number;
+  system_size: number | null;
   irradiance_data: {
     maxSunshineHours: number;
     carbonOffset: number;
-  };
+  } | null;
   panel_layout: {
     maxPanels: number;
     maxArea: number;
-  };
+  } | null;
   estimated_production: {
     yearlyEnergyDcKwh: number;
-  };
+  } | null;
+}
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 function calculateFinancialMetrics(calculation: SolarCalculation) {
   const avgElectricityRate = 0.15;
-  const annualProduction = calculation.estimated_production.yearlyEnergyDcKwh;
+  const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
   const annualSavings = annualProduction * avgElectricityRate;
   const systemCostPerWatt = 2.95;
-  const totalSystemCost = calculation.system_size * 1000 * systemCostPerWatt;
+  const totalSystemCost = (calculation.system_size || 0) * 1000 * systemCostPerWatt;
   const federalTaxCredit = totalSystemCost * 0.30;
   const netSystemCost = totalSystemCost - federalTaxCredit;
-  const paybackPeriod = netSystemCost / annualSavings;
+  const paybackPeriod = netSystemCost / (annualSavings || 1); // Prevent division by zero
 
   return {
     totalSystemCost,
@@ -39,8 +43,8 @@ function calculateFinancialMetrics(calculation: SolarCalculation) {
 }
 
 function calculateEnvironmentalImpact(calculation: SolarCalculation) {
-  const annualProduction = calculation.estimated_production.yearlyEnergyDcKwh;
-  const carbonOffset = calculation.irradiance_data.carbonOffset * annualProduction / 1000;
+  const annualProduction = calculation.estimated_production?.yearlyEnergyDcKwh || 0;
+  const carbonOffset = ((calculation.irradiance_data?.carbonOffset || 0) * annualProduction) / 1000;
   const treesEquivalent = carbonOffset / 20;
 
   return {
@@ -67,11 +71,11 @@ function generatePDF(calculation: SolarCalculation, propertyAddress: string) {
   doc.text('System Specifications', 20, 70);
 
   doc.setFontSize(12);
-  doc.text(`System Size: ${calculation.system_size.toFixed(2)} kW`, 20, 85);
-  doc.text(`Annual Production: ${calculation.estimated_production.yearlyEnergyDcKwh.toFixed(2)} kWh`, 20, 95);
-  doc.text(`Number of Panels: ${calculation.panel_layout.maxPanels}`, 20, 105);
-  doc.text(`Array Area: ${calculation.panel_layout.maxArea.toFixed(1)} m²`, 20, 115);
-  doc.text(`Annual Sunshine Hours: ${calculation.irradiance_data.maxSunshineHours.toFixed(0)} hours`, 20, 125);
+  doc.text(`System Size: ${calculation.system_size?.toFixed(2) || 'N/A'} kW`, 20, 85);
+  doc.text(`Annual Production: ${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2) || 'N/A'} kWh`, 20, 95);
+  doc.text(`Number of Panels: ${calculation.panel_layout?.maxPanels || 'N/A'}`, 20, 105);
+  doc.text(`Array Area: ${calculation.panel_layout?.maxArea?.toFixed(1) || 'N/A'} m²`, 20, 115);
+  doc.text(`Annual Sunshine Hours: ${calculation.irradiance_data?.maxSunshineHours?.toFixed(0) || 'N/A'} hours`, 20, 125);
 
   // Financial Analysis
   doc.setFontSize(18);
@@ -133,6 +137,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (calcError || !calculation) {
+      console.error('Failed to fetch calculation:', calcError);
       throw new Error('Failed to fetch calculation data')
     }
 
@@ -145,7 +150,7 @@ Deno.serve(async (req) => {
     // Generate a unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `solar_report_${calculationId}_${timestamp}.pdf`;
-    const filePath = fileName;
+    const filePath = `${calculation.properties.user_id}/${fileName}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabaseClient
@@ -157,6 +162,7 @@ Deno.serve(async (req) => {
       });
 
     if (uploadError) {
+      console.error('Failed to upload PDF:', uploadError);
       throw new Error('Failed to upload PDF');
     }
 
@@ -167,6 +173,7 @@ Deno.serve(async (req) => {
       .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
 
     if (urlError) {
+      console.error('Failed to generate download URL:', urlError);
       throw new Error('Failed to generate download URL');
     }
 
@@ -179,6 +186,7 @@ Deno.serve(async (req) => {
       });
 
     if (reportError) {
+      console.error('Failed to save report reference:', reportError);
       throw new Error('Failed to save report reference');
     }
 
