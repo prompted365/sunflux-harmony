@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { generateReportHtml } from './utils/reportTemplate.ts'
-import { transformCalculationToReportData } from './utils/dataTransformer.ts'
+import { generateEnhancedReport } from './utils/reportGenerator.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,11 +45,10 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Transform data and generate HTML
-    const reportData = transformCalculationToReportData(calculation, propertyAddress)
-    const htmlContent = generateReportHtml(reportData)
+    // Generate enhanced report using GPT-4
+    const htmlContent = await generateEnhancedReport(calculation, propertyAddress)
 
-    // Store the HTML report with correct content type
+    // Store the HTML report
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const fileName = `report_${calculationId}_${timestamp}.html`
     const filePath = `reports/${fileName}`
@@ -71,7 +69,7 @@ serve(async (req) => {
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7, { // 7 days expiry
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7, {
         transform: {
           metadata: {
             'content-type': 'text/html; charset=utf-8'
