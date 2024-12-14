@@ -74,22 +74,42 @@ Deno.serve(async (req) => {
       throw new Error('Invalid property address: missing required components')
     }
 
-    // Properly format the address string
+    // First, geocode the address using Google Geocoding API
     const formattedAddress = `${property.address.trim()}, ${property.city.trim()}, ${property.state.trim()} ${property.zip_code.trim()}`
-    console.log('Formatted address:', formattedAddress)
-
     const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY')
+    
     if (!apiKey) {
       console.error('Google Cloud API key not found')
       throw new Error('API key configuration missing')
     }
 
-    const encodedAddress = encodeURIComponent(formattedAddress)
-    const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.address=${encodedAddress}&key=${apiKey}`
+    console.log('Geocoding address:', formattedAddress)
     
-    console.log('Calling Google Solar API with URL:', url)
+    const geocodeResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(formattedAddress)}&key=${apiKey}`
+    )
+
+    if (!geocodeResponse.ok) {
+      const errorText = await geocodeResponse.text()
+      console.error('Geocoding error:', errorText)
+      throw new Error(`Geocoding error: ${geocodeResponse.status} ${geocodeResponse.statusText}`)
+    }
+
+    const geocodeData = await geocodeResponse.json()
     
-    const response = await fetch(url, {
+    if (!geocodeData.results || geocodeData.results.length === 0) {
+      throw new Error('Address not found')
+    }
+
+    const location = geocodeData.results[0].geometry.location
+    console.log('Geocoded coordinates:', location)
+
+    // Now call the Solar API with the coordinates
+    const solarUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${location.lat}&location.longitude=${location.lng}&key=${apiKey}`
+    
+    console.log('Calling Google Solar API...')
+    
+    const response = await fetch(solarUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +122,7 @@ Deno.serve(async (req) => {
         status: response.status,
         statusText: response.statusText,
         error: errorText,
-        url: url.replace(apiKey, '[REDACTED]') // Log URL without API key
+        url: solarUrl.replace(apiKey, '[REDACTED]')
       })
       throw new Error(`Google Solar API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
