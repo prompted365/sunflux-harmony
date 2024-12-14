@@ -5,6 +5,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function geocodeAddress(address: string, city: string, state: string, zipCode: string): Promise<{lat: number, lng: number} | null> {
+  const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
+  if (!apiKey) {
+    throw new Error('Google Cloud API key not configured');
+  }
+
+  const fullAddress = `${address}, ${city}, ${state} ${zipCode}`;
+  const encodedAddress = encodeURIComponent(fullAddress);
+  
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`
+    );
+    
+    const data = await response.json();
+    
+    if (data.status === 'OK' && data.results && data.results[0]) {
+      const location = data.results[0].geometry.location;
+      return {
+        lat: location.lat,
+        lng: location.lng
+      };
+    }
+    
+    console.error('Geocoding failed:', data);
+    return null;
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -33,6 +65,51 @@ Deno.serve(async (req) => {
       throw new Error('Failed to fetch property details');
     }
 
+    // If we don't have coordinates, geocode the address
+    if (!property.latitude || !property.longitude) {
+      console.log('Geocoding address:', property.address);
+      const coordinates = await geocodeAddress(
+        property.address,
+        property.city,
+        property.state,
+        property.zip_code
+      );
+
+      if (!coordinates) {
+        throw new Error('Failed to geocode address');
+      }
+
+      // Update property with coordinates
+      const { error: updateError } = await supabaseClient
+        .from('properties')
+        .update({
+          latitude: coordinates.lat,
+          longitude: coordinates.lng
+        })
+        .eq('id', propertyId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      property.latitude = coordinates.lat;
+      property.longitude = coordinates.lng;
+    }
+
+    // Create solar calculation record
+    const { data: calculation, error: calculationError } = await supabaseClient
+      .from('solar_calculations')
+      .insert({
+        property_id: propertyId,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (calculationError || !calculation) {
+      throw new Error('Failed to create solar calculation record');
+    }
+
     // Call Google Solar API
     const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
     if (!apiKey) {
@@ -52,6 +129,7 @@ Deno.serve(async (req) => {
     const buildingData = await buildingInsightsResponse.json();
     
     if (!buildingInsightsResponse.ok) {
+      console.error('Building insights error:', buildingData);
       throw new Error('Failed to fetch building insights: ' + JSON.stringify(buildingData));
     }
 
@@ -70,6 +148,7 @@ Deno.serve(async (req) => {
     const layersData = await dataLayersResponse.json();
 
     if (!dataLayersResponse.ok) {
+      console.error('Data layers error:', layersData);
       throw new Error('Failed to fetch data layers: ' + JSON.stringify(layersData));
     }
 
@@ -102,7 +181,7 @@ Deno.serve(async (req) => {
           financialDetails: financialData?.financialDetails || null,
         }
       })
-      .eq('property_id', propertyId);
+      .eq('id', calculation.id);
 
     if (updateError) {
       throw updateError;
