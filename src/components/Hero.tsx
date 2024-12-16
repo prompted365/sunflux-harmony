@@ -14,10 +14,10 @@ const Hero = () => {
           {/* Main Content Roll */}
           <div className="bg-white/90 backdrop-blur-lg rounded-lg shadow-xl p-8 mb-12 animate-roll-down origin-top">
             <div className="inline-block p-2 bg-solar-gradient rounded-lg text-white text-sm font-medium mb-6">
-              Transform Your Home with Solar Power
+              Empower Solar Businesses
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-muted mb-6">
-              Transform Your Solar Sales
+              Accelerate Your Solar Sales
               <span className="text-primary block mt-2">With Digital Innovation</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl">
