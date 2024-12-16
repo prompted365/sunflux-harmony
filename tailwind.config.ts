@@ -25,24 +25,28 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#00B2B2",
+          DEFAULT: "#C84B31", // Burnt Orange
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#F5F7FA",
-          foreground: "#2D3748",
+          DEFAULT: "#FFAA5A", // Pale Orange
+          foreground: "#1F2937",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#9B1B30", // Charred Red
+          foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#E2E8F0",
-          foreground: "#64748B",
+          DEFAULT: "#2D3A3A", // Charcoal
+          foreground: "#FFFFFF",
         },
         accent: {
-          DEFAULT: "#00B2B2",
-          foreground: "#FFFFFF",
+          DEFAULT: "#FFAA5A", // Pale Orange
+          foreground: "#1F2937",
+        },
+        card: {
+          DEFAULT: "#FFFFFF",
+          foreground: "#1F2937",
         },
       },
       keyframes: {
@@ -54,10 +58,36 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "solar-pulse": {
+          "0%, 100%": { 
+            transform: "scale(1)",
+            opacity: "0.9"
+          },
+          "50%": { 
+            transform: "scale(1.05)",
+            opacity: "1"
+          },
+        },
+        "sun-ray": {
+          "0%": { 
+            transform: "rotate(0deg)",
+            opacity: "0.5"
+          },
+          "100%": { 
+            transform: "rotate(360deg)",
+            opacity: "1"
+          },
+        }
       },
       animation: {
         "roll-down": "roll-down 1s ease-out forwards",
         "fade-in": "fade-in 0.5s ease-out forwards",
+        "solar-pulse": "solar-pulse 3s ease-in-out infinite",
+        "sun-ray": "sun-ray 20s linear infinite",
+      },
+      backgroundImage: {
+        'solar-gradient': 'linear-gradient(135deg, #C84B31 0%, #9B1B30 100%)',
+        'energy-pattern': 'radial-gradient(circle at center, #FFAA5A 0%, transparent 60%)',
       },
     },
   },
