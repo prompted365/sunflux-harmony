@@ -12,7 +12,7 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="relative">
           {/* Main Content Roll */}
-          <div className="bg-white/90 backdrop-blur-lg rounded-lg shadow-xl p-8 mb-12 animate-roll-down origin-top">
+          <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-12 animate-roll-down origin-top">
             <div className="inline-block p-2 bg-solar-gradient rounded-lg text-white text-sm font-medium mb-6">
               Empower Solar Businesses
             </div>
@@ -40,7 +40,7 @@ const Hero = () => {
           </div>
 
           {/* Feature Roll */}
-          <div className="bg-white/90 backdrop-blur-lg rounded-lg shadow-xl p-8 animate-roll-down animation-delay-500 origin-top">
+          <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 animate-roll-down animation-delay-500 origin-top">
             <div className="grid md:grid-cols-3 gap-8">
               <div className="space-y-4 p-6 rounded-lg transition-all duration-300 hover:bg-secondary/10">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
