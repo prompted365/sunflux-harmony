@@ -75,10 +75,10 @@ const Hero = () => {
           </div>
 
           {/* Power Message Section with Image */}
-          <div className="bg-muted rounded-xl shadow-xl p-8 animate-roll-down animation-delay-500 origin-top overflow-hidden">
-            <div className="flex flex-col items-center justify-center space-y-8">
+          <div className="animate-roll-down animation-delay-500 origin-top">
+            <div className="flex flex-col items-center justify-center">
               <img 
-                src="/lovable-uploads/2cfeccee-4491-438a-a3a9-8be759cc9534.png"
+                src="/lovable-uploads/a6f5f640-f12a-4f9c-8404-c1b39bd848df.png"
                 alt="Putting power back into your hands"
                 className="w-full max-w-3xl mx-auto animate-fade-in"
               />
