@@ -14,18 +14,13 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-muted/20">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="relative w-8 h-8">
-            <div className="absolute inset-0 bg-primary rounded-full animate-solar-pulse"></div>
-            <svg
-              className="relative z-10 w-8 h-8 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L2 8l10 6 10-6-10-6zM2 16l10 6 10-6-10-6-10 6z" />
-            </svg>
-          </div>
+          <img
+            src="/lovable-uploads/b72825ac-f807-4e0e-8dd7-d11fa7046731.png"
+            alt="SolarFlAIre Logo"
+            className="w-8 h-8"
+          />
           <span className="text-xl font-bold bg-clip-text text-transparent bg-solar-gradient">
-            SolarFlow
+            SolarFl(AI)re
           </span>
         </div>
         
