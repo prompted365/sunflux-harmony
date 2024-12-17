@@ -30,8 +30,8 @@ export function transformCalculationToReportData(calculation: any, propertyAddre
     property: {
       address: propertyAddress,
       generatedDate,
-      satelliteImage: buildingSpecs.imagery?.rgb || '',
-      solarAnalysisImage: buildingSpecs.imagery?.annualFlux || '',
+      satelliteImage: buildingSpecs.imagery?.rgb || '/placeholder.svg',
+      solarAnalysisImage: buildingSpecs.imagery?.annualFlux || '/placeholder.svg',
     },
     systemMetrics: {
       panelCount: solarPotential.maxPanels || 0,

@@ -45,7 +45,7 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Generate enhanced report using GPT-4
+    // Generate report using direct template approach
     const htmlContent = await generateEnhancedReport(calculation, propertyAddress)
 
     // Store the HTML report
