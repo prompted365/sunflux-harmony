@@ -80,7 +80,7 @@ const Hero = () => {
               <img 
                 src="/lovable-uploads/a6f5f640-f12a-4f9c-8404-c1b39bd848df.png"
                 alt="Putting power back into your hands"
-                className="w-full max-w-3xl mx-auto animate-fade-in"
+                className="w-full max-w-3xl mx-auto animate-fade-in drop-shadow-[0_0_35px_rgba(255,255,255,0.5)] filter"
               />
             </div>
           </div>
