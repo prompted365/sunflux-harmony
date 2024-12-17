@@ -25,28 +25,28 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#9b87f5", // Primary Purple
+          DEFAULT: "#C84B31", // Burnt Orange
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#7E69AB", // Secondary Purple
-          foreground: "#FFFFFF",
+          DEFAULT: "#FFAA5A", // Pale Orange
+          foreground: "#1F2937",
         },
         destructive: {
-          DEFAULT: "#D946EF", // Magenta Pink
+          DEFAULT: "#9B1B30", // Charred Red
           foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#1A1F2C", // Dark Purple
+          DEFAULT: "#2D3A3A", // Charcoal
           foreground: "#FFFFFF",
         },
         accent: {
-          DEFAULT: "#8B5CF6", // Vivid Purple
-          foreground: "#FFFFFF",
+          DEFAULT: "#FFAA5A", // Pale Orange
+          foreground: "#1F2937",
         },
         card: {
           DEFAULT: "#FFFFFF",
-          foreground: "#1A1F2C",
+          foreground: "#1F2937",
         },
       },
       keyframes: {
@@ -86,8 +86,8 @@ export default {
         "sun-ray": "sun-ray 20s linear infinite",
       },
       backgroundImage: {
-        'solar-gradient': 'linear-gradient(135deg, #9b87f5 0%, #7E69AB 100%)',
-        'energy-pattern': 'radial-gradient(circle at center, #E5DEFF 0%, transparent 60%)',
+        'solar-gradient': 'linear-gradient(135deg, #C84B31 0%, #9B1B30 100%)',
+        'energy-pattern': 'radial-gradient(circle at center, #FFAA5A 0%, transparent 60%)',
       },
     },
   },
