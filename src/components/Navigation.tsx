@@ -17,7 +17,7 @@ const Navigation = () => {
           <img
             src="/lovable-uploads/b72825ac-f807-4e0e-8dd7-d11fa7046731.png"
             alt="SolarFlAIre Logo"
-            className="w-10 h-10"
+            className="w-10"
           />
           <span className="text-xl font-bold bg-clip-text text-transparent bg-solar-gradient">
             SolarFl(AI)re
