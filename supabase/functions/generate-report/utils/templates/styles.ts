@@ -10,226 +10,123 @@ export function generateStyles(): string {
       --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       --transition: all 0.3s ease;
     }
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text);
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: var(--secondary);
-        }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            transition: var(--transition);
-        }
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: var(--secondary);
+    }
 
-        .header:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: var(--card-shadow);
-            transition: var(--transition);
-        }
+    .logo {
+      width: 64px;
+      height: auto;
+    }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
+    .brand-name {
+      font-size: 1.5rem;
+      color: var(--primary);
+      font-weight: bold;
+    }
 
-        .metric-box {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            transition: var(--transition);
-            box-shadow: var(--card-shadow);
-        }
+    .metric-card {
+      background: var(--primary);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
 
-        .metric-box:hover {
-            transform: translateY(-2px);
-        }
+    .metric-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
 
-        .blue-bg {
-            background: var(--primary);
-            color: white;
-        }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
 
-        .green-bg {
-            background: var(--primary-light);
-            color: white;
-        }
+    .metric-subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
 
-        .yellow-bg {
-            background: var(--primary);
-            color: white;
-        }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
 
-        .metric-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
 
-        .metric-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
 
-        .metric-subtitle {
-            font-size: 12px;
-            opacity: 0.9;
-        }
+    .stat-label {
+      color: var(--text);
+      font-size: 1rem;
+    }
 
-        .financial-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+    .section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+    }
 
-        .financial-box {
-            border: 2px solid var(--accent);
-            padding: 20px;
-            border-radius: 12px;
-            transition: var(--transition);
-        }
+    .section-title {
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+    }
 
-        .financial-box:hover {
-            border-color: var(--primary);
-        }
-
-        .specs-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-        }
-
-        .spec-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--accent);
-            transition: var(--transition);
-        }
-
-        .spec-item:hover {
-            border-bottom-color: var(--primary);
-        }
-
-        .section-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 25px;
-            color: var(--primary);
-        }
-
-        .imagery-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .imagery-box {
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: var(--card-shadow);
-            transition: var(--transition);
-        }
-
-        .imagery-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .imagery-box img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-        }
-
-        .imagery-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 178, 178, 0.9);
-            color: white;
-            padding: 15px;
-            font-size: 14px;
-        }
-
-        .solar-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text);
-        }
-
-        .roi-chart {
-            height: 400px;
-            margin: 20px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .inflection-point {
-            background: var(--success);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        @media (max-width: 768px) {
-            .grid, .financial-grid, .specs-grid, .imagery-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        </style>
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .section {
+        break-inside: avoid;
+      }
+    }
   `;
 }
