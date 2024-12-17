@@ -113,7 +113,7 @@ async function generateContent(analysis: any) {
         }
       }
     }],
-    tool_choice: { type: "function", function: { name: "analyze_solar_potential" } }
+    tool_choice: { type: "function", function: { name: "generate_report_sections" } }
   });
 
   const toolCall = response.choices[0].message.tool_calls?.[0];
