@@ -78,7 +78,7 @@ const Hero = () => {
           <div className="animate-roll-down animation-delay-500 origin-top">
             <div className="flex flex-col items-center justify-center">
               <img 
-                src="/lovable-uploads/a6f5f640-f12a-4f9c-8404-c1b39bd848df.png"
+                src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
                 alt="Putting power back into your hands"
                 className="w-full max-w-3xl mx-auto animate-fade-in drop-shadow-[15px_-15px_50px_rgba(255,255,255,0.5)] filter"
               />
