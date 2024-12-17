@@ -1,5 +1,5 @@
 import OpenAI from "https://esm.sh/openai@4.28.0";
-import { systemPrompts, tools } from "./agents.ts";
+import { systemPrompts } from "./agents.ts";
 import { generateReportHtml } from "./templates/mainTemplate.ts";
 
 const openai = new OpenAI();
@@ -29,7 +29,7 @@ export async function generateEnhancedReport(solarData: any, propertyAddress: st
 
 async function processData(rawData: any) {
   const response = await openai.chat.completions.create({
-    model: "gpt-4-0125-preview",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompts.dataProcessing },
       { role: "user", content: JSON.stringify(rawData) }
@@ -60,7 +60,7 @@ async function processData(rawData: any) {
 
 async function analyzeData(processedData: any) {
   const response = await openai.chat.completions.create({
-    model: "gpt-4-0125-preview",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompts.analysis },
       { role: "user", content: JSON.stringify(processedData) }
@@ -91,7 +91,7 @@ async function analyzeData(processedData: any) {
 
 async function generateContent(analysis: any) {
   const response = await openai.chat.completions.create({
-    model: "gpt-4-0125-preview",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompts.report },
       { role: "user", content: JSON.stringify(analysis) }
@@ -113,7 +113,7 @@ async function generateContent(analysis: any) {
         }
       }
     }],
-    tool_choice: { type: "function", function: { name: "generate_report_sections" } }
+    tool_choice: { type: "function", function: { name: "analyze_solar_potential" } }
   });
 
   const toolCall = response.choices[0].message.tool_calls?.[0];
