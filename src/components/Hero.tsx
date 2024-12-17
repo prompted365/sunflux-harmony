@@ -40,7 +40,7 @@ const Hero = () => {
           </div>
 
           {/* Feature Roll */}
-          <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 animate-roll-down animation-delay-500 origin-top">
+          <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-12 animate-roll-down animation-delay-500 origin-top">
             <div className="grid md:grid-cols-3 gap-8">
               <div className="space-y-4 p-6 rounded-lg transition-all duration-300 hover:bg-secondary/10">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -71,6 +71,17 @@ const Hero = () => {
                 <h3 className="text-xl font-semibold text-muted">Lead Management</h3>
                 <p className="text-gray-600">Integrated CRM system for efficient lead tracking and nurturing.</p>
               </div>
+            </div>
+          </div>
+
+          {/* Power Message Section with Image */}
+          <div className="bg-muted rounded-xl shadow-xl p-8 animate-roll-down animation-delay-500 origin-top overflow-hidden">
+            <div className="flex flex-col items-center justify-center space-y-8">
+              <img 
+                src="/lovable-uploads/2cfeccee-4491-438a-a3a9-8be759cc9534.png"
+                alt="Putting power back into your hands"
+                className="w-full max-w-3xl mx-auto animate-fade-in"
+              />
             </div>
           </div>
         </div>
