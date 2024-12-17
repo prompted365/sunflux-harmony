@@ -34,11 +34,28 @@ async function processData(rawData: any) {
       { role: "system", content: systemPrompts.dataProcessing },
       { role: "user", content: JSON.stringify(rawData) }
     ],
-    tools: tools.dataProcessing,
-    tool_choice: "auto"
+    tools: [{
+      type: "function",
+      function: {
+        name: "process_solar_data",
+        description: "Process and structure raw solar API data",
+        parameters: {
+          type: "object",
+          properties: {
+            solarData: {
+              type: "object",
+              description: "Raw solar calculation data"
+            }
+          },
+          required: ["solarData"]
+        }
+      }
+    }],
+    tool_choice: { type: "function", function: { name: "process_solar_data" } }
   });
 
-  return JSON.parse(response.choices[0].message.tool_calls![0].function.arguments);
+  const toolCall = response.choices[0].message.tool_calls?.[0];
+  return toolCall ? JSON.parse(toolCall.function.arguments) : null;
 }
 
 async function analyzeData(processedData: any) {
@@ -48,11 +65,28 @@ async function analyzeData(processedData: any) {
       { role: "system", content: systemPrompts.analysis },
       { role: "user", content: JSON.stringify(processedData) }
     ],
-    tools: tools.analysis,
-    tool_choice: "auto"
+    tools: [{
+      type: "function",
+      function: {
+        name: "analyze_solar_potential",
+        description: "Analyze solar installation potential and benefits",
+        parameters: {
+          type: "object",
+          properties: {
+            processedData: {
+              type: "object",
+              description: "Processed solar data"
+            }
+          },
+          required: ["processedData"]
+        }
+      }
+    }],
+    tool_choice: { type: "function", function: { name: "analyze_solar_potential" } }
   });
 
-  return JSON.parse(response.choices[0].message.tool_calls![0].function.arguments);
+  const toolCall = response.choices[0].message.tool_calls?.[0];
+  return toolCall ? JSON.parse(toolCall.function.arguments) : null;
 }
 
 async function generateContent(analysis: any) {
@@ -62,9 +96,26 @@ async function generateContent(analysis: any) {
       { role: "system", content: systemPrompts.report },
       { role: "user", content: JSON.stringify(analysis) }
     ],
-    tools: tools.report,
-    tool_choice: "auto"
+    tools: [{
+      type: "function",
+      function: {
+        name: "generate_report_sections",
+        description: "Generate report sections with natural language",
+        parameters: {
+          type: "object",
+          properties: {
+            analysis: {
+              type: "object",
+              description: "Analyzed solar data and insights"
+            }
+          },
+          required: ["analysis"]
+        }
+      }
+    }],
+    tool_choice: { type: "function", function: { name: "generate_report_sections" } }
   });
 
-  return JSON.parse(response.choices[0].message.tool_calls![0].function.arguments);
+  const toolCall = response.choices[0].message.tool_calls?.[0];
+  return toolCall ? JSON.parse(toolCall.function.arguments) : null;
 }
