@@ -60,7 +60,7 @@ export const useSolarCalculations = () => {
 
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('solar_calculations')
+      .channel('solar_calculations_changes')
       .on(
         'postgres_changes',
         {
@@ -70,7 +70,13 @@ export const useSolarCalculations = () => {
         },
         (payload) => {
           console.log('Change received!', payload);
-          fetchCalculations();
+          if (payload.eventType === 'DELETE') {
+            // Remove the deleted calculation from state
+            setCalculations(prev => prev.filter(calc => calc.id !== payload.old.id));
+          } else {
+            // For INSERT and UPDATE, fetch all calculations again
+            fetchCalculations();
+          }
         }
       )
       .subscribe();
