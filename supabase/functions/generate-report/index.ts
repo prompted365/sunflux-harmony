@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { generateEnhancedReport } from './utils/reportGenerator.ts'
-import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
+import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
+import { autoTable } from 'https://esm.sh/jspdf-autotable@3.8.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,37 +51,42 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Generate HTML report content
-    console.log('Generating HTML content')
-    const htmlContent = await generateEnhancedReport(calculation, propertyAddress)
-
-    // Launch headless browser
-    console.log('Launching browser for PDF generation')
-    const browser = await puppeteer.launch({ 
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-    })
-    const page = await browser.newPage()
-    
-    // Set content and wait for network idle to ensure all resources are loaded
-    await page.setContent(htmlContent, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000 // 30 second timeout
-    })
-    
-    // Generate PDF
+    // Generate PDF directly using jsPDF
     console.log('Generating PDF')
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        right: '20px',
-        bottom: '20px',
-        left: '20px'
-      }
+    const doc = new jsPDF()
+    
+    // Add title
+    doc.setFontSize(20)
+    doc.text('Solar Installation Report', 105, 20, { align: 'center' })
+    
+    // Add property info
+    doc.setFontSize(12)
+    doc.text(`Property: ${propertyAddress}`, 20, 40)
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 50)
+
+    // System Specifications
+    doc.setFontSize(16)
+    doc.text('System Specifications', 20, 70)
+    
+    const systemSpecs = [
+      ['System Size', `${calculation.system_size?.toFixed(2) || 'N/A'} kW`],
+      ['Annual Production', `${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2) || 'N/A'} kWh`],
+      ['Panel Count', `${calculation.panel_layout?.maxPanels || 'N/A'}`],
+      ['Array Area', `${calculation.panel_layout?.maxArea?.toFixed(1) || 'N/A'} m²`],
+      ['Annual Sunshine', `${calculation.irradiance_data?.maxSunshineHours?.toFixed(0) || 'N/A'} hours`],
+      ['Carbon Offset', `${calculation.irradiance_data?.carbonOffset?.toFixed(2) || 'N/A'} kg/MWh`]
+    ]
+
+    autoTable(doc, {
+      startY: 80,
+      head: [['Metric', 'Value']],
+      body: systemSpecs,
+      theme: 'striped',
+      headStyles: { fillColor: [200, 75, 49] }
     })
 
-    await browser.close()
+    // Convert PDF to buffer
+    const pdfBuffer = doc.output('arraybuffer')
 
     // Store the PDF report
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
