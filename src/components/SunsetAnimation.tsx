@@ -174,7 +174,7 @@ const SunsetAnimation = () => {
       ref={containerRef} 
       className="w-full h-64 mb-8 relative"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FEC6A1]/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#C84B31]/60 via-[#FEC6A1]/30 to-transparent pointer-events-none" />
     </div>
   );
 };
