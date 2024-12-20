@@ -42,8 +42,8 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
         <img
-          src="/placeholder.svg"
-          alt="Solar panel visualization"
+          src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
+          alt="Solar panel analysis visualization"
           className="w-full h-full object-cover"
         />
         <Button
