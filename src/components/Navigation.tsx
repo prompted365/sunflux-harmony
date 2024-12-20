@@ -2,13 +2,27 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { List, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+      // Force clear the session if there's an error
+      supabase.auth.clearSession();
+      navigate("/login");
+    }
   };
 
   return (
