@@ -24,14 +24,23 @@ const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
 
       if (error) throw error;
 
-      if (data?.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
-      }
+      // Check if we have a downloadUrl in the response
+      if (data?.reportUrl) {
+        // Create a temporary anchor element to trigger the download
+        const link = document.createElement('a');
+        link.href = data.reportUrl;
+        link.download = `sunlink-solar-report-${calc.id}.pdf`; // Set a meaningful filename
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-      toast({
-        title: "Success",
-        description: "Report exported successfully",
-      });
+        toast({
+          title: "Success",
+          description: "Report downloaded successfully",
+        });
+      } else {
+        throw new Error('No download URL received');
+      }
     } catch (error) {
       console.error('Export error:', error);
       toast({
