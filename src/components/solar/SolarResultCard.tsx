@@ -3,14 +3,41 @@ import { SolarCalculation } from "./types";
 import SolarMetrics from "./SolarMetrics";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Trash } from "lucide-react";
 import ReportPreview from "./ReportPreview";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SolarResultCardProps {
   calc: SolarCalculation;
 }
 
 const SolarResultCard = ({ calc }: SolarResultCardProps) => {
+  const { toast } = useToast();
+
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('solar_calculations')
+        .delete()
+        .eq('id', calc.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Calculation deleted",
+        description: "The solar calculation has been removed successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting calculation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the calculation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
@@ -19,6 +46,14 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
           alt="Solar panel visualization"
           className="w-full h-full object-cover"
         />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 left-4 bg-white/90 hover:bg-white/75"
+          onClick={handleDelete}
+        >
+          <Trash className="h-4 w-4 text-gray-600" />
+        </Button>
         <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
           calc.status === 'completed' ? 'bg-green-100 text-green-800' : 
           'bg-yellow-100 text-yellow-800'
