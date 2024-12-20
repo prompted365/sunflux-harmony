@@ -27,7 +27,7 @@ const Login = () => {
           >
             <path d="M12 2L2 8l10 6 10-6-10-6zM2 16l10 6 10-6-10-6-10 6z" />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome to SolarFlow</h1>
+          <h1 className="text-2xl font-bold text-gray-900">SunLink.ai Solar Portal</h1>
           <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
         </div>
         
