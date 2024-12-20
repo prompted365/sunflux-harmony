@@ -6,16 +6,16 @@ const NextSteps = () => {
     {
       name: "Federal Solar Tax Credit",
       amount: "30%",
-      expiry: `${currentYear + 1}`
+      expiry: "2025"
     },
     {
       name: "State Solar Incentive",
-      amount: "$2,500",
-      expiry: `${currentYear}`
+      amount: "$1,500",
+      expiry: "2024"
     },
     {
       name: "Utility Rebate Program",
-      amount: "$1,000",
+      amount: "$750",
       expiry: "Limited Time"
     }
   ];

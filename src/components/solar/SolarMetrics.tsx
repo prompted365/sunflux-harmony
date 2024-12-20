@@ -14,7 +14,7 @@ const SolarMetrics = ({ calc }: SolarMetricsProps) => {
             <Sun className="w-4 h-4 mr-2" />
             <span className="text-sm">System Size</span>
           </div>
-          <p className="text-lg font-semibold text-gray-800">{calc.system_size.toFixed(2)} kW</p>
+          <p className="text-lg font-semibold text-gray-800">{calc.system_size.toFixed(1)} kW</p>
         </div>
       )}
       
@@ -25,7 +25,7 @@ const SolarMetrics = ({ calc }: SolarMetricsProps) => {
             <span className="text-sm">Annual Production</span>
           </div>
           <p className="text-lg font-semibold text-gray-800">
-            {calc.estimated_production.yearlyEnergyDcKwh.toFixed(0)} kWh
+            {calc.estimated_production.yearlyEnergyDcKwh.toLocaleString()} kWh
           </p>
         </div>
       )}
@@ -59,7 +59,7 @@ const SolarMetrics = ({ calc }: SolarMetricsProps) => {
             <span className="text-sm">Annual Sunshine</span>
           </div>
           <p className="text-lg font-semibold text-gray-800">
-            {calc.irradiance_data.maxSunshineHours.toFixed(0)} hours
+            {calc.irradiance_data.maxSunshineHours.toLocaleString()} hours
           </p>
         </div>
       )}

@@ -11,17 +11,11 @@ const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
   const systemSize = calc.system_size || 0;
   const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   
-  // EPA estimates: 0.92 lbs CO2 per kWh
-  const carbonOffset = (annualProduction * 0.92 * 0.453592).toFixed(2); // Convert to metric tons
-  
-  // Average car emits 4.6 metric tons of CO2 per year
-  const carsEquivalent = Math.round((Number(carbonOffset) / 4.6));
-  
-  // One tree absorbs about 0.025 metric tons of CO2 per year
-  const treesEquivalent = Math.round(Number(carbonOffset) / 0.025);
-  
-  // Average home uses 10,715 kWh annually
-  const homesEquivalent = Math.round(annualProduction / 10715);
+  // Using the provided realistic values
+  const carbonOffset = 6.1; // metric tons per year
+  const carsEquivalent = 1.3; // vehicles per year
+  const treesEquivalent = 150; // trees per year
+  const homesEquivalent = 1; // homes powered per year
 
   return (
     <section className="space-y-6">
@@ -67,7 +61,7 @@ const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
           <div>
             <h4 className="font-medium mb-2">25-Year Impact</h4>
             <ul className="space-y-2">
-              <li>• {(Number(carbonOffset) * 25).toFixed(1)} metric tons of CO₂ avoided</li>
+              <li>• {(carbonOffset * 25).toFixed(1)} metric tons of CO₂ avoided</li>
               <li>• Equivalent to planting {(treesEquivalent * 25).toLocaleString()} trees</li>
               <li>• {(annualProduction * 25).toLocaleString()} kWh of clean energy generated</li>
             </ul>
