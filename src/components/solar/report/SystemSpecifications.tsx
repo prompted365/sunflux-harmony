@@ -37,12 +37,12 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
         <Card className="p-6">
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
-              src="/placeholder.svg" 
-              alt="Roof Analysis View"
+              src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
+              alt="Annual Shading Analysis"
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-sm text-gray-600 text-center">Roof Analysis & Panel Layout</p>
+          <p className="text-sm text-gray-600 text-center">Annual Solar Exposure Analysis</p>
         </Card>
       </div>
 
@@ -50,7 +50,7 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
         <Card className="p-6">
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
-              src="/placeholder.svg" 
+              src="/lovable-uploads/090fc8db-6e34-45e9-82ac-a4aed09338db.png"
               alt="3D Property Model"
               className="w-full h-full object-cover"
             />
@@ -61,12 +61,12 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
         <Card className="p-6">
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
-              src="/placeholder.svg" 
+              src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
               alt="Shading Analysis"
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-sm text-gray-600 text-center">Annual Shading Analysis</p>
+          <p className="text-sm text-gray-600 text-center">Detailed Shading Analysis</p>
         </Card>
       </div>
 

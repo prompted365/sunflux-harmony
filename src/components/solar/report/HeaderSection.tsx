@@ -32,7 +32,7 @@ const HeaderSection = ({ propertyAddress }: HeaderSectionProps) => {
           </div>
           <div className="aspect-video rounded-lg overflow-hidden bg-muted">
             <img 
-              src="/placeholder.svg" 
+              src="/lovable-uploads/090fc8db-6e34-45e9-82ac-a4aed09338db.png"
               alt="Bird's Eye Property View"
               className="w-full h-full object-cover"
             />
