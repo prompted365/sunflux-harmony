@@ -1,57 +1,88 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "../types";
+import { Leaf, Car, Tree, Factory } from "lucide-react";
 
 interface EnvironmentalImpactProps {
   calc: SolarCalculation;
 }
 
 const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
-  // Calculate additional environmental metrics with more realistic values
-  const annualCO2Offset = (calc.irradiance_data?.carbonOffset || 0) * 0.907185; // Convert to metric tons
-  const treesEquivalent = Math.round(annualCO2Offset * 16.5); // EPA estimate: 1 tree absorbs ~0.06 metric tons CO2 per year
-  const homesEquivalent = calc.estimated_production?.yearlyEnergyDcKwh 
-    ? Math.round((calc.estimated_production.yearlyEnergyDcKwh / 10950)) // Average US home uses 10,950 kWh annually
-    : 0;
+  // Calculate realistic environmental metrics based on system size
+  const systemSize = calc.system_size || 0;
+  const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   
-  // Local impact comparisons
-  const localAverageCO2 = 5.2; // Average US household emissions in metric tons
-  const communityImpact = Math.round(annualCO2Offset / localAverageCO2 * 100);
+  // EPA estimates: 0.92 lbs CO2 per kWh
+  const carbonOffset = (annualProduction * 0.92 * 0.453592).toFixed(2); // Convert to metric tons
+  
+  // Average car emits 4.6 metric tons of CO2 per year
+  const carsEquivalent = Math.round((Number(carbonOffset) / 4.6));
+  
+  // One tree absorbs about 0.025 metric tons of CO2 per year
+  const treesEquivalent = Math.round(Number(carbonOffset) / 0.025);
+  
+  // Average home uses 10,715 kWh annually
+  const homesEquivalent = Math.round(annualProduction / 10715);
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-green-50 via-background to-background border-2">
-      <h3 className="text-2xl font-semibold text-primary mb-6">Environmental Impact</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-2 p-4 rounded-lg bg-white/50">
-          <p className="text-sm text-gray-600">Carbon Offset</p>
-          <p className="text-2xl font-semibold text-green-600">
-            {annualCO2Offset.toFixed(1)} tons
-          </p>
-          <p className="text-xs text-gray-500">Annual CO₂ Reduction</p>
-        </div>
-        <div className="space-y-2 p-4 rounded-lg bg-white/50">
-          <p className="text-sm text-gray-600">Trees Equivalent</p>
-          <p className="text-2xl font-semibold text-green-600">
-            {treesEquivalent} trees
-          </p>
-          <p className="text-xs text-gray-500">Annual Impact</p>
-        </div>
-        <div className="space-y-2 p-4 rounded-lg bg-white/50">
-          <p className="text-sm text-gray-600">Clean Energy</p>
-          <p className="text-2xl font-semibold text-green-600">
-            {homesEquivalent} homes
-          </p>
-          <p className="text-xs text-gray-500">Equivalent Power</p>
-        </div>
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-primary">Environmental Impact</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <Leaf className="h-8 w-8 text-green-600" />
+            <span className="text-2xl font-bold text-gray-800">{carbonOffset}</span>
+            <span className="text-sm text-gray-600">Metric Tons CO₂ Offset Annually</span>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <Car className="h-8 w-8 text-blue-600" />
+            <span className="text-2xl font-bold text-gray-800">{carsEquivalent}</span>
+            <span className="text-sm text-gray-600">Cars Removed from Road</span>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <Tree className="h-8 w-8 text-green-700" />
+            <span className="text-2xl font-bold text-gray-800">{treesEquivalent}</span>
+            <span className="text-sm text-gray-600">Trees Planted Equivalent</span>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <Factory className="h-8 w-8 text-gray-600" />
+            <span className="text-2xl font-bold text-gray-800">{homesEquivalent}</span>
+            <span className="text-sm text-gray-600">Homes Powered with Clean Energy</span>
+          </div>
+        </Card>
       </div>
 
-      <div className="mt-6 p-4 rounded-lg bg-green-50">
-        <h4 className="font-semibold text-gray-700 mb-2">Local Impact</h4>
-        <p className="text-sm text-gray-600">
-          Your solar installation will offset the equivalent of {communityImpact}% of your neighborhood's average carbon footprint.
-          This makes you a leader in sustainable energy adoption in your community!
-        </p>
-      </div>
-    </Card>
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold text-primary mb-4">Long-Term Environmental Benefits</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+          <div>
+            <h4 className="font-medium mb-2">25-Year Impact</h4>
+            <ul className="space-y-2">
+              <li>• {(Number(carbonOffset) * 25).toFixed(1)} metric tons of CO₂ avoided</li>
+              <li>• Equivalent to planting {(treesEquivalent * 25).toLocaleString()} trees</li>
+              <li>• {(annualProduction * 25).toLocaleString()} kWh of clean energy generated</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-medium mb-2">Community Impact</h4>
+            <ul className="space-y-2">
+              <li>• Reduces local air pollution</li>
+              <li>• Decreases grid dependency</li>
+              <li>• Supports energy independence</li>
+            </ul>
+          </div>
+        </div>
+      </Card>
+    </section>
   );
 };
 
