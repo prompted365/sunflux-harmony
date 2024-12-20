@@ -1,4 +1,5 @@
 import { Json } from "@/integrations/supabase/types";
+import { BuildingSpecs } from "./types/imagery";
 
 export interface SolarCalculation {
   id: string;
@@ -25,4 +26,5 @@ export interface SolarCalculation {
     monthlyBillSavings: number;
     paybackYears: number;
   } | null;
+  building_specs: BuildingSpecs | null;
 }

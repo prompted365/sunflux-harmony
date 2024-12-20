@@ -1,4 +1,4 @@
-import { SolarCalculation } from "./types/calculations";
+import { SolarCalculation } from "./types";
 import HeaderSection from "./report/HeaderSection";
 import SystemSpecifications from "./report/SystemSpecifications";
 import FinancialAnalysis from "./report/FinancialAnalysis";
@@ -14,7 +14,7 @@ interface ReportPreviewProps {
 const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
   return (
     <div className="space-y-8 p-6">
-      <HeaderSection address={propertyAddress} />
+      <HeaderSection propertyAddress={propertyAddress} />
       <SystemSpecifications calc={calc} />
       <FinancialAnalysis calc={calc} />
       <ROITimeline calc={calc} />

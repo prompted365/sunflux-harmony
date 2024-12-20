@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { MapPin, Calendar } from "lucide-react";
 
-interface HeaderSectionProps {
+export interface HeaderSectionProps {
   propertyAddress: string;
 }
 
