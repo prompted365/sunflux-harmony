@@ -20,16 +20,6 @@ const Features = () => {
 
   return (
     <div className="min-h-screen bg-[#1F2937] relative overflow-hidden">
-      {/* Animated Gradient Overlay */}
-      <div 
-        ref={gradientRef}
-        className="fixed inset-0 pointer-events-none bg-gradient-to-t from-primary/30 via-secondary/20 to-transparent"
-        style={{ opacity: 0 }}
-      />
-
-      {/* Bottom Third Dusk Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-[#1A1F2C] via-[#221F26] to-transparent pointer-events-none" />
-
       {/* Content Container */}
       <div className="relative">
         {/* Hero Section */}
@@ -129,7 +119,6 @@ const Features = () => {
                 Seamlessly integrate with your existing CRM and marketing tools.
               </p>
             </Card>
-
           </div>
 
           {/* Bottom CTA Section */}
@@ -149,6 +138,9 @@ const Features = () => {
           </div>
         </div>
       </div>
+
+      {/* Bottom Third Dusk Gradient - Positioned at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-[#1A1F2C] via-[#221F26] to-transparent pointer-events-none" />
     </div>
   );
 };
