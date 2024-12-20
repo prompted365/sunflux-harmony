@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
+import SunAnimation from "@/components/SunAnimation";
 
 const About = () => {
   return (
@@ -7,7 +8,13 @@ const About = () => {
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
-          <h1 className="text-4xl font-bold text-center mb-12">About SunLink.ai</h1>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">About SunLink.ai</h1>
+            <div className="relative">
+              <SunAnimation />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none" />
+            </div>
+          </div>
           
           <Card className="bg-gradient-to-br from-primary/10 to-secondary/10">
             <CardContent className="p-6">
