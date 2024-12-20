@@ -12,7 +12,7 @@ interface ReportPreviewProps {
 }
 
 const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
-  // Only render if we have financial analysis data
+  // Only render financial sections if we have financial analysis data
   const hasFinancialData = calc.financial_analysis && 
     calc.estimated_production?.yearlyEnergyDcKwh;
 
