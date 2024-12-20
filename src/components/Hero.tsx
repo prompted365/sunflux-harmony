@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 const Hero = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-secondary/10 to-background pt-16 overflow-hidden">
-      {/* Solar Animation Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Solar Animation Background - Moved behind with lower z-index */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-energy-pattern opacity-20 animate-sun-ray" />
         <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-energy-pattern opacity-10 animate-solar-pulse" />
       </div>
@@ -77,8 +77,8 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Power Message Section */}
-          <div className="animate-roll-down animation-delay-500 origin-top">
+          {/* Power Message Section - Added z-20 to ensure it's above the canvas */}
+          <div className="animate-roll-down animation-delay-500 origin-top relative z-20">
             <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
               <img 
                 src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
