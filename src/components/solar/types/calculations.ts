@@ -38,6 +38,13 @@ export interface EstimatedProduction {
   };
 }
 
+export interface FinancialAnalysis {
+  initialCost: number;
+  federalIncentive: number;
+  monthlyBillSavings: number;
+  paybackYears: number;
+}
+
 export interface SolarCalculation {
   id: string;
   status: string;
@@ -45,5 +52,6 @@ export interface SolarCalculation {
   irradiance_data: IrradianceData | null;
   panel_layout: PanelLayout | null;
   estimated_production: EstimatedProduction | null;
+  financial_analysis: FinancialAnalysis | null;
   building_specs: BuildingSpecs | null;
 }
