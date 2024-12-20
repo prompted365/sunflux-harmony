@@ -9,6 +9,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -55,11 +56,16 @@ serve(async (req) => {
 
     // Launch headless browser
     console.log('Launching browser for PDF generation')
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+    const browser = await puppeteer.launch({ 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    })
     const page = await browser.newPage()
     
     // Set content and wait for network idle to ensure all resources are loaded
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+    await page.setContent(htmlContent, { 
+      waitUntil: 'networkidle0',
+      timeout: 30000 // 30 second timeout
+    })
     
     // Generate PDF
     console.log('Generating PDF')
