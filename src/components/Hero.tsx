@@ -76,9 +76,13 @@ const Hero = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Power Message Section - Highest z-index to stay on top */}
-          <div className="animate-roll-down animation-delay-500 origin-top relative z-30">
+      {/* Power Message Section moved to be above Three.js animation */}
+      <div className="relative z-30 mb-16">
+        <div className="container mx-auto px-4">
+          <div className="animate-roll-down animation-delay-500 origin-top">
             <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
               <img 
                 src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
