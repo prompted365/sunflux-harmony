@@ -19,13 +19,10 @@ export interface SolarCalculation {
   estimated_production: {
     yearlyEnergyDcKwh: number;
   } | null;
-}
-
-export interface DatabaseSolarCalculation {
-  id: string;
-  status: string;
-  system_size: number | null;
-  irradiance_data: Json;
-  panel_layout: Json;
-  estimated_production: Json;
+  financial_analysis: {
+    initialCost: number;
+    federalIncentive: number;
+    monthlyBillSavings: number;
+    paybackYears: number;
+  } | null;
 }
