@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Navigation } from "@/components/Navigation";
+import Navigation from "@/components/Navigation";
 
 const About = () => {
   return (
