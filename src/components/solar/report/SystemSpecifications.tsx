@@ -50,7 +50,7 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
         <Card className="p-6">
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
-              src="/lovable-uploads/090fc8db-6e34-45e9-82ac-a4aed09338db.png"
+              src="/lovable-uploads/ae3c564a-a724-4eca-bb62-031fd079d353.png"
               alt="3D Property Model"
               className="w-full h-full object-cover"
             />
@@ -61,12 +61,12 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
         <Card className="p-6">
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
-              src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
-              alt="Shading Analysis"
+              src="/lovable-uploads/1657e7e5-1612-44b4-9342-713be6b5b206.png"
+              alt="Panel Layout Optimization"
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-sm text-gray-600 text-center">Detailed Shading Analysis</p>
+          <p className="text-sm text-gray-600 text-center">Panel Layout Optimization</p>
         </Card>
       </div>
 
