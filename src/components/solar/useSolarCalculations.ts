@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { SolarCalculation } from "./types/calculations";
-import { DatabaseSolarCalculation } from "./types/database";
+import { Json } from "@/integrations/supabase/types";
 
 export const useSolarCalculations = () => {
   const [calculations, setCalculations] = useState<SolarCalculation[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalculation => {
+  const transformDatabaseCalculation = (calc: any): SolarCalculation => {
     return {
       id: calc.id,
       status: calc.status,
@@ -40,9 +40,11 @@ export const useSolarCalculations = () => {
 
       if (error) throw error;
       
+      // Ensure data exists and transform it
       const transformedData = (data || []).map(transformDatabaseCalculation);
       setCalculations(transformedData);
     } catch (error) {
+      console.error('Error fetching calculations:', error);
       toast({
         title: "Error",
         description: "Failed to fetch solar calculations",
