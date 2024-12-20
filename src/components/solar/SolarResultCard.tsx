@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "./types";
 import SolarMetrics from "./SolarMetrics";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileText, Trash } from "lucide-react";
 import ReportPreview from "./ReportPreview";
@@ -79,6 +79,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogTitle>Solar Installation Report</DialogTitle>
                 <ReportPreview 
                   calc={calc} 
                   propertyAddress="123 Solar Street" // TODO: Get actual address
