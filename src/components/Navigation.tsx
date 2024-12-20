@@ -10,8 +10,23 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     try {
+      // First check if we have a valid session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      if (!session) {
+        // If no session exists, just redirect to login
+        window.location.href = "/login";
+        return;
+      }
+
+      // Try to sign out normally
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       navigate("/login");
     } catch (error: any) {
       toast({
@@ -19,7 +34,7 @@ const Navigation = () => {
         description: error.message,
         variant: "destructive",
       });
-      // Force a page reload to clear the session state
+      // Force a page reload to clear any invalid session state
       window.location.href = "/login";
     }
   };
