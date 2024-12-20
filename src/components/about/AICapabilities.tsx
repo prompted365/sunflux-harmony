@@ -36,7 +36,7 @@ const AICapabilities = () => {
           </CardContent>
         </Card>
       </div>
-    </Card>
+    </div>
   );
 };
 
