@@ -25,21 +25,21 @@ const NextSteps = () => {
       <h3 className="text-2xl font-semibold text-primary mb-4">Next Steps</h3>
       <div className="space-y-6">
         <div>
-          <h4 className="font-semibold mb-2">Available Incentives</h4>
+          <h4 className="font-semibold mb-2 text-primary-foreground">Available Incentives</h4>
           <div className="grid gap-4 md:grid-cols-3">
             {incentives.map((incentive, index) => (
               <div key={index} className="p-3 rounded-lg bg-secondary/50">
                 <p className="font-semibold text-primary">{incentive.name}</p>
                 <p className="text-lg font-bold text-green-600">{incentive.amount}</p>
-                <p className="text-sm text-muted-foreground">Expires: {incentive.expiry}</p>
+                <p className="text-sm text-primary-foreground">Expires: {incentive.expiry}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <h4 className="font-semibold mb-2">Implementation Timeline</h4>
-          <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+          <h4 className="font-semibold mb-2 text-primary-foreground">Implementation Timeline</h4>
+          <ol className="list-decimal list-inside space-y-2 text-primary-foreground">
             <li>Schedule a detailed site assessment</li>
             <li>Receive your custom installation plan</li>
             <li>Review financing options</li>
@@ -48,8 +48,8 @@ const NextSteps = () => {
         </div>
 
         <div className="bg-primary/5 p-4 rounded-lg">
-          <h4 className="font-semibold mb-2">System Expansion Options</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <h4 className="font-semibold mb-2 text-primary-foreground">System Expansion Options</h4>
+          <ul className="list-disc list-inside space-y-1 text-sm text-primary-foreground">
             <li>Battery storage integration ready</li>
             <li>EV charger compatibility</li>
             <li>Smart home system integration</li>
