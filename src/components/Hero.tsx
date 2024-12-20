@@ -11,9 +11,9 @@ const Hero = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto">
-          {/* Main Content - Now centered and straightened */}
+          {/* Main Content */}
           <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
               <div className="inline-block p-2 bg-solar-gradient rounded-lg text-white text-sm font-medium mb-6">
                 AI-Powered Solar Sales Platform
               </div>
@@ -42,9 +42,9 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Feature Grid - Now with consistent spacing */}
+          {/* Feature Grid */}
           <div className="bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <div className="space-y-4 p-6 rounded-lg transition-all duration-300 hover:bg-secondary/10 text-center">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
                   <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,13 +77,13 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Power Message Section - Centered and aligned */}
+          {/* Power Message Section */}
           <div className="animate-roll-down animation-delay-500 origin-top">
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
               <img 
                 src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
                 alt="Putting power back into your hands"
-                className="w-full max-w-3xl mx-auto animate-fade-in drop-shadow-[15px_-15px_50px_rgba(255,255,255,0.5)] filter"
+                className="w-full max-w-4xl mx-auto animate-fade-in drop-shadow-[0px_10px_50px_rgba(255,255,255,0.5)] filter"
               />
             </div>
           </div>
