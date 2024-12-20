@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { generateEnhancedReport } from './utils/reportGenerator.ts'
-import { jsPDF } from 'https://esm.sh/jspdf@2.5.1'
-import html2canvas from 'https://esm.sh/html2canvas@1.4.1'
+import puppeteer from 'https://deno.land/x/puppeteer@16.2.0/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,6 +19,8 @@ serve(async (req) => {
     if (!calculationId) {
       throw new Error('Calculation ID is required')
     }
+
+    console.log('Generating report for calculation:', calculationId)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -42,40 +43,45 @@ serve(async (req) => {
       .single()
 
     if (calcError || !calculation) {
+      console.error('Failed to fetch calculation:', calcError)
       throw new Error('Failed to fetch calculation data')
     }
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
     // Generate HTML report content
+    console.log('Generating HTML content')
     const htmlContent = await generateEnhancedReport(calculation, propertyAddress)
 
-    // Create a temporary HTML file to render
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+    // Launch headless browser
+    console.log('Launching browser for PDF generation')
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+    const page = await browser.newPage()
     
-    // Create PDF
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    // Convert HTML to canvas
-    const canvas = await html2canvas(document.body);
-    const imgData = canvas.toDataURL('image/png');
+    // Set content and wait for network idle to ensure all resources are loaded
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
     
-    // Add image to PDF
-    pdf.addImage(imgData, 'PNG', 0, 0, 210, 297); // A4 dimensions
+    // Generate PDF
+    console.log('Generating PDF')
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20px',
+        right: '20px',
+        bottom: '20px',
+        left: '20px'
+      }
+    })
 
-    // Generate PDF buffer
-    const pdfBuffer = pdf.output('arraybuffer');
+    await browser.close()
 
     // Store the PDF report
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const fileName = `report_${calculationId}_${timestamp}.pdf`
     const filePath = `reports/${fileName}`
 
+    console.log('Uploading PDF to storage')
     const { error: uploadError } = await supabase
       .storage
       .from('reports')
@@ -85,20 +91,24 @@ serve(async (req) => {
       })
 
     if (uploadError) {
+      console.error('Failed to upload PDF:', uploadError)
       throw new Error('Failed to upload PDF report')
     }
 
     // Create signed URL for viewing
+    console.log('Generating signed URL')
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7)
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days
 
     if (urlError) {
+      console.error('Failed to generate URL:', urlError)
       throw new Error('Failed to generate report URL')
     }
 
     // Save report reference
+    console.log('Saving report reference')
     const { error: reportError } = await supabase
       .from('reports')
       .insert({
@@ -107,9 +117,11 @@ serve(async (req) => {
       })
 
     if (reportError) {
+      console.error('Failed to save report reference:', reportError)
       throw new Error('Failed to save report reference')
     }
 
+    console.log('Report generation completed successfully')
     return new Response(
       JSON.stringify({ 
         message: 'PDF Report generated successfully',
@@ -129,7 +141,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 500
       }
     )
   }

@@ -23,15 +23,19 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
         body: { calculationId }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Report generation error:', error);
+        throw error;
+      }
 
-      if (data?.reportUrl) {
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.location.href = data.reportUrl;
-        }
-      } else {
+      if (!data?.reportUrl) {
         throw new Error('No report URL returned');
+      }
+
+      // Open the PDF in a new tab
+      const newWindow = window.open(data.reportUrl, '_blank');
+      if (!newWindow) {
+        throw new Error('Pop-up blocked. Please allow pop-ups to view the report.');
       }
 
       toast({
@@ -42,7 +46,7 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
       console.error('Report generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate PDF report",
+        description: error instanceof Error ? error.message : "Failed to generate PDF report",
         variant: "destructive",
       });
     } finally {
