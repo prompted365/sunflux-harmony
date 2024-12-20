@@ -184,7 +184,7 @@ const PropertyForm = () => {
             onCheckedChange={(checked) => setFormData({ ...formData, consentToContact: checked })}
           />
           <Label htmlFor="consent" className="text-sm text-gray-600">
-            I consent to being contacted about dominating in solar sales
+            I consent to being contacted about my solar installation
           </Label>
         </div>
 

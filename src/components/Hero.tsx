@@ -28,7 +28,7 @@ const Hero = () => {
               <Button 
                 className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg group relative overflow-hidden"
               >
-                <span className="relative z-10">Meet your Agents</span>
+                <span className="relative z-10">Start Free Trial</span>
                 <div className="absolute inset-0 bg-solar-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
               <Button 
@@ -76,7 +76,7 @@ const Hero = () => {
           </div>
 
           {/* Power Message Section with Image */}
-          <div className="animate-roll-down animation-delay-500 origin-top -mb-12 relative z-10">
+          <div className="animate-roll-down animation-delay-500 origin-top">
             <div className="flex flex-col items-center justify-center">
               <img 
                 src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
