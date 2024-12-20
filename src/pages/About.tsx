@@ -82,6 +82,118 @@ const About = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* New Section: Value Proposition for Solar Vendors */}
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-center mb-8">Empower Your Solar Business</h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="bg-gradient-to-br from-primary/5 to-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-3">Lead Generation & Conversion</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Automated lead qualification with AI-powered assessment</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Interactive 3D visualizations that boost client engagement</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Instant proposal generation with customizable templates</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Smart follow-up reminders and engagement tracking</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-primary/5 to-secondary/5">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-3">Sales Acceleration</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Reduce sales cycle by up to 50% with automated workflows</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Real-time competitive analysis and pricing optimization</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Integration with major CRM platforms for seamless workflow</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      <span>Mobile-first design for on-the-go sales teams</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-gradient-to-br from-primary/10 to-secondary/10">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3">Customer Success Stories</h3>
+                <div className="grid md:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-3xl font-bold text-primary">45%</p>
+                    <p className="text-sm mt-1">Increase in Lead Conversion</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-primary">2x</p>
+                    <p className="text-sm mt-1">Faster Proposal Generation</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-primary">30%</p>
+                    <p className="text-sm mt-1">Higher Close Rate</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3">Enterprise Solutions</h3>
+                <div className="space-y-4">
+                  <p className="leading-relaxed">
+                    Scale your solar business with our enterprise-grade platform, featuring:
+                  </p>
+                  <ul className="grid md:grid-cols-2 gap-4">
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      Custom API integrations
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      White-label solutions
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      Advanced analytics dashboard
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      Team performance tracking
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      Bulk proposal generation
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-primary mr-2">•</span>
+                      Priority support
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
