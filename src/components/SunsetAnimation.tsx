@@ -1,146 +1,82 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { setupScene, setupCamera, setupRenderer } from './solar/three/utils';
+import { Sun } from './solar/three/Sun';
+import { Rays } from './solar/three/Rays';
+import { Clouds } from './solar/three/Clouds';
 
 const SunsetAnimation = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sunRef = useRef<THREE.Mesh | null>(null);
-  const raysRef = useRef<THREE.Group | null>(null);
-  const cloudsRef = useRef<THREE.Group | null>(null);
+  const sunRef = useRef<Sun | null>(null);
+  const raysRef = useRef<Rays | null>(null);
+  const cloudsRef = useRef<Clouds | null>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     // Scene setup
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-
-    // Camera setup with wider field of view for sunset effect
-    const camera = new THREE.PerspectiveCamera(
-      85,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
-      0.1,
-      1000
+    const scene = setupScene();
+    const camera = setupCamera(
+      containerRef.current.clientWidth,
+      containerRef.current.clientHeight
     );
-    camera.position.z = 4;
-    camera.position.y = 0.5; // Slightly elevated view
-    cameraRef.current = camera;
-
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 0);
+    const renderer = setupRenderer(
+      containerRef.current.clientWidth,
+      containerRef.current.clientHeight
+    );
+    
     containerRef.current.appendChild(renderer.domElement);
+    
+    // Create objects
+    const sun = new Sun();
+    const rays = new Rays();
+    const clouds = new Clouds();
+    
+    scene.add(sun.mesh);
+    scene.add(rays.group);
+    scene.add(clouds.group);
+    
+    // Store refs
+    sceneRef.current = scene;
+    cameraRef.current = camera;
     rendererRef.current = renderer;
-
-    // Sunset colored sun
-    const sunGeometry = new THREE.SphereGeometry(1, 32, 32);
-    const sunMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFEC6A1, // Soft orange for sunset
-      transparent: true,
-      opacity: 0.9,
-    });
-    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-    scene.add(sun);
     sunRef.current = sun;
-
-    // Create atmospheric glow
-    const glowGeometry = new THREE.SphereGeometry(1.2, 32, 32);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFEF7CD, // Soft yellow
-      transparent: true,
-      opacity: 0.3,
-    });
-    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-    sun.add(glow);
-
-    // Enhanced sun rays with varying sizes
-    const rays = new THREE.Group();
-    for (let i = 0; i < 16; i++) {
-      const rayLength = 2 + Math.random() * 2; // Varying lengths
-      const rayGeometry = new THREE.BoxGeometry(0.05, rayLength, 0.05);
-      const rayMaterial = new THREE.MeshBasicMaterial({
-        color: 0xD6BCFA, // Light purple for sunset rays
-        transparent: true,
-        opacity: 0.4 + Math.random() * 0.3, // Varying opacity
-      });
-      const ray = new THREE.Mesh(rayGeometry, rayMaterial);
-      ray.position.y = rayLength / 2;
-      ray.rotation.z = (i / 16) * Math.PI * 2;
-      rays.add(ray);
-    }
-    scene.add(rays);
     raysRef.current = rays;
-
-    // Add floating clouds
-    const clouds = new THREE.Group();
-    for (let i = 0; i < 8; i++) {
-      const cloudGeometry = new THREE.SphereGeometry(0.3 + Math.random() * 0.2, 8, 8);
-      const cloudMaterial = new THREE.MeshBasicMaterial({
-        color: 0xFDE1D3, // Soft peach for clouds
-        transparent: true,
-        opacity: 0.2 + Math.random() * 0.3,
-      });
-      const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-      cloud.position.set(
-        (Math.random() - 0.5) * 4,
-        (Math.random() - 0.5) * 4,
-        (Math.random() - 0.5) * 2
-      );
-      clouds.add(cloud);
-    }
-    scene.add(clouds);
     cloudsRef.current = clouds;
 
-    // Mouse interaction setup
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetRotationX = 0;
-    let targetRotationY = 0;
-
+    // Mouse interaction
     const handleMouseMove = (event: MouseEvent) => {
-      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+      mouseRef.current = {
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      };
     };
 
     window.addEventListener('mousemove', handleMouseMove);
 
     // Animation
     const animate = () => {
+      if (!rendererRef.current || !sceneRef.current || !cameraRef.current) return;
+      
       requestAnimationFrame(animate);
-
+      
       if (sunRef.current) {
-        // Smooth rotation following mouse
-        targetRotationX += (mouseY * 0.05 - targetRotationX) * 0.02;
-        targetRotationY += (mouseX * 0.05 - targetRotationY) * 0.02;
-        
-        sunRef.current.rotation.x = targetRotationX;
-        sunRef.current.rotation.y = targetRotationY;
-        
-        // Pulsating effect
-        const scale = 1 + Math.sin(Date.now() * 0.001) * 0.05;
-        sunRef.current.scale.set(scale, scale, scale);
+        sunRef.current.update(mouseRef.current.x, mouseRef.current.y);
       }
-
+      
       if (raysRef.current) {
-        // Rotating rays with varying speeds
-        raysRef.current.rotation.z += 0.001;
-        raysRef.current.children.forEach((ray, i) => {
-          ray.rotation.y = Math.sin(Date.now() * 0.001 + i) * 0.1;
-        });
+        raysRef.current.update();
       }
-
+      
       if (cloudsRef.current) {
-        // Gentle cloud movement
-        cloudsRef.current.children.forEach((cloud, i) => {
-          cloud.position.x += Math.sin(Date.now() * 0.0005 + i) * 0.002;
-          cloud.position.y += Math.cos(Date.now() * 0.0005 + i) * 0.002;
-        });
+        cloudsRef.current.update();
       }
 
-      renderer.render(scene, camera);
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
 
     animate();
@@ -164,7 +100,7 @@ const SunsetAnimation = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       if (containerRef.current && rendererRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
+        containerRef.current.removeChild(rendererRef.current.domElement);
       }
     };
   }, []);
