@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -28,9 +28,9 @@ const Navigation = () => {
           <a href="#features" className="text-muted hover:text-primary transition-colors">
             Features
           </a>
-          <a href="#about" className="text-muted hover:text-primary transition-colors">
+          <Link to="/about" className="text-muted hover:text-primary transition-colors">
             About
-          </a>
+          </Link>
           <a href="#contact" className="text-muted hover:text-primary transition-colors">
             Contact
           </a>
