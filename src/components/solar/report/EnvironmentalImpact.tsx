@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "../types";
-import { Leaf, Car, Tree, Factory } from "lucide-react";
+import { Leaf, Car, Trees, Factory } from "lucide-react";
 
 interface EnvironmentalImpactProps {
   calc: SolarCalculation;
@@ -46,7 +46,7 @@ const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
 
         <Card className="p-4">
           <div className="flex flex-col items-center text-center space-y-2">
-            <Tree className="h-8 w-8 text-green-700" />
+            <Trees className="h-8 w-8 text-green-700" />
             <span className="text-2xl font-bold text-gray-800">{treesEquivalent}</span>
             <span className="text-sm text-gray-600">Trees Planted Equivalent</span>
           </div>
