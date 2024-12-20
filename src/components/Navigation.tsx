@@ -2,13 +2,45 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { List, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    try {
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If no session exists, just redirect to login
+        navigate("/login");
+        return;
+      }
+
+      // Attempt to sign out
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        // If we get an error (like 403), force a redirect to login
+        console.error("Logout error:", error);
+        toast({
+          title: "Session expired",
+          description: "You have been logged out due to an expired session.",
+        });
+        navigate("/login");
+        return;
+      }
+
+      // Successful logout
+      navigate("/login");
+      
+    } catch (error) {
+      console.error("Logout error:", error);
+      // For any other errors, force navigation to login
+      navigate("/login");
+    }
   };
 
   return (
