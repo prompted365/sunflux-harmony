@@ -2,46 +2,13 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { List, Mail } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleLogout = async () => {
-    try {
-      // First check if we have a session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // If no session, just redirect to login
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      // Attempt to sign out
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Logout error:", error);
-        // If we get a 403 or session error, force redirect
-        if (error.status === 403 || error.message.includes("session")) {
-          window.location.href = "/login";
-          return;
-        }
-        throw error;
-      }
-
-      // Successful logout
-      navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("Logout failed:", error);
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try refreshing the page.",
-        variant: "destructive",
-      });
-    }
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   return (

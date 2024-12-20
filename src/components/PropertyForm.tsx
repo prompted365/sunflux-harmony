@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -15,8 +13,6 @@ const PropertyForm = () => {
     city: "",
     state: "",
     zipCode: "",
-    email: "",
-    consentToContact: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,8 +37,6 @@ const PropertyForm = () => {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zipCode,
-        email: formData.email,
-        consent_to_contact: formData.consentToContact,
       }).select().single();
 
       if (error) throw error;
@@ -60,8 +54,6 @@ const PropertyForm = () => {
         city: "",
         state: "",
         zipCode: "",
-        email: "",
-        consentToContact: false,
       });
     } catch (error) {
       toast({
@@ -160,32 +152,6 @@ const PropertyForm = () => {
             className="mt-1"
             placeholder="12345"
           />
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <Input
-            id="email"
-            type="email"
-            required
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="mt-1"
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div className="flex items-center space-x-2 pt-2">
-          <Switch
-            id="consent"
-            checked={formData.consentToContact}
-            onCheckedChange={(checked) => setFormData({ ...formData, consentToContact: checked })}
-          />
-          <Label htmlFor="consent" className="text-sm text-gray-600">
-            I consent to being contacted about dominating in solar sales
-          </Label>
         </div>
 
         <Button 
