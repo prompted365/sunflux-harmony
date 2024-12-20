@@ -4,10 +4,10 @@ export function generateHeaderSection(data: any): string {
       <div class="logo-container">
         <img 
           src="/lovable-uploads/b72825ac-f807-4e0e-8dd7-d11fa7046731.png" 
-          alt="Solar Cell Logo" 
+          alt="SunLink.ai Logo" 
           class="logo"
         />
-        <span class="brand-name">solar cell</span>
+        <span class="brand-name">SunLink.ai</span>
       </div>
       <h1>Solar Installation Analysis</h1>
       <p>Generated on: ${data.generatedDate}</p>

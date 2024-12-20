@@ -3,7 +3,7 @@ export function generateFinancialSection(data: any): string {
     num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
   return `
-    <div class="card">
+    <div class="section">
       <div class="section-title">Financial Analysis</div>
       <div class="financial-grid">
         <div class="financial-box">

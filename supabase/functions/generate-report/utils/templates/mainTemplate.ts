@@ -1,10 +1,8 @@
 import { generateHeaderSection } from './sections/header.ts';
-import { generatePropertySection } from './sections/property.ts';
 import { generateMetricsSection } from './sections/metrics.ts';
 import { generateFinancialSection } from './sections/financial.ts';
-import { generateSystemSection } from './sections/system.ts';
+import { generateChartSection, generateChartScript } from './sections/charts.ts';
 import { generateStyles } from './styles.ts';
-import { generateChartScript } from './charts.ts';
 
 export function generateReportHtml(data: any): string {
   return `
@@ -13,7 +11,7 @@ export function generateReportHtml(data: any): string {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Solar Installation Proposal</title>
+        <title>Solar Installation Analysis - SunLink.ai</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
         <style>
           ${generateStyles()}
@@ -21,10 +19,9 @@ export function generateReportHtml(data: any): string {
     </head>
     <body>
         ${generateHeaderSection(data)}
-        ${generatePropertySection(data)}
         ${generateMetricsSection(data)}
         ${generateFinancialSection(data)}
-        ${generateSystemSection(data)}
+        ${generateChartSection(data)}
         <script>
           ${generateChartScript(data)}
         </script>

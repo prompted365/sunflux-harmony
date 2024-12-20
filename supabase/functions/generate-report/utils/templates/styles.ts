@@ -1,12 +1,12 @@
 export function generateStyles(): string {
   return `
     :root {
-      --primary: #00B2B2;
-      --primary-light: #33c3c3;
+      --primary: #C84B31;
+      --primary-light: #FFAA5A;
       --secondary: #F5F7FA;
-      --text: #2D3748;
-      --accent: #E2E8F0;
-      --success: #38A169;
+      --text: #1F2937;
+      --accent: #FFAA5A;
+      --success: #2D3A3A;
       --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       --transition: all 0.3s ease;
     }
@@ -117,6 +117,47 @@ export function generateStyles(): string {
       color: var(--primary);
       margin-bottom: 1.5rem;
       font-weight: bold;
+    }
+
+    .financial-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .financial-box {
+      border: 2px solid var(--accent);
+      padding: 20px;
+      border-radius: 12px;
+      transition: var(--transition);
+    }
+
+    .financial-box:hover {
+      border-color: var(--primary);
+    }
+
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+    }
+
+    .spec-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--accent);
+      transition: var(--transition);
+    }
+
+    .chart-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin: 2rem 0;
+      box-shadow: var(--card-shadow);
     }
 
     @media print {
