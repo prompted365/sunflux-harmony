@@ -23,7 +23,7 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
       if (error) throw error;
 
       if (data?.reportUrl) {
-        // Open in new tab, ensuring HTML content is rendered
+        // Open PDF in new tab
         const newWindow = window.open('', '_blank');
         if (newWindow) {
           newWindow.location.href = data.reportUrl;
@@ -34,13 +34,13 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
 
       toast({
         title: "Success",
-        description: "Report generated successfully",
+        description: "PDF Report generated successfully",
       });
     } catch (error) {
       console.error('Report generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate report",
+        description: "Failed to generate PDF report",
         variant: "destructive",
       });
     } finally {
@@ -57,7 +57,7 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
       {isGenerating ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Generating Report...
+          Generating PDF...
         </>
       ) : (
         <>
