@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import AddressFields from "./property-form/AddressFields";
-import ContactFields from "./property-form/ContactFields";
-import SubmitButton from "./property-form/SubmitButton";
+import { useToast } from "@/components/ui/use-toast";
 
 const PropertyForm = () => {
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     address: "",
     city: "",
@@ -20,34 +19,19 @@ const PropertyForm = () => {
     consentToContact: false,
   });
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (userError) {
-        toast({
-          title: "Authentication Error",
-          description: "Please sign in again to continue",
-          variant: "destructive",
-        });
-        navigate("/login");
-        return;
-      }
-
       if (!user) {
         toast({
           title: "Error",
           description: "You must be logged in to submit a property",
           variant: "destructive",
         });
-        navigate("/login");
         return;
       }
 
@@ -61,15 +45,14 @@ const PropertyForm = () => {
         consent_to_contact: formData.consentToContact,
       }).select().single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Property submitted successfully",
       });
 
+      // Trigger solar calculation
       await calculateSolar(property.id);
 
       setFormData({
@@ -80,16 +63,12 @@ const PropertyForm = () => {
         email: "",
         consentToContact: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit property",
+        description: "Failed to submit property",
         variant: "destructive",
       });
-      
-      if (error.message?.includes('JWT')) {
-        navigate("/login");
-      }
     } finally {
       setLoading(false);
     }
@@ -108,10 +87,10 @@ const PropertyForm = () => {
         title: "Success",
         description: "Solar calculation initiated",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to initiate solar calculation",
+        description: "Failed to initiate solar calculation",
         variant: "destructive",
       });
     } finally {
@@ -123,9 +102,99 @@ const PropertyForm = () => {
     <div className="bg-white rounded-lg shadow-xl p-8 animate-roll-down origin-top">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Submit Property</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <AddressFields formData={formData} onChange={handleChange} />
-        <ContactFields formData={formData} onChange={handleChange} />
-        <SubmitButton loading={loading} calculating={calculating} />
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+            Street Address
+          </label>
+          <Input
+            id="address"
+            type="text"
+            required
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            className="mt-1"
+            placeholder="123 Solar Street"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+            City
+          </label>
+          <Input
+            id="city"
+            type="text"
+            required
+            value={formData.city}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            className="mt-1"
+            placeholder="Sunnyville"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+            State
+          </label>
+          <Input
+            id="state"
+            type="text"
+            required
+            value={formData.state}
+            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+            className="mt-1"
+            placeholder="CA"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">
+            ZIP Code
+          </label>
+          <Input
+            id="zipCode"
+            type="text"
+            required
+            value={formData.zipCode}
+            onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+            className="mt-1"
+            placeholder="12345"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            required
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="mt-1"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2 pt-2">
+          <Switch
+            id="consent"
+            checked={formData.consentToContact}
+            onCheckedChange={(checked) => setFormData({ ...formData, consentToContact: checked })}
+          />
+          <Label htmlFor="consent" className="text-sm text-gray-600">
+            I consent to being contacted about dominating in solar sales
+          </Label>
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full bg-primary hover:bg-primary/90"
+          disabled={loading || calculating}
+        >
+          {loading ? "Submitting..." : calculating ? "Calculating Solar Potential..." : "Submit Property"}
+        </Button>
       </form>
     </div>
   );

@@ -76,7 +76,7 @@ const Hero = () => {
           </div>
 
           {/* Power Message Section with Image */}
-          <div className="animate-roll-down animation-delay-500 origin-top">
+          <div className="animate-roll-down animation-delay-500 origin-top -mb-12 relative z-10">
             <div className="flex flex-col items-center justify-center">
               <img 
                 src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
