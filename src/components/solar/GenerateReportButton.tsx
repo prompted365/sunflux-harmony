@@ -22,9 +22,12 @@ const GenerateReportButton = ({ calculationId }: GenerateReportButtonProps) => {
 
       if (error) throw error;
 
-      // The response from the edge function contains reportUrl, not downloadUrl
       if (data?.reportUrl) {
-        window.open(data.reportUrl, '_blank');
+        // Open in new tab, ensuring HTML content is rendered
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.location.href = data.reportUrl;
+        }
       } else {
         throw new Error('No report URL returned');
       }

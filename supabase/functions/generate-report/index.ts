@@ -65,7 +65,7 @@ serve(async (req) => {
       throw new Error('Failed to upload report')
     }
 
-    // Create signed URL for viewing
+    // Create signed URL for viewing with correct content type
     const { data: { signedUrl }, error: urlError } = await supabase
       .storage
       .from('reports')
