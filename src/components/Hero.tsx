@@ -28,7 +28,7 @@ const Hero = () => {
               <Button 
                 className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg group relative overflow-hidden"
               >
-                <span className="relative z-10">Start Free Trial</span>
+                <span className="relative z-10">Meet your Agents</span>
                 <div className="absolute inset-0 bg-solar-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
               <Button 
