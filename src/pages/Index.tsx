@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import PropertyForm from "@/components/PropertyForm";
 import SolarResults from "@/components/SolarResults";
+import SunsetAnimation from "@/components/SunsetAnimation";
 
 const Index = () => {
   useEffect(() => {
@@ -21,6 +22,7 @@ const Index = () => {
       <Navigation />
       <div className="container mx-auto px-4 py-12">
         <Hero />
+        <SunsetAnimation />
         <PropertyForm />
         <SolarResults />
       </div>
