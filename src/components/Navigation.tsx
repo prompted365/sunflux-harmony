@@ -19,9 +19,8 @@ const Navigation = () => {
         description: error.message,
         variant: "destructive",
       });
-      // Force clear the session if there's an error
-      supabase.auth.clearSession();
-      navigate("/login");
+      // Force a page reload to clear the session state
+      window.location.href = "/login";
     }
   };
 
