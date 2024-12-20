@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
+import { List, Mail } from "lucide-react"; // Import icons
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -8,6 +9,13 @@ const Navigation = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -25,15 +33,23 @@ const Navigation = () => {
         </div>
         
         <div className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-muted hover:text-primary transition-colors">
-            Features
-          </a>
+          <button 
+            onClick={() => scrollToSection('features')} 
+            className="flex items-center space-x-2 text-muted hover:text-primary transition-colors"
+          >
+            <List className="w-4 h-4" />
+            <span>Features</span>
+          </button>
           <Link to="/about" className="text-muted hover:text-primary transition-colors">
             About
           </Link>
-          <a href="#contact" className="text-muted hover:text-primary transition-colors">
-            Contact
-          </a>
+          <button 
+            onClick={() => scrollToSection('contact')} 
+            className="flex items-center space-x-2 text-muted hover:text-primary transition-colors"
+          >
+            <Mail className="w-4 h-4" />
+            <span>Contact</span>
+          </button>
           <Button 
             variant="default" 
             className="bg-solar-gradient hover:opacity-90 transition-opacity"
