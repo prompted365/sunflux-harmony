@@ -13,7 +13,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/40 to-secondary/20 pointer-events-none" />
         <div className="relative mb-12">
           <SunsetAnimation />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/30 to-secondary pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/10 to-secondary/5 pointer-events-none" />
         </div>
         <PropertyForm />
         <SolarResults />
