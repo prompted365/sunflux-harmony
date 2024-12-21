@@ -30,6 +30,11 @@ serve(async (req) => {
       throw new Error(`Failed to fetch property: ${propertyError?.message}`);
     }
 
+    // Ensure we have coordinates
+    if (!property.latitude || !property.longitude) {
+      throw new Error('Property must have latitude and longitude coordinates');
+    }
+
     // 2. Create initial solar calculation record
     const { data: calculation, error: calcError } = await supabase
       .from('solar_calculations')
