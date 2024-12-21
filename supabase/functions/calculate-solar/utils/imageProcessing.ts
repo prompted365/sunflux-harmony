@@ -34,8 +34,46 @@ export async function processAndStoreImage(
     console.log(`Processing ${imageType} raster data:`, {
       width: rasters.width,
       height: rasters.height,
-      count: rasters.length
+      count: rasters.length,
+      sampleFormat: image.getSampleFormat(),
+      bitsPerSample: image.getBitsPerSample(),
+      samplesPerPixel: image.getSamplesPerPixel()
     });
+
+    // For mask images, we expect single-band data
+    if (imageType === 'mask' && rasters.length === 1) {
+      const singleBandData = {
+        width: rasters.width,
+        height: rasters.height,
+        rasters: [
+          Array.from(rasters[0] as unknown as Uint8Array),
+          Array.from(rasters[0] as unknown as Uint8Array),
+          Array.from(rasters[0] as unknown as Uint8Array)
+        ],
+        bounds: { north: 0, south: 0, east: 0, west: 0 }
+      };
+      const canvas = renderRGB(singleBandData);
+      const pngData = canvas.toBuffer('image/png');
+      
+      const filePath = `${propertyId}/${imageType}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('solar_imagery')
+        .upload(filePath, pngData, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error(`Error uploading ${imageType} image:`, uploadError);
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('solar_imagery')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    }
 
     const canvas = useHeatmap ? 
       renderPalette({
