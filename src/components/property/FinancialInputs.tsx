@@ -30,7 +30,7 @@ export const FinancialInputs = ({
           placeholder="Enter your average monthly bill"
         />
         {isUsingDefaults && (
-          <Alert variant="warning" className="mt-2">
+          <Alert variant="default" className="mt-2">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Using default value. Please enter your actual monthly bill for more accurate calculations.
@@ -50,7 +50,7 @@ export const FinancialInputs = ({
           placeholder="Energy cost per kWh"
         />
         {isUsingDefaults && (
-          <Alert variant="warning" className="mt-2">
+          <Alert variant="default" className="mt-2">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Using national average ($0.15/kWh). Update with your local rate for accurate savings.
