@@ -3,9 +3,28 @@ import { MapPin, Calendar } from "lucide-react";
 
 export interface HeaderSectionProps {
   propertyAddress: string;
+  buildingSpecs?: {
+    imagery?: {
+      rgb?: string | null;
+      dsm?: string | null;
+      mask?: string | null;
+      annualFlux?: string | null;
+      monthlyFlux?: string | null;
+    };
+    imageryDate?: {
+      year: number;
+      month: number;
+      day: number;
+    };
+  };
 }
 
-const HeaderSection = ({ propertyAddress }: HeaderSectionProps) => {
+const HeaderSection = ({ propertyAddress, buildingSpecs }: HeaderSectionProps) => {
+  const propertyImage = buildingSpecs?.imagery?.rgb || "/lovable-uploads/090fc8db-6e34-45e9-82ac-a4aed09338db.png";
+  const imageryDate = buildingSpecs?.imageryDate 
+    ? new Date(buildingSpecs.imageryDate.year, buildingSpecs.imageryDate.month - 1, buildingSpecs.imageryDate.day)
+    : new Date();
+
   return (
     <>
       <div className="text-center space-y-4 print:space-y-2">
@@ -27,16 +46,23 @@ const HeaderSection = ({ propertyAddress }: HeaderSectionProps) => {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <div>Analysis Date: {new Date().toLocaleDateString()}</div>
+              <div>Analysis Date: {imageryDate.toLocaleDateString()}</div>
             </div>
           </div>
           <div className="aspect-video rounded-lg overflow-hidden bg-muted">
             <img 
-              src="/lovable-uploads/090fc8db-6e34-45e9-82ac-a4aed09338db.png"
+              src={propertyImage}
               alt="Bird's Eye Property View"
               className="w-full h-full object-cover"
             />
-            <p className="text-xs text-center mt-2 text-gray-600">Aerial Property View</p>
+            <p className="text-xs text-center mt-2 text-gray-600">
+              Aerial Property View
+              {buildingSpecs?.imageryDate && (
+                <span className="ml-1">
+                  (Captured: {imageryDate.toLocaleDateString()})
+                </span>
+              )}
+            </p>
           </div>
         </div>
       </Card>

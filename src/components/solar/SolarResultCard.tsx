@@ -38,11 +38,16 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     }
   };
 
+  // Get the appropriate visualization image based on calculation status
+  const coverImage = calc.status === 'completed' && calc.building_specs?.imagery
+    ? calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb
+    : "/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png";
+
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
         <img
-          src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
+          src={coverImage}
           alt="Solar panel analysis visualization"
           className="w-full h-full object-cover"
         />

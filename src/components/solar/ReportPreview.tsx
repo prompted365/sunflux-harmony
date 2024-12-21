@@ -18,7 +18,10 @@ const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
 
   return (
     <div className="space-y-8 p-6">
-      <HeaderSection propertyAddress={propertyAddress} />
+      <HeaderSection 
+        propertyAddress={propertyAddress} 
+        buildingSpecs={calc.building_specs || undefined}
+      />
       <SystemSpecifications calc={calc} />
       {hasFinancialData && (
         <>
