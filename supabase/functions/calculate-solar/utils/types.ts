@@ -1,34 +1,3 @@
-// GeoTIFF Types
-export interface GeoTiff {
-  width: number;
-  height: number;
-  rasters: Array<number>[];
-  bounds: Bounds;
-}
-
-export interface Bounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-}
-
-export interface RGBColor {
-  r: number;
-  g: number;
-  b: number;
-}
-
-export interface PaletteOptions {
-  data: GeoTiff;
-  mask?: GeoTiff;
-  colors?: string[];
-  min?: number;
-  max?: number;
-  index?: number;
-}
-
-// Google Solar API Types
 export interface BuildingInsightsResponse {
   name: string;
   center: LatLng;
@@ -56,6 +25,8 @@ export interface SolarPotential {
   roofSegmentStats: RoofSegmentSizeAndSunshineStats[];
   solarPanelConfigs: SolarPanelConfig[];
   financialAnalyses: FinancialAnalysis[];
+  panelHeightMeters: number;
+  panelWidthMeters: number;
 }
 
 export interface SizeAndSunshineStats {
@@ -88,11 +59,8 @@ export interface RoofSegmentSummary {
 
 export interface FinancialAnalysis {
   monthlyBill: Money;
-  panelConfigIndex: number;
   financialDetails: FinancialDetails;
-  leasingSavings?: LeasingSavings;
   cashPurchaseSavings?: CashPurchaseSavings;
-  financedPurchaseSavings?: FinancedPurchaseSavings;
 }
 
 export interface Money {
@@ -102,58 +70,11 @@ export interface Money {
 }
 
 export interface FinancialDetails {
-  initialAcKwhPerYear: number;
-  remainingLifetimeUtilityBill: Money;
-  federalIncentive: Money;
-  stateIncentive: Money;
-  utilityIncentive: Money;
-  lifetimeSrecTotal: Money;
   costOfElectricityWithoutSolar: Money;
-  netMeteringAllowed: boolean;
-  solarPercentage: number;
-  percentageExportedToGrid: number;
-}
-
-export interface LeasingSavings {
-  leasesAllowed: boolean;
-  leasesSupported: boolean;
-  annualLeasingCost: Money;
-  savings: SavingsOverTime;
+  federalIncentive: Money;
+  lifetimeSrecTotal: Money;
 }
 
 export interface CashPurchaseSavings {
-  outOfPocketCost: Money;
-  upfrontCost: Money;
-  rebateValue: Money;
   paybackYears: number;
-  savings: SavingsOverTime;
-}
-
-export interface FinancedPurchaseSavings {
-  annualLoanPayment: Money;
-  rebateValue: Money;
-  loanInterestRate: number;
-  savings: SavingsOverTime;
-}
-
-export interface SavingsOverTime {
-  savingsYear1: Money;
-  savingsYear20: Money;
-  presentValueOfSavingsYear20: Money;
-  savingsLifetime: Money;
-  presentValueOfSavingsLifetime: Money;
-  financiallyViable: boolean;
-}
-
-// Data Layers Types
-export interface DataLayersResponse {
-  imageryDate: Date;
-  imageryProcessedDate: Date;
-  dsmUrl: string;
-  rgbUrl: string;
-  maskUrl: string;
-  annualFluxUrl: string;
-  monthlyFluxUrl: string;
-  hourlyShadeUrls: string[];
-  imageryQuality: string;
 }
