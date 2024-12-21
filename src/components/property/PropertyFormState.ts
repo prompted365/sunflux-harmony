@@ -12,6 +12,13 @@ export interface FinancialFormData {
   energyCostPerKwh: number
 }
 
+export interface SignupFormData {
+  email: string
+  password: string
+  communicationOptIn: boolean
+  termsAccepted: boolean
+}
+
 export const usePropertyFormState = () => {
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
@@ -25,6 +32,12 @@ export const usePropertyFormState = () => {
     monthlyBill: null,
     energyCostPerKwh: 0.15, // National average default
   })
+  const [signupData, setSignupData] = useState<SignupFormData>({
+    email: "",
+    password: "",
+    communicationOptIn: false,
+    termsAccepted: false,
+  })
 
   const updateField = (field: keyof PropertyFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -32,6 +45,10 @@ export const usePropertyFormState = () => {
 
   const updateFinancialField = (field: keyof FinancialFormData, value: number | null) => {
     setFinancialData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const updateSignupField = (field: keyof SignupFormData, value: any) => {
+    setSignupData(prev => ({ ...prev, [field]: value }))
   }
 
   return {
@@ -44,5 +61,7 @@ export const usePropertyFormState = () => {
     setFormData,
     financialData,
     updateFinancialField,
+    signupData,
+    updateSignupField,
   }
 }

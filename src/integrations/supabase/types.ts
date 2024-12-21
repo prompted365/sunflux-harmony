@@ -543,30 +543,42 @@ export type Database = {
       }
       vendor_profiles: {
         Row: {
+          account_tier: string | null
+          communication_opt_in: boolean | null
           company_name: string | null
           created_at: string
           id: string
           logo_url: string | null
           primary_color: string | null
           secondary_color: string | null
+          trial_reports_remaining: number | null
+          trial_reports_reset_date: string | null
           updated_at: string
         }
         Insert: {
+          account_tier?: string | null
+          communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string
           id: string
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          trial_reports_remaining?: number | null
+          trial_reports_reset_date?: string | null
           updated_at?: string
         }
         Update: {
+          account_tier?: string | null
+          communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          trial_reports_remaining?: number | null
+          trial_reports_reset_date?: string | null
           updated_at?: string
         }
         Relationships: [

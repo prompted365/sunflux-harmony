@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import PropertyForm from "@/components/PropertyForm";
-import SolarResults from "@/components/SolarResults";
 import SunsetAnimation from "@/components/SunsetAnimation";
 
 const Index = () => {
@@ -24,7 +23,6 @@ const Index = () => {
         <Hero />
         <SunsetAnimation />
         <PropertyForm />
-        <SolarResults />
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ export const PropertyFormSubmit = ({ loading, calculating }: PropertyFormSubmitP
       className="w-full bg-primary hover:bg-primary/90 py-6 text-lg mt-6"
       disabled={loading || calculating}
     >
-      {loading ? "Submitting..." : calculating ? "Calculating Solar Potential..." : "Submit Property"}
+      {loading ? "Creating Account..." : calculating ? "Calculating Solar Potential..." : "Create Trial Account & Analyze Property"}
     </Button>
   )
 }
