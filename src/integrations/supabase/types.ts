@@ -544,6 +544,7 @@ export type Database = {
       vendor_profiles: {
         Row: {
           account_tier: string | null
+          bypass_trial_limits: boolean | null
           communication_opt_in: boolean | null
           company_name: string | null
           created_at: string
@@ -557,6 +558,7 @@ export type Database = {
         }
         Insert: {
           account_tier?: string | null
+          bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string
@@ -570,6 +572,7 @@ export type Database = {
         }
         Update: {
           account_tier?: string | null
+          bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string

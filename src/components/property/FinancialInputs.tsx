@@ -27,13 +27,13 @@ export const FinancialInputs = ({
           type="number"
           value={monthlyBill || ''}
           onChange={(e) => onMonthlyBillChange(e.target.value ? Number(e.target.value) : null)}
-          placeholder="Enter your average monthly bill"
+          placeholder="Enter your client's average monthly bill"
         />
         {isUsingDefaults && (
           <Alert variant="default" className="mt-2">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Using default value. Please enter your actual monthly bill for more accurate calculations.
+              Using default value. Please enter your client's actual monthly bill for more accurate calculations.
             </AlertDescription>
           </Alert>
         )}
@@ -53,7 +53,7 @@ export const FinancialInputs = ({
           <Alert variant="default" className="mt-2">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Using national average ($0.15/kWh). Update with your local rate for accurate savings.
+              Using national average ($0.15/kWh). Update with your client's local rate for accurate savings.
             </AlertDescription>
           </Alert>
         )}

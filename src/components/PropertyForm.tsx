@@ -4,13 +4,11 @@ import { AddressInput } from "./property/AddressInput"
 import { PropertyFormSubmit } from "./property/PropertyFormSubmit"
 import { usePropertyFormState } from "./property/PropertyFormState"
 import { FinancialInputs } from "./property/FinancialInputs"
+import { AccountSignupInputs } from "./property/AccountSignupInputs"
 import { Card } from "./ui/card"
 import { useEffect } from "react"
 import { calculateSolar } from "./property/PropertyCalculation"
 import { submitProperty } from "./property/PropertySubmission"
-import { Input } from "./ui/input"
-import { Label } from "./ui/label"
-import { Checkbox } from "./ui/checkbox"
 import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 
@@ -31,7 +29,6 @@ const PropertyForm = () => {
     updateSignupField,
   } = usePropertyFormState();
 
-  // Initialize Solar API when component mounts
   useEffect(() => {
     initializeSolarAPI().catch(console.error);
   }, []);
@@ -104,67 +101,19 @@ const PropertyForm = () => {
   return (
     <div className="max-w-2xl mx-auto bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-muted">Get Started</h2>
+        <h2 className="text-3xl font-bold text-muted">Experience Our AI Workflow</h2>
         <p className="text-xl text-gray-600 mt-4">
-          Enter your details below to create your trial account and analyze your first property
+          Try out our automated solar analysis process firsthand. While our AI agents typically handle 
+          this data collection automatically, this demo lets you see exactly how we gather and process 
+          property information.
         </p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Account Details</h3>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={signupData.email}
-                onChange={(e) => updateSignupField('email', e.target.value)}
-                className="w-full bg-white/80"
-                placeholder="your@email.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={signupData.password}
-                onChange={(e) => updateSignupField('password', e.target.value)}
-                className="w-full bg-white/80"
-                placeholder="Choose a secure password"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="communicationOptIn"
-                checked={signupData.communicationOptIn}
-                onCheckedChange={(checked) => 
-                  updateSignupField('communicationOptIn', checked)
-                }
-              />
-              <Label htmlFor="communicationOptIn">
-                I agree to receive communications about product updates and features
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="termsAccepted"
-                required
-                checked={signupData.termsAccepted}
-                onCheckedChange={(checked) => 
-                  updateSignupField('termsAccepted', checked)
-                }
-              />
-              <Label htmlFor="termsAccepted">
-                I understand this will create a trial vendor account with limited features
-              </Label>
-            </div>
-          </div>
-        </Card>
+        <AccountSignupInputs 
+          signupData={signupData}
+          updateSignupField={updateSignupField}
+        />
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Property Location</h3>
