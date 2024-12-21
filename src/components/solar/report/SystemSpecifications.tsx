@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "../types";
-import { MapPin, Sun, Battery, Zap } from "lucide-react";
+import { Sun, Zap, MapPin, Battery } from "lucide-react";
 
 interface SystemSpecificationsProps {
   calc: SolarCalculation;
@@ -38,7 +38,7 @@ const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
           <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
             <img 
               src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
-              alt="Annual Shading Analysis"
+              alt="Annual Solar Exposure Analysis"
               className="w-full h-full object-cover"
             />
           </div>
