@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { corsHeaders } from "../_shared/cors.ts"
+import { storeDataLayers } from "./utils/solarApi.ts"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -31,26 +32,30 @@ serve(async (req) => {
 
     console.log('Processing solar imagery for:', { calculationId, latitude, longitude });
 
-    // 1. Fetch data layers from Google Solar API
-    const dataLayersUrl = `https://solar.googleapis.com/v1/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=100&view=FULL_LAYERS&key=${GOOGLE_CLOUD_API_KEY}`;
-    
-    const dataLayersResponse = await fetch(dataLayersUrl);
-    if (!dataLayersResponse.ok) {
-      const errorText = await dataLayersResponse.text();
-      console.error('Failed to fetch data layers:', errorText);
-      throw new Error(`Failed to fetch data layers: ${errorText}`);
+    // Fetch and store data layers
+    const dataLayers = await storeDataLayers(
+      { latitude, longitude },
+      calculationId,
+      supabase,
+      GOOGLE_CLOUD_API_KEY
+    );
+
+    if (!dataLayers) {
+      throw new Error('Failed to fetch data layers');
     }
 
-    const dataLayers = await dataLayersResponse.json();
-    console.log('Successfully fetched data layers');
+    // Format dates properly for PostgreSQL
+    const formatDate = (dateObj: { year: number; month: number; day: number }) => {
+      return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}-${String(dateObj.day).padStart(2, '0')}`;
+    };
 
-    // 2. Store data layers information
+    // Store data layers information
     const { error: dataLayersError } = await supabase
       .from('data_layers')
       .insert({
         calculation_id: calculationId,
-        imagery_date: dataLayers.imageryDate,
-        imagery_processed_date: dataLayers.imageryProcessedDate,
+        imagery_date: dataLayers.imageryDate ? formatDate(dataLayers.imageryDate) : null,
+        imagery_processed_date: dataLayers.imageryProcessedDate ? formatDate(dataLayers.imageryProcessedDate) : null,
         dsm_url: dataLayers.dsmUrl,
         rgb_url: dataLayers.rgbUrl,
         mask_url: dataLayers.maskUrl,
@@ -69,7 +74,7 @@ serve(async (req) => {
 
     console.log('Successfully stored data layers');
 
-    // 3. Update solar calculation status
+    // Update solar calculation status
     const { error: updateError } = await supabase
       .from('solar_calculations')
       .update({ 
