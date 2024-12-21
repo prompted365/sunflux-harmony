@@ -83,7 +83,7 @@ const Vendor = () => {
       <Navigation />
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)] w-full">
-          <Sidebar>
+          <Sidebar className="pt-16"> {/* Added padding-top here */}
             <SidebarContent>
               <SidebarGroup>
                 <SidebarGroupLabel>
@@ -108,7 +108,7 @@ const Vendor = () => {
               </SidebarGroup>
             </SidebarContent>
           </Sidebar>
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6 pt-16"> {/* Added padding-top here too */}
             <div className="mb-4">
               <Button
                 variant="outline"
