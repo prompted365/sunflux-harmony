@@ -1,15 +1,16 @@
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { getSolarAPI, initializeSolarAPI } from "@/lib/solar-sdk"
+import { initializeSolarAPI } from "@/lib/solar-sdk"
 import { AddressInput } from "./property/AddressInput"
 import { PropertyFormSubmit } from "./property/PropertyFormSubmit"
 import { usePropertyFormState } from "./property/PropertyFormState"
 import { FinancialInputs } from "./property/FinancialInputs"
 import { Card } from "./ui/card"
 import { useEffect } from "react"
+import { calculateSolar } from "./property/PropertyCalculation"
+import { submitProperty } from "./property/PropertySubmission"
 
 const PropertyForm = () => {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const {
     loading,
     setLoading,
@@ -20,158 +21,41 @@ const PropertyForm = () => {
     setFormData,
     financialData,
     updateFinancialField,
-  } = usePropertyFormState()
+  } = usePropertyFormState();
 
   // Initialize Solar API when component mounts
   useEffect(() => {
-    initializeSolarAPI().catch(console.error)
-  }, [])
-
-  const geocodeAddress = async () => {
-    const response = await supabase.functions.invoke('geocode-address', {
-      body: formData
-    })
-
-    if (response.error) {
-      throw new Error(response.error.message || 'Failed to geocode address')
-    }
-
-    return response.data
-  }
-
-  const calculateSolar = async (propertyId: string, coordinates: { latitude: number; longitude: number }) => {
-    setCalculating(true)
-    try {
-      const solarAPI = getSolarAPI()
-      
-      // Get building insights using the SDK
-      const buildingInsights = await solarAPI.getBuildingInsights(
-        coordinates.latitude,
-        coordinates.longitude
-      )
-
-      if (buildingInsights.error) {
-        throw new Error(buildingInsights.error)
-      }
-
-      // Get environmental analysis
-      const environmentalAnalysis = await solarAPI.analyzeEnvironment(
-        coordinates.latitude,
-        coordinates.longitude
-      )
-
-      if ('error' in environmentalAnalysis) {
-        throw new Error(environmentalAnalysis.error)
-      }
-
-      const { error: calcError } = await supabase
-        .from('solar_calculations')
-        .insert({
-          property_id: propertyId,
-          status: 'completed',
-          system_size: buildingInsights.yearlyEnergyDcKwh / 1000, // Convert to kW
-          irradiance_data: {
-            maxSunshineHours: buildingInsights.maxSunshineHoursPerYear,
-            carbonOffset: buildingInsights.annualCarbonOffsetKg,
-          },
-          estimated_production: {
-            yearlyEnergyDcKwh: buildingInsights.yearlyEnergyDcKwh,
-            environmentalImpact: {
-              carbonOffset: environmentalAnalysis.carbonOffset,
-              annualProduction: environmentalAnalysis.annualProduction,
-              lifetimeProduction: environmentalAnalysis.lifetimeProduction
-            }
-          }
-        })
-
-      if (calcError) throw calcError
-
-      // Create solar configuration with financial inputs
-      const { error: configError } = await supabase
-        .from('solar_configurations')
-        .insert({
-          property_id: propertyId,
-          monthly_bill: financialData.monthlyBill,
-          energy_cost_per_kwh: financialData.energyCostPerKwh,
-          is_using_defaults: !financialData.monthlyBill
-        })
-
-      if (configError) throw configError
-
-      toast({
-        title: "Success",
-        description: "Solar calculation completed",
-      })
-
-    } catch (error) {
-      console.error("Error calculating solar:", error)
-      toast({
-        title: "Error",
-        description: "Failed to complete solar calculation",
-        variant: "destructive",
-      })
-    } finally {
-      setCalculating(false)
-    }
-  }
+    initializeSolarAPI().catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const property = await submitProperty(formData, toast);
       
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to submit a property",
-          variant: "destructive",
-        })
-        return
+      if (property) {
+        // Get coordinates from the saved property
+        const coordinates = {
+          latitude: property.latitude,
+          longitude: property.longitude
+        };
+
+        // Trigger solar calculation with coordinates
+        await calculateSolar(property.id, coordinates, financialData, toast);
+
+        setFormData({
+          address: "",
+          city: "",
+          state: "",
+          zipCode: "",
+        });
       }
-
-      // Get coordinates
-      const coordinates = await geocodeAddress()
-      console.log("Geocoded coordinates:", coordinates)
-
-      const { data: property, error } = await supabase.from("properties").insert({
-        user_id: user.id,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zip_code: formData.zipCode,
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      }).select().single()
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: "Property submitted successfully",
-      })
-
-      // Trigger solar calculation with coordinates
-      await calculateSolar(property.id, coordinates)
-
-      setFormData({
-        address: "",
-        city: "",
-        state: "",
-        zipCode: "",
-      })
-    } catch (error) {
-      console.error("Error submitting property:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit property",
-        variant: "destructive",
-      })
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
@@ -232,7 +116,7 @@ const PropertyForm = () => {
         <PropertyFormSubmit loading={loading} calculating={calculating} />
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default PropertyForm
+export default PropertyForm;
