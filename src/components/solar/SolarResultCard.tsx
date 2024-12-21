@@ -3,10 +3,11 @@ import { SolarCalculation } from "./types";
 import SolarMetrics from "./SolarMetrics";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash } from "lucide-react";
+import { FileText, Trash, AlertCircle } from "lucide-react";
 import ReportPreview from "./ReportPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 interface SolarResultCardProps {
   calc: SolarCalculation;
@@ -14,6 +15,7 @@ interface SolarResultCardProps {
 
 const SolarResultCard = ({ calc }: SolarResultCardProps) => {
   const { toast } = useToast();
+  const [imageError, setImageError] = useState(false);
 
   const handleDelete = async () => {
     try {
@@ -43,14 +45,29 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     ? calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb
     : "/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png";
 
+  const handleImageError = () => {
+    console.error('Failed to load image:', coverImage);
+    setImageError(true);
+  };
+
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
-        <img
-          src={coverImage}
-          alt="Solar panel analysis visualization"
-          className="w-full h-full object-cover"
-        />
+        {imageError ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="text-center text-gray-500">
+              <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+              <p className="text-sm">Image unavailable</p>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={coverImage}
+            alt="Solar panel analysis visualization"
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -87,7 +104,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
                 <DialogTitle>Solar Installation Report</DialogTitle>
                 <ReportPreview 
                   calc={calc} 
-                  propertyAddress="123 Solar Street" // TODO: Get actual address
+                  propertyAddress={calc.building_specs?.address || "Property Address Unavailable"}
                 />
               </DialogContent>
             </Dialog>
