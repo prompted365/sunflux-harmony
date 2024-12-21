@@ -15,6 +15,24 @@ const PropertyForm = () => {
     zipCode: "",
   });
 
+  const geocodeAddress = async () => {
+    const addressString = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        addressString
+      )}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+    );
+    
+    const data = await response.json();
+    
+    if (data.status !== "OK") {
+      throw new Error("Failed to geocode address");
+    }
+
+    const { lat, lng } = data.results[0].geometry.location;
+    return { latitude: lat, longitude: lng };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -31,12 +49,18 @@ const PropertyForm = () => {
         return;
       }
 
+      // Get coordinates
+      const coordinates = await geocodeAddress();
+      console.log("Geocoded coordinates:", coordinates);
+
       const { data: property, error } = await supabase.from("properties").insert({
         user_id: user.id,
         address: formData.address,
         city: formData.city,
         state: formData.state,
         zip_code: formData.zipCode,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
       }).select().single();
 
       if (error) throw error;
@@ -56,9 +80,10 @@ const PropertyForm = () => {
         zipCode: "",
       });
     } catch (error) {
+      console.error("Error submitting property:", error);
       toast({
         title: "Error",
-        description: "Failed to submit property",
+        description: error.message || "Failed to submit property",
         variant: "destructive",
       });
     } finally {
@@ -80,6 +105,7 @@ const PropertyForm = () => {
         description: "Solar calculation initiated",
       });
     } catch (error) {
+      console.error("Error calculating solar:", error);
       toast({
         title: "Error",
         description: "Failed to initiate solar calculation",
