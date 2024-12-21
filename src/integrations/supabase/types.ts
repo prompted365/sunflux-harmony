@@ -216,6 +216,56 @@ export type Database = {
           },
         ]
       }
+      solar_configurations: {
+        Row: {
+          created_at: string
+          energy_cost_per_kwh: number | null
+          id: string
+          installation_cost_per_watt: number | null
+          is_using_defaults: boolean | null
+          monthly_bill: number | null
+          panel_capacity_watts: number | null
+          panel_height_meters: number | null
+          panel_width_meters: number | null
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          energy_cost_per_kwh?: number | null
+          id?: string
+          installation_cost_per_watt?: number | null
+          is_using_defaults?: boolean | null
+          monthly_bill?: number | null
+          panel_capacity_watts?: number | null
+          panel_height_meters?: number | null
+          panel_width_meters?: number | null
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          energy_cost_per_kwh?: number | null
+          id?: string
+          installation_cost_per_watt?: number | null
+          is_using_defaults?: boolean | null
+          monthly_bill?: number | null
+          panel_capacity_watts?: number | null
+          panel_height_meters?: number | null
+          panel_width_meters?: number | null
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solar_configurations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

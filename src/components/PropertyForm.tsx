@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { AddressInput } from "./property/AddressInput"
 import { PropertyFormSubmit } from "./property/PropertyFormSubmit"
 import { usePropertyFormState } from "./property/PropertyFormState"
+import { FinancialInputs } from "./property/FinancialInputs"
+import { Card } from "./ui/card"
 
 const PropertyForm = () => {
   const { toast } = useToast()
@@ -14,6 +16,8 @@ const PropertyForm = () => {
     formData,
     updateField,
     setFormData,
+    financialData,
+    updateFinancialField,
   } = usePropertyFormState()
 
   const geocodeAddress = async () => {
@@ -40,6 +44,18 @@ const PropertyForm = () => {
       })
 
       if (error) throw error
+
+      // Create solar configuration with financial inputs
+      const { error: configError } = await supabase
+        .from('solar_configurations')
+        .insert({
+          property_id: propertyId,
+          monthly_bill: financialData.monthlyBill,
+          energy_cost_per_kwh: financialData.energyCostPerKwh,
+          is_using_defaults: !financialData.monthlyBill
+        })
+
+      if (configError) throw configError
 
       toast({
         title: "Success",
@@ -124,38 +140,52 @@ const PropertyForm = () => {
         </p>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
-        <AddressInput
-          id="address"
-          label="Street Address"
-          value={formData.address}
-          onChange={(value) => updateField('address', value)}
-          placeholder="123 Solar Street"
-        />
-        
-        <AddressInput
-          id="city"
-          label="City"
-          value={formData.city}
-          onChange={(value) => updateField('city', value)}
-          placeholder="Sunnyville"
-        />
-        
-        <AddressInput
-          id="state"
-          label="State"
-          value={formData.state}
-          onChange={(value) => updateField('state', value)}
-          placeholder="CA"
-        />
-        
-        <AddressInput
-          id="zipCode"
-          label="ZIP Code"
-          value={formData.zipCode}
-          onChange={(value) => updateField('zipCode', value)}
-          placeholder="12345"
-        />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Property Location</h3>
+          <AddressInput
+            id="address"
+            label="Street Address"
+            value={formData.address}
+            onChange={(value) => updateField('address', value)}
+            placeholder="123 Solar Street"
+          />
+          
+          <AddressInput
+            id="city"
+            label="City"
+            value={formData.city}
+            onChange={(value) => updateField('city', value)}
+            placeholder="Sunnyville"
+          />
+          
+          <AddressInput
+            id="state"
+            label="State"
+            value={formData.state}
+            onChange={(value) => updateField('state', value)}
+            placeholder="CA"
+          />
+          
+          <AddressInput
+            id="zipCode"
+            label="ZIP Code"
+            value={formData.zipCode}
+            onChange={(value) => updateField('zipCode', value)}
+            placeholder="12345"
+          />
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
+          <FinancialInputs
+            monthlyBill={financialData.monthlyBill}
+            energyCostPerKwh={financialData.energyCostPerKwh}
+            onMonthlyBillChange={(value) => updateFinancialField('monthlyBill', value)}
+            onEnergyCostChange={(value) => updateFinancialField('energyCostPerKwh', value)}
+            isUsingDefaults={!financialData.monthlyBill}
+          />
+        </Card>
 
         <PropertyFormSubmit loading={loading} calculating={calculating} />
       </form>

@@ -7,6 +7,11 @@ export interface PropertyFormData {
   zipCode: string
 }
 
+export interface FinancialFormData {
+  monthlyBill: number | null
+  energyCostPerKwh: number
+}
+
 export const usePropertyFormState = () => {
   const [loading, setLoading] = useState(false)
   const [calculating, setCalculating] = useState(false)
@@ -16,9 +21,17 @@ export const usePropertyFormState = () => {
     state: "",
     zipCode: "",
   })
+  const [financialData, setFinancialData] = useState<FinancialFormData>({
+    monthlyBill: null,
+    energyCostPerKwh: 0.15, // National average default
+  })
 
   const updateField = (field: keyof PropertyFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const updateFinancialField = (field: keyof FinancialFormData, value: number | null) => {
+    setFinancialData(prev => ({ ...prev, [field]: value }))
   }
 
   return {
@@ -29,5 +42,7 @@ export const usePropertyFormState = () => {
     formData,
     updateField,
     setFormData,
+    financialData,
+    updateFinancialField,
   }
 }
