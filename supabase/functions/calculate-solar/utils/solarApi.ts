@@ -1,12 +1,7 @@
-import { LatLng, DataLayersResponse } from './types.ts';
+import { BuildingInsightsResponse, DataLayersResponse, LatLng } from './types.ts';
 import { processAndStoreImage } from './imageProcessing.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-export async function getBuildingInsights(property: any, apiKey: string) {
+export async function getBuildingInsights(property: any, apiKey: string): Promise<BuildingInsightsResponse> {
   const args = {
     'location.latitude': property.latitude.toString(),
     'location.longitude': property.longitude.toString(),
@@ -23,7 +18,7 @@ export async function getBuildingInsights(property: any, apiKey: string) {
   
   if (response.status !== 200) {
     console.error('getBuildingInsights error:\n', content);
-    throw content;
+    throw new Error(content.error?.message || 'Failed to get building insights');
   }
   
   console.log('buildingInsights response:', content);
@@ -39,7 +34,7 @@ export async function getDataLayerUrls(
     'location.latitude': location.latitude.toFixed(5),
     'location.longitude': location.longitude.toFixed(5),
     radius_meters: radiusMeters.toString(),
-    required_quality: 'LOW',
+    required_quality: 'HIGH',
   };
   
   console.log('GET dataLayers\n', args);
@@ -50,7 +45,7 @@ export async function getDataLayerUrls(
   
   if (response.status !== 200) {
     console.error('getDataLayerUrls error:\n', content);
-    throw content;
+    throw new Error(content.error?.message || 'Failed to get data layers');
   }
   
   console.log('dataLayersResponse', content);
@@ -58,7 +53,7 @@ export async function getDataLayerUrls(
 }
 
 export async function processAndStoreImagery(
-  solarData: any, 
+  property: any, 
   propertyId: string, 
   supabase: any, 
   apiKey: string
@@ -74,8 +69,8 @@ export async function processAndStoreImagery(
   try {
     const dataLayers = await getDataLayerUrls(
       { 
-        latitude: solarData.latitude, 
-        longitude: solarData.longitude 
+        latitude: property.latitude, 
+        longitude: property.longitude 
       },
       100,
       apiKey
