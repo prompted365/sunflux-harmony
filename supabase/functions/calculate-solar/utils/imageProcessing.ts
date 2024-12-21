@@ -26,6 +26,17 @@ export async function processAndStoreImage(
     const image = await tiff.getImage();
     const rasters = await image.readRasters();
 
+    if (!rasters || !rasters.length) {
+      console.error(`No raster data found for ${imageType} image`);
+      return null;
+    }
+
+    console.log(`Processing ${imageType} raster data:`, {
+      width: rasters.width,
+      height: rasters.height,
+      count: rasters.length
+    });
+
     const canvas = useHeatmap ? 
       renderPalette({
         data: {
@@ -77,6 +88,11 @@ export async function processAndStoreImage(
 }
 
 function renderRGB(rgb: GeoTiff, mask?: GeoTiff): any {
+  if (!rgb.rasters || rgb.rasters.length < 3) {
+    console.error('Invalid RGB data: requires at least 3 raster bands');
+    throw new Error('Invalid RGB data');
+  }
+
   const canvas = createCanvas(mask ? mask.width : rgb.width, mask ? mask.height : rgb.height);
   const ctx = canvas.getContext('2d');
 
@@ -91,38 +107,19 @@ function renderRGB(rgb: GeoTiff, mask?: GeoTiff): any {
       const maskIdx = y * canvas.width + x;
       const imgIdx = y * canvas.width * 4 + x * 4;
       
-      imageData.data[imgIdx + 0] = rgb.rasters[0][rgbIdx];
-      imageData.data[imgIdx + 1] = rgb.rasters[1][rgbIdx];
-      imageData.data[imgIdx + 2] = rgb.rasters[2][rgbIdx];
-      imageData.data[imgIdx + 3] = mask ? mask.rasters[0][maskIdx] * 255 : 255;
+      // Ensure raster data exists and is within bounds
+      if (rgb.rasters[0] && rgb.rasters[1] && rgb.rasters[2]) {
+        imageData.data[imgIdx + 0] = rgb.rasters[0][rgbIdx] || 0;
+        imageData.data[imgIdx + 1] = rgb.rasters[1][rgbIdx] || 0;
+        imageData.data[imgIdx + 2] = rgb.rasters[2][rgbIdx] || 0;
+        imageData.data[imgIdx + 3] = mask && mask.rasters[0] ? 
+          mask.rasters[0][maskIdx] * 255 : 255;
+      }
     }
   }
 
   ctx.putImageData(imageData, 0, 0);
   return canvas;
-}
-
-function renderPalette({
-  data,
-  mask,
-  colors = ['000000', 'ffffff'],
-  min = 0,
-  max = 1,
-  index = 0,
-}: PaletteOptions): any {
-  const palette = createPalette(colors);
-  const indices = data.rasters[index]
-    .map((x) => normalize(x, max, min))
-    .map((x) => Math.round(x * (palette.length - 1)));
-
-  return renderRGB({
-    ...data,
-    rasters: [
-      indices.map((i: number) => palette[i].r),
-      indices.map((i: number) => palette[i].g),
-      indices.map((i: number) => palette[i].b),
-    ],
-  }, mask);
 }
 
 function createPalette(hexColors: string[]): RGBColor[] {
@@ -164,4 +161,32 @@ function lerp(x: number, y: number, t: number): number {
 
 function clamp(x: number, min: number, max: number): number {
   return Math.min(Math.max(x, min), max);
+}
+
+function renderPalette({
+  data,
+  mask,
+  colors = ['000000', 'ffffff'],
+  min = 0,
+  max = 1,
+  index = 0,
+}: PaletteOptions): any {
+  if (!data.rasters || !data.rasters[index]) {
+    console.error('Invalid palette data: missing raster data');
+    throw new Error('Invalid palette data');
+  }
+
+  const palette = createPalette(colors);
+  const indices = data.rasters[index]
+    .map((x) => normalize(x, max, min))
+    .map((x) => Math.round(x * (palette.length - 1)));
+
+  return renderRGB({
+    ...data,
+    rasters: [
+      indices.map((i: number) => palette[i].r),
+      indices.map((i: number) => palette[i].g),
+      indices.map((i: number) => palette[i].b),
+    ],
+  }, mask);
 }
