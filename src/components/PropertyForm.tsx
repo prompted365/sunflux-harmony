@@ -1,5 +1,6 @@
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { solarAPI } from "@/lib/solar-sdk"
 import { AddressInput } from "./property/AddressInput"
 import { PropertyFormSubmit } from "./property/PropertyFormSubmit"
 import { usePropertyFormState } from "./property/PropertyFormState"
@@ -35,15 +36,48 @@ const PropertyForm = () => {
   const calculateSolar = async (propertyId: string, coordinates: { latitude: number; longitude: number }) => {
     setCalculating(true)
     try {
-      const { error } = await supabase.functions.invoke('calculate-solar', {
-        body: { 
-          propertyId,
-          latitude: coordinates.latitude,
-          longitude: coordinates.longitude
-        }
-      })
+      // Get building insights using the SDK
+      const buildingInsights = await solarAPI.getBuildingInsights(
+        coordinates.latitude,
+        coordinates.longitude
+      )
 
-      if (error) throw error
+      if (buildingInsights.error) {
+        throw new Error(buildingInsights.error)
+      }
+
+      // Get environmental analysis
+      const environmentalAnalysis = await solarAPI.analyzeEnvironment(
+        coordinates.latitude,
+        coordinates.longitude
+      )
+
+      if ('error' in environmentalAnalysis) {
+        throw new Error(environmentalAnalysis.error)
+      }
+
+      // Create solar calculation record
+      const { error: calcError } = await supabase
+        .from('solar_calculations')
+        .insert({
+          property_id: propertyId,
+          status: 'completed',
+          system_size: buildingInsights.yearlyEnergyDcKwh / 1000, // Convert to kW
+          irradiance_data: {
+            maxSunshineHours: buildingInsights.maxSunshineHoursPerYear,
+            carbonOffset: buildingInsights.annualCarbonOffsetKg,
+          },
+          estimated_production: {
+            yearlyEnergyDcKwh: buildingInsights.yearlyEnergyDcKwh,
+            environmentalImpact: {
+              carbonOffset: environmentalAnalysis.carbonOffset,
+              annualProduction: environmentalAnalysis.annualProduction,
+              lifetimeProduction: environmentalAnalysis.lifetimeProduction
+            }
+          }
+        })
+
+      if (calcError) throw calcError
 
       // Create solar configuration with financial inputs
       const { error: configError } = await supabase
@@ -59,13 +93,13 @@ const PropertyForm = () => {
 
       toast({
         title: "Success",
-        description: "Solar calculation initiated",
+        description: "Solar calculation completed",
       })
     } catch (error) {
       console.error("Error calculating solar:", error)
       toast({
         title: "Error",
-        description: "Failed to initiate solar calculation",
+        description: "Failed to complete solar calculation",
         variant: "destructive",
       })
     } finally {

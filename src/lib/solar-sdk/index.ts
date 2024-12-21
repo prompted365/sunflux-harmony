@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { BuildingInsights, EnvironmentalAnalysis, Panel, OptimizedPanels, ROIMetrics } from "./types";
 
 export class SolarAPI {
   private apiKey: string;
@@ -9,7 +10,7 @@ export class SolarAPI {
     this.baseUrl = "https://solar.googleapis.com/v1";
   }
 
-  async getBuildingInsights(lat: number, long: number, quality: string = "HIGH") {
+  async getBuildingInsights(lat: number, long: number, quality: string = "HIGH"): Promise<BuildingInsights> {
     try {
       const response = await fetch(
         `${this.baseUrl}/buildingInsights:findClosest?location.latitude=${lat}&location.longitude=${long}&requiredQuality=${quality}&key=${this.apiKey}`
@@ -34,6 +35,7 @@ export class SolarAPI {
         lifetimeEnergyDcKwh: solarPotential.maxSunshineHoursPerYear * solarPotential.panelLifetimeYears,
         annualCarbonOffsetKg: solarPotential.carbonOffsetFactorKgPerMwh * (solarPotential.maxSunshineHoursPerYear / 1000),
         maxSunshineHoursPerYear: solarPotential.maxSunshineHoursPerYear,
+        error: undefined
       };
     } catch (error) {
       console.error("Building insights error:", error);
@@ -41,7 +43,7 @@ export class SolarAPI {
     }
   }
 
-  async analyzeEnvironment(lat: number, long: number) {
+  async analyzeEnvironment(lat: number, long: number): Promise<EnvironmentalAnalysis> {
     const insights = await this.getBuildingInsights(lat, long);
     if ('error' in insights) {
       return insights;
@@ -55,7 +57,7 @@ export class SolarAPI {
     };
   }
 
-  async getPanelsByVendor(vendorName: string, region: string) {
+  async getPanelsByVendor(vendorName: string, region: string): Promise<Panel[]> {
     const { data, error } = await supabase
       .from("panels")
       .select("*")
@@ -66,7 +68,7 @@ export class SolarAPI {
     return data;
   }
 
-  optimizePanels(panels: any[], roofArea: number, targetSystemSize: number) {
+  optimizePanels(panels: Panel[], roofArea: number, targetSystemSize: number): OptimizedPanels {
     panels.sort((a, b) => b.efficiency - a.efficiency);
     const selectedPanels = [];
     let totalPower = 0;
@@ -87,11 +89,11 @@ export class SolarAPI {
 
     return {
       selectedPanels,
-      totalPower: (totalPower / 1000).toFixed(2),
+      totalPower: `${(totalPower / 1000).toFixed(2)}`
     };
   }
 
-  async calculateInstallationCosts(region: string, selectedPanels: any[], laborHours: number) {
+  async calculateInstallationCosts(region: string, selectedPanels: Panel[], laborHours: number) {
     const { data: costs, error } = await supabase
       .from("installation_costs")
       .select("*")
@@ -117,11 +119,15 @@ export class SolarAPI {
     return data;
   }
 
-  calculateROI(totalCost: number, annualSavings: number, discountRate: number, lifespan: number) {
+  calculateROI(totalCost: number, annualSavings: number, discountRate: number, lifespan: number): ROIMetrics {
+    const paybackPeriod = this.calculatePaybackPeriod(totalCost, annualSavings);
+    const npv = this.calculateNPV(totalCost, annualSavings, discountRate, lifespan);
+    const irr = this.calculateIRR(totalCost, annualSavings, lifespan);
+
     return {
-      paybackPeriod: this.calculatePaybackPeriod(totalCost, annualSavings),
-      npv: this.calculateNPV(totalCost, annualSavings, discountRate, lifespan),
-      irr: this.calculateIRR(totalCost, annualSavings, lifespan),
+      paybackPeriod,
+      npv,
+      irr
     };
   }
 
