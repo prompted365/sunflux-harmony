@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { geocodeAddress } from './utils/geocoding.ts';
-import { fetchSolarData, processSolarData } from './utils/solarApi.ts';
-import { downloadAndProcessImage } from './utils/imageProcessing.ts';
+import { fetchSolarData } from './utils/solarApi.ts';
+import { processAndStoreImagery } from './utils/solarApi.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
     if (!propertyId) {
       throw new Error('Property ID is required');
     }
+
+    console.log('Processing solar calculation for property:', propertyId);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
