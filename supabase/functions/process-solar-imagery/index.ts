@@ -33,9 +33,17 @@ serve(async (req) => {
       .eq('calculation_id', calculationId)
       .single();
 
-    if (fetchError || !dataLayer) {
-      throw new Error('Failed to fetch data layer information')
+    if (fetchError) {
+      console.error('Error fetching data layer:', fetchError)
+      throw new Error(`Failed to fetch data layer: ${fetchError.message}`)
     }
+
+    if (!dataLayer) {
+      console.error('No data layer found for calculation:', calculationId)
+      throw new Error('No data layer found for calculation')
+    }
+
+    console.log('Found data layer:', dataLayer.id)
 
     // Process and store imagery
     const imageryUrls = await processAndStoreImagery(
@@ -57,18 +65,32 @@ serve(async (req) => {
       .eq('id', dataLayer.id);
 
     if (updateError) {
+      console.error('Error updating data layer:', updateError)
       throw updateError;
     }
 
+    console.log('Successfully processed imagery for calculation:', calculationId)
+
     return new Response(
-      JSON.stringify({ message: 'Imagery processing completed successfully' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        message: 'Imagery processing completed successfully',
+        dataLayerId: dataLayer.id 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     )
 
   } catch (error) {
     console.error('Imagery processing error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400 
