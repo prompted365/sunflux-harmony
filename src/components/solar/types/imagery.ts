@@ -8,6 +8,7 @@ export interface SolarImagery {
 
 export interface BuildingSpecs {
   imagery: SolarImagery;
+  address?: string;
   imageryDate?: {
     year: number;
     month: number;

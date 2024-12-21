@@ -92,12 +92,13 @@ Deno.serve(async (req) => {
       Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
     );
     
-    // Process the solar data with imagery URLs
+    // Process the solar data with imagery URLs and property address
     const processedData = {
       ...processSolarData(solarData),
       building_specs: {
         ...processSolarData(solarData).building_specs,
-        imagery: imageryUrls
+        imagery: imageryUrls,
+        address: `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
       }
     };
 
@@ -124,74 +125,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-async function processAndStoreImagery(solarData: any, propertyId: string, supabase: any, apiKey: string) {
-  const imageryUrls = {
-    rgb: null,
-    dsm: null,
-    mask: null,
-    annualFlux: null,
-    monthlyFlux: null
-  };
-
-  try {
-    // Get data layer URLs
-    const dataLayers = await getDataLayerUrls(
-      { 
-        latitude: solarData.center.latitude, 
-        longitude: solarData.center.longitude 
-      },
-      100, // 100 meter radius
-      apiKey
-    );
-
-    // Process and store each image type
-    const imageProcessingPromises = [
-      {
-        url: dataLayers.rgbUrl,
-        type: 'rgb',
-        heatmap: false
-      },
-      {
-        url: dataLayers.dsmUrl,
-        type: 'dsm',
-        heatmap: true
-      },
-      {
-        url: dataLayers.maskUrl,
-        type: 'mask',
-        heatmap: false
-      },
-      {
-        url: dataLayers.annualFluxUrl,
-        type: 'annual_flux',
-        heatmap: true
-      },
-      {
-        url: dataLayers.monthlyFluxUrl,
-        type: 'monthly_flux',
-        heatmap: true
-      }
-    ].map(async ({ url, type, heatmap }) => {
-      if (url) {
-        const publicUrl = await processAndStoreImage(
-          url,
-          apiKey,
-          supabase,
-          propertyId,
-          type,
-          heatmap
-        );
-        if (publicUrl) {
-          imageryUrls[type as keyof typeof imageryUrls] = publicUrl;
-        }
-      }
-    });
-
-    await Promise.all(imageProcessingPromises);
-  } catch (error) {
-    console.error('Error processing imagery:', error);
-  }
-
-  return imageryUrls;
-}
