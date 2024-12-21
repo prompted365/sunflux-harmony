@@ -1,4 +1,5 @@
 import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
+import { createCanvas } from 'https://deno.land/x/canvas@v1.4.1/mod.ts';
 import { GeoTiff, RGBColor, PaletteOptions } from './types.ts';
 
 export async function processAndStoreImage(
@@ -48,15 +49,13 @@ export async function processAndStoreImage(
         bounds: { north: 0, south: 0, east: 0, west: 0 }
       });
 
-    const blob = await new Promise<Blob>((resolve) => 
-      canvas.toBlob(resolve!, 'image/png')
-    );
-    const arrayBufferPng = await blob.arrayBuffer();
+    // Convert canvas to PNG buffer
+    const pngData = canvas.toBuffer('image/png');
 
     const filePath = `${propertyId}/${imageType}.png`;
     const { error: uploadError } = await supabase.storage
       .from('solar_imagery')
-      .upload(filePath, new Uint8Array(arrayBufferPng), {
+      .upload(filePath, pngData, {
         contentType: 'image/png',
         upsert: true
       });
@@ -77,16 +76,14 @@ export async function processAndStoreImage(
   }
 }
 
-function renderRGB(rgb: GeoTiff, mask?: GeoTiff): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = mask ? mask.width : rgb.width;
-  canvas.height = mask ? mask.height : rgb.height;
+function renderRGB(rgb: GeoTiff, mask?: GeoTiff): any {
+  const canvas = createCanvas(mask ? mask.width : rgb.width, mask ? mask.height : rgb.height);
+  const ctx = canvas.getContext('2d');
 
   const dw = rgb.width / canvas.width;
   const dh = rgb.height / canvas.height;
 
-  const ctx = canvas.getContext('2d')!;
-  const img = ctx.createImageData(canvas.width, canvas.height);
+  const imageData = ctx.createImageData(canvas.width, canvas.height);
 
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
@@ -94,14 +91,14 @@ function renderRGB(rgb: GeoTiff, mask?: GeoTiff): HTMLCanvasElement {
       const maskIdx = y * canvas.width + x;
       const imgIdx = y * canvas.width * 4 + x * 4;
       
-      img.data[imgIdx + 0] = rgb.rasters[0][rgbIdx];
-      img.data[imgIdx + 1] = rgb.rasters[1][rgbIdx];
-      img.data[imgIdx + 2] = rgb.rasters[2][rgbIdx];
-      img.data[imgIdx + 3] = mask ? mask.rasters[0][maskIdx] * 255 : 255;
+      imageData.data[imgIdx + 0] = rgb.rasters[0][rgbIdx];
+      imageData.data[imgIdx + 1] = rgb.rasters[1][rgbIdx];
+      imageData.data[imgIdx + 2] = rgb.rasters[2][rgbIdx];
+      imageData.data[imgIdx + 3] = mask ? mask.rasters[0][maskIdx] * 255 : 255;
     }
   }
 
-  ctx.putImageData(img, 0, 0);
+  ctx.putImageData(imageData, 0, 0);
   return canvas;
 }
 
@@ -112,7 +109,7 @@ function renderPalette({
   min = 0,
   max = 1,
   index = 0,
-}: PaletteOptions): HTMLCanvasElement {
+}: PaletteOptions): any {
   const palette = createPalette(colors);
   const indices = data.rasters[index]
     .map((x) => normalize(x, max, min))
