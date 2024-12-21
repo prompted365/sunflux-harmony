@@ -1,23 +1,4 @@
-import { LatLng } from './types';
-
-export interface DataLayersResponse {
-  imageryDate: {
-    year: number;
-    month: number;
-    day: number;
-  };
-  imageryProcessedDate: {
-    year: number;
-    month: number;
-    day: number;
-  };
-  dsmUrl: string;
-  rgbUrl: string;
-  maskUrl: string;
-  annualFluxUrl: string;
-  monthlyFluxUrl: string;
-  imageryQuality: string;
-}
+import { LatLng, DataLayersResponse } from './types';
 
 export async function getDataLayerUrls(
   location: LatLng,
@@ -103,7 +84,7 @@ export async function processAndStoreImagery(
     ].map(async ({ url, type, heatmap }) => {
       if (url) {
         try {
-          const { processAndStoreImage } = await import('./imageProcessing/index.ts');
+          const { processAndStoreImage } = await import('./imageProcessing.ts');
           const publicUrl = await processAndStoreImage(
             url,
             apiKey,
