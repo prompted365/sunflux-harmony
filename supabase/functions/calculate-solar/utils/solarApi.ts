@@ -1,10 +1,34 @@
-import { LatLng, DataLayersResponse } from './types';
-import { processAndStoreImage } from './imageProcessing';
+import { LatLng, DataLayersResponse } from './types.ts';
+import { processAndStoreImage } from './imageProcessing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+export async function getBuildingInsights(property: any, apiKey: string) {
+  const args = {
+    'location.latitude': property.latitude.toString(),
+    'location.longitude': property.longitude.toString(),
+    'requiredQuality': 'HIGH',
+  };
+  
+  console.log('GET buildingInsights\n', args);
+  const params = new URLSearchParams({ ...args, key: apiKey });
+  
+  const response = await fetch(
+    `https://solar.googleapis.com/v1/buildingInsights:findClosest?${params}`
+  );
+  const content = await response.json();
+  
+  if (response.status !== 200) {
+    console.error('getBuildingInsights error:\n', content);
+    throw content;
+  }
+  
+  console.log('buildingInsights response:', content);
+  return content;
+}
 
 export async function getDataLayerUrls(
   location: LatLng,
@@ -50,8 +74,8 @@ export async function processAndStoreImagery(
   try {
     const dataLayers = await getDataLayerUrls(
       { 
-        latitude: solarData.center.latitude, 
-        longitude: solarData.center.longitude 
+        latitude: solarData.latitude, 
+        longitude: solarData.longitude 
       },
       100,
       apiKey

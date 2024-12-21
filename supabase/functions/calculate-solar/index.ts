@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { geocodeAddress } from './utils/geocoding.ts';
-import { processAndStoreImagery } from './utils/solarApi.ts';
+import { processAndStoreImagery, getBuildingInsights } from './utils/solarApi.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,6 +82,12 @@ Deno.serve(async (req) => {
       throw new Error('Failed to create solar calculation record');
     }
 
+    // Get building insights from Google Solar API
+    const buildingInsights = await getBuildingInsights(
+      property,
+      Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
+    );
+
     // Process and store imagery
     const imageryUrls = await processAndStoreImagery(
       property,
@@ -95,8 +101,16 @@ Deno.serve(async (req) => {
       .from('solar_calculations')
       .update({
         status: 'completed',
+        system_size: buildingInsights.solarPotential?.maxArrayPanelsCount || null,
+        irradiance_data: {
+          maxSunshineHours: buildingInsights.solarPotential?.maxSunshineHoursPerYear || null,
+          carbonOffset: buildingInsights.solarPotential?.carbonOffsetFactorKgPerMwh || null,
+        },
+        panel_layout: buildingInsights.solarPotential?.solarPanelConfigs?.[0] || null,
+        estimated_production: buildingInsights.solarPotential?.solarPanelConfigs?.[0] || null,
+        financial_analysis: buildingInsights.solarPotential?.financialAnalyses?.[0] || null,
         building_specs: {
-          ...property,
+          ...buildingInsights,
           imagery: imageryUrls
         }
       })
