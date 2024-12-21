@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { geocodeAddress } from './utils/geocoding.ts'
-import { processAndStoreImagery, getBuildingInsights } from './utils/solarApi.ts'
+import { getBuildingInsights } from './utils/solarApi.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -89,19 +88,11 @@ Deno.serve(async (req) => {
       Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
     )
 
-    // Process and store imagery
-    const imageryUrls = await processAndStoreImagery(
-      property,
-      propertyId,
-      supabaseClient,
-      Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
-    )
-    
-    // Update solar calculation with processed data
+    // Update solar calculation with initial data
     const { error: updateError } = await supabaseClient
       .from('solar_calculations')
       .update({
-        status: 'completed',
+        status: 'processing',
         system_size: buildingInsights.solarPotential?.maxArrayPanelsCount || null,
         irradiance_data: {
           maxSunshineHours: buildingInsights.solarPotential?.maxSunshineHoursPerYear || null,
@@ -110,10 +101,7 @@ Deno.serve(async (req) => {
         panel_layout: buildingInsights.solarPotential?.solarPanelConfigs?.[0] || null,
         estimated_production: buildingInsights.solarPotential?.solarPanelConfigs?.[0] || null,
         financial_analysis: buildingInsights.solarPotential?.financialAnalyses?.[0] || null,
-        building_specs: {
-          ...buildingInsights,
-          imagery: imageryUrls
-        }
+        building_specs: buildingInsights
       })
       .eq('id', calculation.id)
 
@@ -121,8 +109,18 @@ Deno.serve(async (req) => {
       throw updateError
     }
 
+    // Trigger imagery processing
+    await supabaseClient.functions.invoke('process-solar-imagery', {
+      body: { 
+        propertyId,
+        calculationId: calculation.id,
+        latitude: property.latitude,
+        longitude: property.longitude
+      }
+    })
+
     return new Response(
-      JSON.stringify({ message: 'Solar calculation completed successfully' }),
+      JSON.stringify({ message: 'Solar calculation initiated successfully' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
