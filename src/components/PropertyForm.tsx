@@ -28,11 +28,15 @@ const PropertyForm = () => {
     return response.data
   }
 
-  const calculateSolar = async (propertyId: string) => {
+  const calculateSolar = async (propertyId: string, coordinates: { latitude: number; longitude: number }) => {
     setCalculating(true)
     try {
       const { error } = await supabase.functions.invoke('calculate-solar', {
-        body: { propertyId }
+        body: { 
+          propertyId,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude
+        }
       })
 
       if (error) throw error
@@ -90,8 +94,8 @@ const PropertyForm = () => {
         description: "Property submitted successfully",
       })
 
-      // Trigger solar calculation
-      await calculateSolar(property.id)
+      // Trigger solar calculation with coordinates
+      await calculateSolar(property.id, coordinates)
 
       setFormData({
         address: "",
