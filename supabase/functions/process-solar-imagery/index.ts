@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { processAndStoreImagery } from './utils/imageProcessing.ts'
+import { corsHeaders } from "../_shared/cors.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const GOOGLE_CLOUD_API_KEY = Deno.env.get('GOOGLE_CLOUD_API_KEY')!;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,88 +12,90 @@ serve(async (req) => {
   }
 
   try {
-    const { calculationId } = await req.json()
+    const { calculationId, latitude, longitude } = await req.json();
     
-    if (!calculationId) {
-      throw new Error('Calculation ID is required')
+    if (!calculationId || !latitude || !longitude) {
+      throw new Error('Missing required parameters');
     }
 
-    console.log('Processing imagery for calculation:', calculationId)
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Fetch data layers from database
-    const { data: dataLayer, error: fetchError } = await supabaseClient
-      .from('data_layers')
-      .select('*')
-      .eq('calculation_id', calculationId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching data layer:', fetchError)
-      throw new Error(`Failed to fetch data layer: ${fetchError.message}`)
-    }
-
-    if (!dataLayer) {
-      console.error('No data layer found for calculation:', calculationId)
-      throw new Error('No data layer found for calculation')
-    }
-
-    console.log('Found data layer:', dataLayer.id)
-
-    // Process and store imagery
-    const imageryUrls = await processAndStoreImagery(
-      dataLayer,
-      calculationId,
-      supabaseClient,
-      Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
-    );
+    // 1. Fetch building insights
+    console.log('Fetching building insights...');
+    const buildingInsightsUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${latitude}&location.longitude=${longitude}&key=${GOOGLE_CLOUD_API_KEY}`;
     
-    // Update calculation with imagery URLs
-    const { error: updateError } = await supabaseClient
+    const buildingResponse = await fetch(buildingInsightsUrl);
+    if (!buildingResponse.ok) {
+      throw new Error(`Failed to fetch building insights: ${await buildingResponse.text()}`);
+    }
+    
+    const buildingData = await buildingResponse.json();
+
+    // 2. Fetch data layers
+    console.log('Fetching data layers...');
+    const dataLayersUrl = `https://solar.googleapis.com/v1/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=100&view=FULL_LAYERS&key=${GOOGLE_CLOUD_API_KEY}`;
+    
+    const dataLayersResponse = await fetch(dataLayersUrl);
+    if (!dataLayersResponse.ok) {
+      throw new Error(`Failed to fetch data layers: ${await dataLayersResponse.text()}`);
+    }
+    
+    const dataLayersData = await dataLayersResponse.json();
+
+    // 3. Store data layers information
+    const { error: dataLayersError } = await supabase
       .from('data_layers')
+      .insert({
+        calculation_id: calculationId,
+        imagery_date: dataLayersData.imageryDate,
+        imagery_processed_date: dataLayersData.imageryProcessedDate,
+        dsm_url: dataLayersData.dsmUrl,
+        rgb_url: dataLayersData.rgbUrl,
+        mask_url: dataLayersData.maskUrl,
+        annual_flux_url: dataLayersData.annualFluxUrl,
+        monthly_flux_url: dataLayersData.monthlyFluxUrl,
+        hourly_shade_urls: dataLayersData.hourlyShadeUrls,
+        imagery_quality: dataLayersData.imageryQuality,
+        raw_response: dataLayersData
+      });
+
+    if (dataLayersError) {
+      throw new Error(`Failed to store data layers: ${dataLayersError.message}`);
+    }
+
+    // 4. Update solar calculation with building insights data
+    const { error: updateError } = await supabase
+      .from('solar_calculations')
       .update({
-        processed_at: new Date().toISOString(),
+        status: 'completed',
+        system_size: buildingData.solarPotential?.maxArrayPanelsCount || null,
+        panel_layout: buildingData.solarPotential?.panelLayout || null,
+        estimated_production: buildingData.solarPotential?.estimatedProduction || null,
+        financial_analysis: buildingData.solarPotential?.financialAnalyses || null,
         building_specs: {
-          imagery: imageryUrls
+          address: buildingData.name,
+          imagery: dataLayersData
         }
       })
-      .eq('id', dataLayer.id);
+      .eq('id', calculationId);
 
     if (updateError) {
-      console.error('Error updating data layer:', updateError)
-      throw updateError;
+      throw new Error(`Failed to update calculation: ${updateError.message}`);
     }
 
-    console.log('Successfully processed imagery for calculation:', calculationId)
-
     return new Response(
-      JSON.stringify({ 
-        message: 'Imagery processing completed successfully',
-        dataLayerId: dataLayer.id 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
-    console.error('Imagery processing error:', error)
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.stack 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});
