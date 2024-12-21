@@ -19,6 +19,7 @@ export interface DataLayersResponse {
   maskUrl: string;
   annualFluxUrl: string;
   monthlyFluxUrl: string;
+  hourlyShadeUrls: string[];
   imageryQuality: string;
 }
 
