@@ -1,5 +1,5 @@
 import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
-import { GeoTiff, RGBColor, PaletteOptions } from './types';
+import { GeoTiff, RGBColor, PaletteOptions } from './types.ts';
 
 export async function processAndStoreImage(
   url: string, 
