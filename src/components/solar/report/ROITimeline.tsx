@@ -1,15 +1,22 @@
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { SolarCalculation } from "../types";
 import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface ROITimelineProps {
   calc: SolarCalculation;
+  financialConfig?: {
+    monthlyBill: number | null;
+    energyCostPerKwh: number;
+    isUsingDefaults: boolean;
+  };
 }
 
-const ROITimeline = ({ calc }: ROITimelineProps) => {
+const ROITimeline = ({ calc, financialConfig }: ROITimelineProps) => {
   if (!calc.financial_analysis) return null;
 
-  const utilityRate = 0.15; // Average utility rate per kWh
+  const utilityRate = financialConfig?.energyCostPerKwh || 0.15; // Use config or fallback to average
   const rateInflation = 0.03; // 3% annual utility rate inflation
   const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   const initialCost = calc.financial_analysis.initialCost;
@@ -44,6 +51,16 @@ const ROITimeline = ({ calc }: ROITimelineProps) => {
   return (
     <Card className="p-6 bg-gradient-to-br from-primary/5 via-background to-background">
       <h3 className="text-2xl font-semibold text-primary mb-6">Return on Investment Timeline</h3>
+      
+      {financialConfig?.isUsingDefaults && (
+        <Alert variant="default" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Using default values for ROI calculations. Update your monthly bill and energy costs for more accurate projections.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4">
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">

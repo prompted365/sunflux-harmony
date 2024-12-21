@@ -9,9 +9,14 @@ import NextSteps from "./report/NextSteps";
 interface ReportPreviewProps {
   calc: SolarCalculation;
   propertyAddress: string;
+  financialConfig?: {
+    monthlyBill: number | null;
+    energyCostPerKwh: number;
+    isUsingDefaults: boolean;
+  };
 }
 
-const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
+const ReportPreview = ({ calc, propertyAddress, financialConfig }: ReportPreviewProps) => {
   // Only render financial sections if we have financial analysis data
   const hasFinancialData = calc.financial_analysis && 
     calc.estimated_production?.yearlyEnergyDcKwh;
@@ -25,8 +30,14 @@ const ReportPreview = ({ calc, propertyAddress }: ReportPreviewProps) => {
       <SystemSpecifications calc={calc} />
       {hasFinancialData && (
         <>
-          <FinancialAnalysis calc={calc} />
-          <ROITimeline calc={calc} />
+          <FinancialAnalysis 
+            calc={calc} 
+            financialConfig={financialConfig}
+          />
+          <ROITimeline 
+            calc={calc}
+            financialConfig={financialConfig}
+          />
         </>
       )}
       <EnvironmentalImpact calc={calc} />

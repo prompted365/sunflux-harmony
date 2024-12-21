@@ -1,14 +1,21 @@
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { SolarCalculation } from "../types";
 
 interface FinancialAnalysisProps {
   calc: SolarCalculation;
+  financialConfig?: {
+    monthlyBill: number | null;
+    energyCostPerKwh: number;
+    isUsingDefaults: boolean;
+  };
 }
 
-const FinancialAnalysis = ({ calc }: FinancialAnalysisProps) => {
+const FinancialAnalysis = ({ calc, financialConfig }: FinancialAnalysisProps) => {
   if (!calc.financial_analysis) return null;
 
-  const utilityRate = 0.15; // Average utility rate per kWh
+  const utilityRate = financialConfig?.energyCostPerKwh || 0.15; // Use config or fallback to average
   const rateInflation = 0.03; // 3% annual utility rate inflation
   const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   
@@ -31,6 +38,16 @@ const FinancialAnalysis = ({ calc }: FinancialAnalysisProps) => {
   return (
     <Card className="p-6 bg-gradient-to-br from-primary/5 via-background to-background border-2">
       <h3 className="text-2xl font-semibold text-primary mb-6">Financial Benefits</h3>
+      
+      {financialConfig?.isUsingDefaults && (
+        <Alert variant="default" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Using default values for financial calculations. Update your monthly bill and energy costs for more accurate estimates.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="space-y-2 p-4 rounded-lg bg-white/50">
           <p className="text-sm text-muted-foreground">Initial Investment</p>
