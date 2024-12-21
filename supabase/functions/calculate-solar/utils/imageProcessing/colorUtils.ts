@@ -1,22 +1,5 @@
 import { RGBColor } from './types';
 
-export function colorToRGB(color: string): RGBColor {
-  const hex = color.startsWith('#') ? color.slice(1) : color;
-  return {
-    r: parseInt(hex.substring(0, 2), 16),
-    g: parseInt(hex.substring(2, 4), 16),
-    b: parseInt(hex.substring(4, 6), 16),
-  };
-}
-
-export function rgbToColor({ r, g, b }: RGBColor): string {
-  const f = (x: number) => {
-    const hex = Math.round(x).toString(16);
-    return hex.length == 1 ? `0${hex}` : hex;
-  };
-  return `#${f(r)}${f(g)}${f(b)}`;
-}
-
 export function createPalette(hexColors: string[]): RGBColor[] {
   const rgb = hexColors.map(colorToRGB);
   const size = 256;
@@ -34,6 +17,15 @@ export function createPalette(hexColors: string[]): RGBColor[] {
         b: lerp(rgb[lower].b, rgb[upper].b, index - lower),
       };
     });
+}
+
+export function colorToRGB(color: string): RGBColor {
+  const hex = color.startsWith('#') ? color.slice(1) : color;
+  return {
+    r: parseInt(hex.substring(0, 2), 16),
+    g: parseInt(hex.substring(2, 4), 16),
+    b: parseInt(hex.substring(4, 6), 16),
+  };
 }
 
 export function normalize(x: number, max: number = 1, min: number = 0): number {
