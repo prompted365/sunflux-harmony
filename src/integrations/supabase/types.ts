@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      addons: {
+        Row: {
+          addon_type: string
+          capacity: number | null
+          cost: number
+          created_at: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          addon_type: string
+          capacity?: number | null
+          cost: number
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          addon_type?: string
+          capacity?: number | null
+          cost?: number
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_usage: {
+        Row: {
+          annual_consumption: number
+          created_at: string
+          id: string
+          monthly_bill: number
+          updated_at: string
+          user_id: string
+          utility_rate_structure: string
+        }
+        Insert: {
+          annual_consumption: number
+          created_at?: string
+          id?: string
+          monthly_bill: number
+          updated_at?: string
+          user_id: string
+          utility_rate_structure: string
+        }
+        Update: {
+          annual_consumption?: number
+          created_at?: string
+          id?: string
+          monthly_bill?: number
+          updated_at?: string
+          user_id?: string
+          utility_rate_structure?: string
+        }
+        Relationships: []
+      }
       data_layers: {
         Row: {
           annual_flux_url: string | null
@@ -67,6 +124,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      incentives: {
+        Row: {
+          created_at: string
+          expiration_date: string
+          id: number
+          incentive_type: string
+          region: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          expiration_date: string
+          id?: number
+          incentive_type: string
+          region: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          expiration_date?: string
+          id?: number
+          incentive_type?: string
+          region?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      installation_costs: {
+        Row: {
+          created_at: string
+          id: number
+          installation_cost_model: string
+          labor_cost: number
+          local_installation_cost: number
+          mounting_system_type: string
+          region: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          installation_cost_model: string
+          labor_cost: number
+          local_installation_cost: number
+          mounting_system_type: string
+          region: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          installation_cost_model?: string
+          labor_cost?: number
+          local_installation_cost?: number
+          mounting_system_type?: string
+          region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      panels: {
+        Row: {
+          created_at: string
+          degradation_rate: number
+          dimensions: Json
+          efficiency: number
+          id: number
+          panel_model: string
+          price: number
+          rated_power: number
+          region: string
+          shipping_cost: number
+          updated_at: string
+          vendor_name: string
+          warranty: Json
+        }
+        Insert: {
+          created_at?: string
+          degradation_rate: number
+          dimensions: Json
+          efficiency: number
+          id?: number
+          panel_model: string
+          price: number
+          rated_power: number
+          region: string
+          shipping_cost: number
+          updated_at?: string
+          vendor_name: string
+          warranty: Json
+        }
+        Update: {
+          created_at?: string
+          degradation_rate?: number
+          dimensions?: Json
+          efficiency?: number
+          id?: number
+          panel_model?: string
+          price?: number
+          rated_power?: number
+          region?: string
+          shipping_cost?: number
+          updated_at?: string
+          vendor_name?: string
+          warranty?: Json
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -134,6 +302,45 @@ export type Database = {
         }
         Relationships: []
       }
+      property_details: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          roof_area: number
+          roof_tilt: number | null
+          shading: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          roof_area: number
+          roof_tilt?: number | null
+          shading?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          roof_area?: number
+          roof_tilt?: number | null
+          shading?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           calculation_id: string
@@ -162,6 +369,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      roi_results: {
+        Row: {
+          co2_offset: number
+          created_at: string
+          id: string
+          irr: number
+          lifetime_production: number
+          npv: number
+          payback_period: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          co2_offset: number
+          created_at?: string
+          id?: string
+          irr: number
+          lifetime_production: number
+          npv: number
+          payback_period: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          co2_offset?: number
+          created_at?: string
+          id?: string
+          irr?: number
+          lifetime_production?: number
+          npv?: number
+          payback_period?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       solar_calculations: {
         Row: {
