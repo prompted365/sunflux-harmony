@@ -196,6 +196,35 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_feature_votes: {
+        Row: {
+          created_at: string
+          feature_type: string
+          id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feature_type: string
+          id?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feature_type?: string
+          id?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_feature_votes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       panels: {
         Row: {
           created_at: string
@@ -537,6 +566,44 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_integrations: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string | null
+          platform: string
+          private_token: string | null
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          platform: string
+          private_token?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string | null
+          platform?: string
+          private_token?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_integrations_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
             referencedColumns: ["id"]
           },
         ]

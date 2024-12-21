@@ -4,6 +4,7 @@ import VendorBranding from "@/components/vendor/VendorBranding";
 import VendorInputs from "@/components/vendor/VendorInputs";
 import VendorClients from "@/components/vendor/VendorClients";
 import VendorDashboard from "@/components/vendor/VendorDashboard";
+import VendorIntegrations from "@/components/vendor/integrations/VendorIntegrations";
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
 
@@ -23,6 +24,8 @@ const Vendor = () => {
         return <VendorBranding vendorProfile={vendorProfile} />;
       case "inputs":
         return <VendorInputs />;
+      case "integrations":
+        return <VendorIntegrations />;
       case "clients":
         return <VendorClients />;
       default:
