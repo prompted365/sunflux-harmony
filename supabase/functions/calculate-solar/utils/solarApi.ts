@@ -1,4 +1,10 @@
 import { LatLng, DataLayersResponse } from './types';
+import { processAndStoreImage } from './imageProcessing';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 export async function getDataLayerUrls(
   location: LatLng,
@@ -82,7 +88,6 @@ export async function processAndStoreImagery(
     ].map(async ({ url, type, heatmap }) => {
       if (url) {
         try {
-          const { processAndStoreImage } = await import('./imageProcessing.ts');
           const publicUrl = await processAndStoreImage(
             url,
             apiKey,

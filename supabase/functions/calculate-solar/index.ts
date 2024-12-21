@@ -1,6 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { geocodeAddress } from './utils/geocoding.ts';
-import { fetchSolarData } from './utils/solarApi.ts';
 import { processAndStoreImagery } from './utils/solarApi.ts';
 
 const corsHeaders = {
@@ -83,31 +82,24 @@ Deno.serve(async (req) => {
       throw new Error('Failed to create solar calculation record');
     }
 
-    // Fetch solar data from Google Solar API
-    const solarData = await fetchSolarData(property.latitude, property.longitude);
-    
     // Process and store imagery
     const imageryUrls = await processAndStoreImagery(
-      solarData,
+      property,
       propertyId,
       supabaseClient,
       Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
     );
     
-    // Process the solar data with imagery URLs and property address
-    const processedData = {
-      ...processSolarData(solarData),
-      building_specs: {
-        ...processSolarData(solarData).building_specs,
-        imagery: imageryUrls,
-        address: `${property.address}, ${property.city}, ${property.state} ${property.zip_code}`
-      }
-    };
-
     // Update solar calculation with processed data
     const { error: updateError } = await supabaseClient
       .from('solar_calculations')
-      .update(processedData)
+      .update({
+        status: 'completed',
+        building_specs: {
+          ...property,
+          imagery: imageryUrls
+        }
+      })
       .eq('id', calculation.id);
 
     if (updateError) {
