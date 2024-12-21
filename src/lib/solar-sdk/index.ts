@@ -39,14 +39,29 @@ export class SolarAPI {
       };
     } catch (error) {
       console.error("Building insights error:", error);
-      return { error: error.message };
+      return {
+        roofArea: 0,
+        roofTilt: 0,
+        shading: 0,
+        yearlyEnergyDcKwh: 0,
+        lifetimeEnergyDcKwh: 0,
+        annualCarbonOffsetKg: 0,
+        maxSunshineHoursPerYear: 0,
+        error: error.message
+      };
     }
   }
 
   async analyzeEnvironment(lat: number, long: number): Promise<EnvironmentalAnalysis> {
     const insights = await this.getBuildingInsights(lat, long);
-    if ('error' in insights) {
-      return insights;
+    if (insights.error) {
+      return {
+        solarIrradiance: 0,
+        carbonOffset: 0,
+        annualProduction: 0,
+        lifetimeProduction: 0,
+        error: insights.error
+      };
     }
 
     return {
@@ -65,7 +80,13 @@ export class SolarAPI {
       .eq("region", region);
 
     if (error) throw new Error(`Failed to fetch panels: ${error.message}`);
-    return data;
+    
+    // Transform database records to Panel type
+    return data.map(panel => ({
+      ...panel,
+      dimensions: panel.dimensions as Panel['dimensions'],
+      warranty: panel.warranty as Panel['warranty']
+    }));
   }
 
   optimizePanels(panels: Panel[], roofArea: number, targetSystemSize: number): OptimizedPanels {
