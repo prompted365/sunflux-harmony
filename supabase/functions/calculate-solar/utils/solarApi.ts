@@ -1,5 +1,4 @@
 import { BuildingInsightsResponse, DataLayersResponse, LatLng } from './types.ts';
-import { processAndStoreImage } from './imageProcessing.ts';
 
 export async function getBuildingInsights(property: any, apiKey: string): Promise<BuildingInsightsResponse> {
   const args = {
@@ -52,20 +51,12 @@ export async function getDataLayerUrls(
   return content;
 }
 
-export async function processAndStoreImagery(
-  property: any, 
-  propertyId: string, 
-  supabase: any, 
+export async function storeDataLayers(
+  property: any,
+  calculationId: string,
+  supabase: any,
   apiKey: string
 ) {
-  const imageryUrls = {
-    rgb: null,
-    dsm: null,
-    mask: null,
-    annualFlux: null,
-    monthlyFlux: null
-  };
-
   try {
     const dataLayers = await getDataLayerUrls(
       { 
@@ -78,57 +69,38 @@ export async function processAndStoreImagery(
 
     console.log('Retrieved data layers:', dataLayers);
 
-    const imageProcessingPromises = [
-      {
-        url: dataLayers.rgbUrl,
-        type: 'rgb',
-        heatmap: false
-      },
-      {
-        url: dataLayers.dsmUrl,
-        type: 'dsm',
-        heatmap: true
-      },
-      {
-        url: dataLayers.maskUrl,
-        type: 'mask',
-        heatmap: false
-      },
-      {
-        url: dataLayers.annualFluxUrl,
-        type: 'annualFlux',
-        heatmap: true
-      },
-      {
-        url: dataLayers.monthlyFluxUrl,
-        type: 'monthlyFlux',
-        heatmap: true
-      }
-    ].map(async ({ url, type, heatmap }) => {
-      if (url) {
-        try {
-          const publicUrl = await processAndStoreImage(
-            url,
-            apiKey,
-            supabase,
-            propertyId,
-            type,
-            heatmap
-          );
-          if (publicUrl) {
-            imageryUrls[type as keyof typeof imageryUrls] = publicUrl;
-          }
-        } catch (error) {
-          console.error(`Error processing ${type} image:`, error);
-        }
+    // Store raw data layers response in database
+    const { error: insertError } = await supabase
+      .from('data_layers')
+      .insert({
+        calculation_id: calculationId,
+        imagery_date: dataLayers.imageryDate,
+        imagery_processed_date: dataLayers.imageryProcessedDate,
+        dsm_url: dataLayers.dsmUrl,
+        rgb_url: dataLayers.rgbUrl,
+        mask_url: dataLayers.maskUrl,
+        annual_flux_url: dataLayers.annualFluxUrl,
+        monthly_flux_url: dataLayers.monthlyFluxUrl,
+        hourly_shade_urls: dataLayers.hourlyShadeUrls,
+        imagery_quality: dataLayers.imageryQuality,
+        raw_response: dataLayers
+      });
+
+    if (insertError) {
+      throw insertError;
+    }
+
+    // Trigger image processing in a separate function
+    await supabase.functions.invoke('process-solar-imagery', {
+      body: { 
+        calculationId,
+        propertyId: property.id
       }
     });
 
-    await Promise.all(imageProcessingPromises);
-    console.log('Processed imagery URLs:', imageryUrls);
+    return dataLayers;
   } catch (error) {
-    console.error('Error processing imagery:', error);
+    console.error('Error storing data layers:', error);
+    throw error;
   }
-
-  return imageryUrls;
 }

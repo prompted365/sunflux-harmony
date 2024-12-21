@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      data_layers: {
+        Row: {
+          annual_flux_url: string | null
+          calculation_id: string
+          created_at: string
+          dsm_url: string | null
+          hourly_shade_urls: string[] | null
+          id: string
+          imagery_date: string | null
+          imagery_processed_date: string | null
+          imagery_quality: string | null
+          mask_url: string | null
+          monthly_flux_url: string | null
+          processed_at: string | null
+          raw_response: Json | null
+          rgb_url: string | null
+        }
+        Insert: {
+          annual_flux_url?: string | null
+          calculation_id: string
+          created_at?: string
+          dsm_url?: string | null
+          hourly_shade_urls?: string[] | null
+          id?: string
+          imagery_date?: string | null
+          imagery_processed_date?: string | null
+          imagery_quality?: string | null
+          mask_url?: string | null
+          monthly_flux_url?: string | null
+          processed_at?: string | null
+          raw_response?: Json | null
+          rgb_url?: string | null
+        }
+        Update: {
+          annual_flux_url?: string | null
+          calculation_id?: string
+          created_at?: string
+          dsm_url?: string | null
+          hourly_shade_urls?: string[] | null
+          id?: string
+          imagery_date?: string | null
+          imagery_processed_date?: string | null
+          imagery_quality?: string | null
+          mask_url?: string | null
+          monthly_flux_url?: string | null
+          processed_at?: string | null
+          raw_response?: Json | null
+          rgb_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_layers_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company: string | null
