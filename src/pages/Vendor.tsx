@@ -8,7 +8,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -26,31 +25,62 @@ const Vendor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [vendorProfile, setVendorProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchVendorProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/login");
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("vendor_profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
+        const { data, error } = await supabase
+          .from("vendor_profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
 
-      if (error) {
+        if (error) {
+          toast({
+            title: "Error fetching vendor profile",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // If no profile exists, create one
+        if (!data) {
+          const { data: newProfile, error: createError } = await supabase
+            .from("vendor_profiles")
+            .insert([{ id: session.user.id }])
+            .select()
+            .single();
+
+          if (createError) {
+            toast({
+              title: "Error creating vendor profile",
+              description: createError.message,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          setVendorProfile(newProfile);
+        } else {
+          setVendorProfile(data);
+        }
+      } catch (error: any) {
         toast({
-          title: "Error fetching vendor profile",
+          title: "Error",
           description: error.message,
           variant: "destructive",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      setVendorProfile(data);
     };
 
     fetchVendorProfile();
@@ -64,6 +94,10 @@ const Vendor = () => {
   ];
 
   const renderContent = () => {
+    if (loading) {
+      return <div className="flex items-center justify-center h-full">Loading...</div>;
+    }
+
     switch (activeSection) {
       case "dashboard":
         return <VendorDashboard />;
@@ -90,21 +124,19 @@ const Vendor = () => {
                   <Building2 className="mr-2 h-4 w-4" />
                   Vendor Portal
                 </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {menuItems.map((item) => (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton
-                          onClick={() => setActiveSection(item.id)}
-                          className={activeSection === item.id ? "bg-primary/10" : ""}
-                        >
-                          <item.icon className="mr-2 h-4 w-4" />
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        onClick={() => setActiveSection(item.id)}
+                        className={activeSection === item.id ? "bg-primary/10" : ""}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
               </SidebarGroup>
             </SidebarContent>
           </Sidebar>
