@@ -84,8 +84,13 @@ Deno.serve(async (req) => {
     // Fetch solar data from Google Solar API
     const solarData = await fetchSolarData(property.latitude, property.longitude);
     
-    // Download and store imagery
-    const imageryUrls = await processAndStoreImagery(solarData, propertyId, supabaseClient);
+    // Process and store imagery
+    const imageryUrls = await processAndStoreImagery(
+      solarData,
+      propertyId,
+      supabaseClient,
+      Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? ''
+    );
     
     // Process the solar data with imagery URLs
     const processedData = {
@@ -120,47 +125,70 @@ Deno.serve(async (req) => {
   }
 });
 
-async function processAndStoreImagery(solarData: any, propertyId: string, supabase: any) {
+async function processAndStoreImagery(solarData: any, propertyId: string, supabase: any, apiKey: string) {
   const imageryUrls = {
-    dsm: null,
     rgb: null,
+    dsm: null,
     mask: null,
     annualFlux: null,
     monthlyFlux: null
   };
 
   try {
-    // Process each image type
-    const imageTypes = {
-      dsm: solarData.dsmUrl,
-      rgb: solarData.rgbUrl,
-      mask: solarData.maskUrl,
-      annualFlux: solarData.annualFluxUrl,
-      monthlyFlux: solarData.monthlyFluxUrl
-    };
+    // Get data layer URLs
+    const dataLayers = await getDataLayerUrls(
+      { 
+        latitude: solarData.center.latitude, 
+        longitude: solarData.center.longitude 
+      },
+      100, // 100 meter radius
+      apiKey
+    );
 
-    for (const [type, url] of Object.entries(imageTypes)) {
+    // Process and store each image type
+    const imageProcessingPromises = [
+      {
+        url: dataLayers.rgbUrl,
+        type: 'rgb',
+        heatmap: false
+      },
+      {
+        url: dataLayers.dsmUrl,
+        type: 'dsm',
+        heatmap: true
+      },
+      {
+        url: dataLayers.maskUrl,
+        type: 'mask',
+        heatmap: false
+      },
+      {
+        url: dataLayers.annualFluxUrl,
+        type: 'annual_flux',
+        heatmap: true
+      },
+      {
+        url: dataLayers.monthlyFluxUrl,
+        type: 'monthly_flux',
+        heatmap: true
+      }
+    ].map(async ({ url, type, heatmap }) => {
       if (url) {
-        const imageData = await downloadAndProcessImage(url, Deno.env.get('GOOGLE_CLOUD_API_KEY') ?? '');
-        if (imageData) {
-          const filePath = `${propertyId}/${type}.png`;
-          const { error: uploadError } = await supabase.storage
-            .from('solar_imagery')
-            .upload(filePath, imageData, {
-              contentType: 'image/png',
-              upsert: true
-            });
-
-          if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage
-              .from('solar_imagery')
-              .getPublicUrl(filePath);
-            
-            imageryUrls[type as keyof typeof imageryUrls] = publicUrl;
-          }
+        const publicUrl = await processAndStoreImage(
+          url,
+          apiKey,
+          supabase,
+          propertyId,
+          type,
+          heatmap
+        );
+        if (publicUrl) {
+          imageryUrls[type as keyof typeof imageryUrls] = publicUrl;
         }
       }
-    }
+    });
+
+    await Promise.all(imageProcessingPromises);
   } catch (error) {
     console.error('Error processing imagery:', error);
   }

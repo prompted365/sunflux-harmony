@@ -28,6 +28,52 @@ export async function fetchSolarData(latitude: number, longitude: number): Promi
   return buildingData;
 }
 
+export async function getDataLayerUrls(
+  location: { latitude: number; longitude: number },
+  radiusMeters: number,
+  apiKey: string,
+): Promise<DataLayersResponse> {
+  const args = {
+    'location.latitude': location.latitude.toFixed(5),
+    'location.longitude': location.longitude.toFixed(5),
+    radius_meters: radiusMeters.toString(),
+    required_quality: 'LOW',
+  };
+  
+  console.log('GET dataLayers\n', args);
+  const params = new URLSearchParams({ ...args, key: apiKey });
+  
+  const response = await fetch(`https://solar.googleapis.com/v1/dataLayers:get?${params}`);
+  const content = await response.json();
+  
+  if (response.status !== 200) {
+    console.error('getDataLayerUrls\n', content);
+    throw content;
+  }
+  
+  console.log('dataLayersResponse', content);
+  return content;
+}
+
+export interface DataLayersResponse {
+  imageryDate: {
+    year: number;
+    month: number;
+    day: number;
+  };
+  imageryProcessedDate: {
+    year: number;
+    month: number;
+    day: number;
+  };
+  dsmUrl: string;
+  rgbUrl: string;
+  maskUrl: string;
+  annualFluxUrl: string;
+  monthlyFluxUrl: string;
+  imageryQuality: string;
+}
+
 export function processSolarData(data: SolarApiResponse) {
   const solarPotential = data.solarPotential;
   
