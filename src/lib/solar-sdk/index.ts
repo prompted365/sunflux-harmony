@@ -179,5 +179,29 @@ export class SolarAPI {
   }
 }
 
-// Create and export a singleton instance
-export const solarAPI = new SolarAPI(process.env.GOOGLE_MAPS_API_KEY || '');
+// Create and export a singleton instance that will be initialized with the API key
+let solarAPI: SolarAPI;
+
+// Initialize the API with the secret from Supabase
+const initializeSolarAPI = async () => {
+  const { data: { GOOGLE_MAPS_API_KEY } } = await supabase.functions.invoke('get-secret', {
+    body: { name: 'GOOGLE_MAPS_API_KEY' }
+  });
+  
+  if (!GOOGLE_MAPS_API_KEY) {
+    console.error('Google Maps API key not found in Supabase secrets');
+    return new SolarAPI(''); // Return instance with empty key to avoid breaking the app
+  }
+
+  solarAPI = new SolarAPI(GOOGLE_MAPS_API_KEY);
+  return solarAPI;
+};
+
+// Export the initialization function and a getter for the API instance
+export { initializeSolarAPI };
+export const getSolarAPI = () => {
+  if (!solarAPI) {
+    throw new Error('Solar API not initialized. Call initializeSolarAPI() first.');
+  }
+  return solarAPI;
+};

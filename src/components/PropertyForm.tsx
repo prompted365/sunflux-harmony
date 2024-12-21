@@ -1,11 +1,12 @@
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { solarAPI } from "@/lib/solar-sdk"
+import { getSolarAPI, initializeSolarAPI } from "@/lib/solar-sdk"
 import { AddressInput } from "./property/AddressInput"
 import { PropertyFormSubmit } from "./property/PropertyFormSubmit"
 import { usePropertyFormState } from "./property/PropertyFormState"
 import { FinancialInputs } from "./property/FinancialInputs"
 import { Card } from "./ui/card"
+import { useEffect } from "react"
 
 const PropertyForm = () => {
   const { toast } = useToast()
@@ -20,6 +21,11 @@ const PropertyForm = () => {
     financialData,
     updateFinancialField,
   } = usePropertyFormState()
+
+  // Initialize Solar API when component mounts
+  useEffect(() => {
+    initializeSolarAPI().catch(console.error)
+  }, [])
 
   const geocodeAddress = async () => {
     const response = await supabase.functions.invoke('geocode-address', {
@@ -36,6 +42,8 @@ const PropertyForm = () => {
   const calculateSolar = async (propertyId: string, coordinates: { latitude: number; longitude: number }) => {
     setCalculating(true)
     try {
+      const solarAPI = getSolarAPI()
+      
       // Get building insights using the SDK
       const buildingInsights = await solarAPI.getBuildingInsights(
         coordinates.latitude,
@@ -56,7 +64,6 @@ const PropertyForm = () => {
         throw new Error(environmentalAnalysis.error)
       }
 
-      // Create solar calculation record
       const { error: calcError } = await supabase
         .from('solar_calculations')
         .insert({
@@ -95,6 +102,7 @@ const PropertyForm = () => {
         title: "Success",
         description: "Solar calculation completed",
       })
+
     } catch (error) {
       console.error("Error calculating solar:", error)
       toast({
