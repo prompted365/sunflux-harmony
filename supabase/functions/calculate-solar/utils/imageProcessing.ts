@@ -27,7 +27,6 @@ export async function processAndStoreImage(
     const image = await tiff.getImage();
     const rasters = await image.readRasters();
 
-    // Create canvas and render image
     const canvas = useHeatmap ? 
       renderPalette({
         data: {
@@ -51,13 +50,11 @@ export async function processAndStoreImage(
         bounds: { north: 0, south: 0, east: 0, west: 0 }
       });
 
-    // Convert canvas to blob
     const blob = await new Promise<Blob>((resolve) => 
       canvas.toBlob(resolve!, 'image/png')
     );
     const arrayBufferPng = await blob.arrayBuffer();
 
-    // Upload to Supabase Storage
     const filePath = `${propertyId}/${imageType}.png`;
     const { error: uploadError } = await supabase.storage
       .from('solar_imagery')
@@ -71,7 +68,6 @@ export async function processAndStoreImage(
       return null;
     }
 
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('solar_imagery')
       .getPublicUrl(filePath);
@@ -119,7 +115,7 @@ function renderPalette({
   max = 1,
   index = 0,
 }: PaletteOptions): HTMLCanvasElement {
-  const palette = createPalette(colors);
+  const palette = createPalette(colors ?? ['000000', 'ffffff']);
   const indices = data.rasters[index]
     .map((x) => normalize(x, max, min))
     .map((x) => Math.round(x * (palette.length - 1)));
