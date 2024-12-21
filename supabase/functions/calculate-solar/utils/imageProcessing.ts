@@ -1,21 +1,7 @@
 import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
 import * as geokeysToProj4 from 'https://esm.sh/geotiff-geokeys-to-proj4@2024.4.13';
 import proj4 from 'https://esm.sh/proj4@2.15.0';
-import { GeoTiff, Bounds } from './types';
-
-interface GeoTiff {
-  width: number;
-  height: number;
-  rasters: Array<number>[];
-  bounds: Bounds;
-}
-
-interface Bounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-}
+import { GeoTiff, RGBColor, PaletteOptions } from './types';
 
 export async function processAndStoreImage(
   url: string, 
@@ -28,7 +14,6 @@ export async function processAndStoreImage(
   try {
     console.log(`Processing ${imageType} image from URL:`, url);
     
-    // Add API key to Solar API URLs
     const solarUrl = url.includes('solar.googleapis.com') ? url + `&key=${apiKey}` : url;
     const response = await fetch(solarUrl);
     
@@ -43,13 +28,7 @@ export async function processAndStoreImage(
     const rasters = await image.readRasters();
 
     // Create canvas and render image
-    const canvas = document.createElement('canvas');
-    canvas.width = rasters.width;
-    canvas.height = rasters.height;
-    
-    if (useHeatmap) {
-      // Use palette rendering for solar data
-      const colors = ['0000FF', '00FF00', 'FFFF00', 'FF0000'];
+    const canvas = useHeatmap ? 
       renderPalette({
         data: {
           width: rasters.width,
@@ -59,12 +38,10 @@ export async function processAndStoreImage(
           ),
           bounds: { north: 0, south: 0, east: 0, west: 0 }
         },
-        colors,
+        colors: ['0000FF', '00FF00', 'FFFF00', 'FF0000'],
         min: 0,
         max: Math.max(...Array.from(rasters[0] as unknown as Uint8Array))
-      });
-    } else {
-      // Use RGB rendering for regular images
+      }) :
       renderRGB({
         width: rasters.width,
         height: rasters.height,
@@ -73,7 +50,6 @@ export async function processAndStoreImage(
         ),
         bounds: { north: 0, south: 0, east: 0, west: 0 }
       });
-    }
 
     // Convert canvas to blob
     const blob = await new Promise<Blob>((resolve) => 
@@ -142,19 +118,12 @@ function renderPalette({
   min = 0,
   max = 1,
   index = 0,
-}: {
-  data: GeoTiff;
-  mask?: GeoTiff;
-  colors?: string[];
-  min?: number;
-  max?: number;
-  index?: number;
-}): HTMLCanvasElement {
+}: PaletteOptions): HTMLCanvasElement {
   const palette = createPalette(colors);
   const indices = data.rasters[index]
     .map((x) => normalize(x, max, min))
     .map((x) => Math.round(x * (palette.length - 1)));
-  
+
   return renderRGB({
     ...data,
     rasters: [
@@ -165,7 +134,7 @@ function renderPalette({
   }, mask);
 }
 
-function createPalette(hexColors: string[]): { r: number; g: number; b: number }[] {
+function createPalette(hexColors: string[]): RGBColor[] {
   const rgb = hexColors.map(colorToRGB);
   const size = 256;
   const step = (rgb.length - 1) / (size - 1);
@@ -184,7 +153,7 @@ function createPalette(hexColors: string[]): { r: number; g: number; b: number }
     });
 }
 
-function colorToRGB(color: string): { r: number; g: number; b: number } {
+function colorToRGB(color: string): RGBColor {
   const hex = color.startsWith('#') ? color.slice(1) : color;
   return {
     r: parseInt(hex.substring(0, 2), 16),

@@ -9,7 +9,7 @@ export async function getDataLayerUrls(
     'location.latitude': location.latitude.toFixed(5),
     'location.longitude': location.longitude.toFixed(5),
     radius_meters: radiusMeters.toString(),
-    required_quality: 'LOW', // Request at least LOW quality to ensure we get results
+    required_quality: 'LOW',
   };
   
   console.log('GET dataLayers\n', args);

@@ -35,3 +35,18 @@ export interface Bounds {
   east: number;
   west: number;
 }
+
+export interface RGBColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+export interface PaletteOptions {
+  data: GeoTiff;
+  mask?: GeoTiff;
+  colors?: string[];
+  min?: number;
+  max?: number;
+  index?: number;
+}
