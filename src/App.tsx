@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import About from "./pages/About";
 import Features from "./pages/Features";
+import Vendor from "./pages/Vendor";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,11 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/vendor" element={
+            <ProtectedRoute>
+              <Vendor />
+            </ProtectedRoute>
+          } />
           <Route
             path="/"
             element={

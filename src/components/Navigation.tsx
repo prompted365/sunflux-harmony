@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { List, Mail } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { List, Mail, Building2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -67,6 +67,13 @@ const Navigation = () => {
           </Link>
           <Link to="/about" className="text-muted hover:text-primary transition-colors">
             About
+          </Link>
+          <Link 
+            to="/vendor" 
+            className="flex items-center space-x-2 text-muted hover:text-primary transition-colors"
+          >
+            <Building2 className="w-4 h-4" />
+            <span>Vendor Portal</span>
           </Link>
           <Link 
             to="/contact" 
