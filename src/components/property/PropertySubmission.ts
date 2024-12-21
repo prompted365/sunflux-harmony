@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PropertyFormData } from "./PropertyFormState";
-import { Toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const submitProperty = async (
   formData: PropertyFormData,
@@ -44,7 +44,7 @@ export const submitProperty = async (
     console.error("Error submitting property:", error);
     toast({
       title: "Error",
-      description: error.message || "Failed to submit property",
+      description: error instanceof Error ? error.message : "Failed to submit property",
       variant: "destructive",
     });
     return null;

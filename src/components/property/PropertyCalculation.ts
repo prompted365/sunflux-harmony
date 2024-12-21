@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSolarAPI } from "@/lib/solar-sdk";
-import { Toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const calculateSolar = async (
   propertyId: string, 
@@ -17,19 +17,11 @@ export const calculateSolar = async (
       coordinates.longitude
     );
 
-    if (buildingInsights.error) {
-      throw new Error(buildingInsights.error);
-    }
-
     // Get environmental analysis
     const environmentalAnalysis = await solarAPI.analyzeEnvironment(
       coordinates.latitude,
       coordinates.longitude
     );
-
-    if ('error' in environmentalAnalysis) {
-      throw new Error(environmentalAnalysis.error);
-    }
 
     const { error: calcError } = await supabase
       .from('solar_calculations')
@@ -75,7 +67,7 @@ export const calculateSolar = async (
     console.error("Error calculating solar:", error);
     toast({
       title: "Error",
-      description: "Failed to complete solar calculation",
+      description: error instanceof Error ? error.message : "Failed to complete solar calculation",
       variant: "destructive",
     });
     return false;
