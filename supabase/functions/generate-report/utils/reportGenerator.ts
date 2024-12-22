@@ -1,4 +1,4 @@
-import { generateBaseTemplate } from './templates/base/layout';
+import { generateBaseTemplate } from './templates/layout';
 import { generateHeader } from './templates/sections/header';
 import { generatePropertyAnalysis } from './templates/sections/propertyAnalysis';
 import { generateSystemSpecs } from './templates/sections/systemSpecs';
