@@ -71,7 +71,6 @@ export const generateBaseTemplate = () => `
             margin: 2rem 0;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     {{content}}

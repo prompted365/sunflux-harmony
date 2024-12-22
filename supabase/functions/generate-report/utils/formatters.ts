@@ -1,16 +1,15 @@
-export const formatCurrency = (value: number): string => {
+export const formatCurrency = (num: number): string => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(value);
+        currency: 'USD'
+    }).format(num);
 };
 
-export const formatNumber = (value: number): string => {
+export const formatNumber = (num: number, decimals = 0): string => {
     return new Intl.NumberFormat('en-US', {
-        maximumFractionDigits: 1
-    }).format(value);
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }).format(num);
 };
 
 export const formatDate = (date: Date): string => {

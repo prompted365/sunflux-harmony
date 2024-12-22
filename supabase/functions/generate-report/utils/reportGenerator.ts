@@ -1,5 +1,5 @@
-import { generateBaseTemplate } from './templates/baseTemplate';
-import { formatCurrency, formatNumber, formatDate } from './formatters';
+import { generateBaseTemplate } from './templates/baseTemplate.ts';
+import { formatCurrency, formatNumber, formatDate } from './formatters.ts';
 
 export const generateReport = (data: any): string => {
     const content = `
