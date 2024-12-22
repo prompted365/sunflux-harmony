@@ -3,11 +3,13 @@ import { SolarCalculation } from "./types";
 import SolarMetrics from "./SolarMetrics";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash, AlertCircle } from "lucide-react";
+import { FileText, Trash, AlertCircle, FileDown, FileCode } from "lucide-react";
 import ReportPreview from "./ReportPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import GenerateHtmlButton from "@/components/GenerateHtmlButton";
+import GenerateReportButton from "./GenerateReportButton";
 
 interface SolarResultCardProps {
   calc: SolarCalculation;
@@ -93,21 +95,30 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         {calc.status === 'completed' && (
           <>
             <SolarMetrics calc={calc} />
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full gap-2">
-                  <FileText className="h-4 w-4" />
-                  View Report
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogTitle>Solar Installation Report</DialogTitle>
-                <ReportPreview 
-                  calc={calc} 
-                  propertyAddress={calc.building_specs?.address || "Property Address Unavailable"}
-                />
-              </DialogContent>
-            </Dialog>
+            <div className="space-y-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full gap-2">
+                    <FileText className="h-4 w-4" />
+                    View Report
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogTitle>Solar Installation Report</DialogTitle>
+                  <ReportPreview 
+                    calc={calc} 
+                    propertyAddress={calc.building_specs?.address || "Property Address Unavailable"}
+                  />
+                  <div className="flex gap-2 mt-6">
+                    <GenerateHtmlButton 
+                      htmlContent={`Report for ${calc.building_specs?.address || 'Property'}`}
+                      filename={`solar-report-${calc.id}`}
+                    />
+                    <GenerateReportButton calculationId={calc.id} />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </>
         )}
 
