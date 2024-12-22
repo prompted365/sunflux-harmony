@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useVendorProfile } from "@/hooks/useVendorProfile";
 
 const FEATURE_OPTIONS = [
   { id: 'contacts', label: 'Contacts' },
@@ -16,6 +17,7 @@ export const VendorIntegrations = () => {
   const [locationId, setLocationId] = useState("");
   const [privateToken, setPrivateToken] = useState("");
   const { toast } = useToast();
+  const { vendorProfile } = useVendorProfile();
 
   const handleSaveIntegration = async () => {
     try {
@@ -25,6 +27,7 @@ export const VendorIntegrations = () => {
           platform: 'gohighlevel',
           location_id: locationId,
           private_token: privateToken,
+          vendor_id: vendorProfile?.id
         });
 
       if (error) throw error;
@@ -46,7 +49,10 @@ export const VendorIntegrations = () => {
     try {
       const { error } = await supabase
         .from('integration_feature_votes')
-        .insert({ feature_type: featureType });
+        .insert({ 
+          feature_type: featureType,
+          vendor_id: vendorProfile?.id // Add vendor_id to satisfy RLS policy
+        });
 
       if (error) throw error;
 
