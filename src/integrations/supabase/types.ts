@@ -311,6 +311,7 @@ export type Database = {
           state: string
           updated_at: string
           user_id: string
+          vendor_id: string | null
           zip_code: string
         }
         Insert: {
@@ -323,6 +324,7 @@ export type Database = {
           state: string
           updated_at?: string
           user_id: string
+          vendor_id?: string | null
           zip_code: string
         }
         Update: {
@@ -335,6 +337,7 @@ export type Database = {
           state?: string
           updated_at?: string
           user_id?: string
+          vendor_id?: string | null
           zip_code?: string
         }
         Relationships: [
@@ -343,6 +346,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
             referencedColumns: ["id"]
           },
         ]
