@@ -42,9 +42,26 @@ const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalc
       },
       optimalConfiguration: (calc.panel_layout as any)?.optimalConfiguration
     },
-    estimated_production: calc.estimated_production as SolarCalculation['estimated_production'],
-    financial_analysis: calc.financial_analysis as SolarCalculation['financial_analysis'],
-    building_specs: calc.building_specs as SolarCalculation['building_specs']
+    estimated_production: {
+      yearlyEnergyDcKwh: (calc.estimated_production as any)?.yearlyEnergyDcKwh || null,
+      monthlyBill: (calc.estimated_production as any)?.monthlyBill || null,
+      financialDetails: (calc.estimated_production as any)?.financialDetails,
+      environmentalImpact: (calc.estimated_production as any)?.environmentalImpact
+    },
+    financial_analysis: {
+      initialCost: (calc.financial_analysis as any)?.initialCost || 0,
+      federalIncentive: (calc.financial_analysis as any)?.federalIncentive || 0,
+      monthlyBillSavings: (calc.financial_analysis as any)?.monthlyBillSavings || 0,
+      paybackYears: (calc.financial_analysis as any)?.paybackYears || 0
+    },
+    building_specs: {
+      address: (calc.building_specs as any)?.address,
+      imagery: {
+        rgb: (calc.building_specs as any)?.imagery?.rgb,
+        dsm: (calc.building_specs as any)?.imagery?.dsm,
+        annualFlux: (calc.building_specs as any)?.imagery?.annualFlux
+      }
+    }
   };
 };
 
