@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PropertyFormData } from "./PropertyFormState";
+import { Toast } from "@/components/ui/use-toast";
 
 export interface PropertySubmissionData extends PropertyFormData {
   vendor_id: string;
@@ -14,13 +15,17 @@ export const submitProperty = async (
 ) => {
   try {
     // Get coordinates from address
-    const coordinates = await geocodeAddress(formData);
+    const coordinates = await geocodeAddress({
+      ...formData,
+      vendor_id
+    });
 
     // Insert property with vendor_id
     const { data: property, error } = await supabase
       .from("properties")
       .insert({
         vendor_id,
+        user_id: vendor_id, // Set user_id to vendor_id for now
         address: formData.address,
         city: formData.city,
         state: formData.state,

@@ -1,7 +1,8 @@
 export interface IrradianceData {
-  maxSunshineHours?: number;
-  carbonOffset?: number;
-  monthlyProduction?: {
-    [key: string]: number;
-  };
+  maxSunshineHours: number; // Making this required to match existing type
+  carbonOffset: number; // Making this required to match existing type
+  monthlyProduction?: number[];
+  annualProduction?: number;
+  peakSunHours?: number;
+  shading?: number;
 }

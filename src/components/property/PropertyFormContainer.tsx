@@ -38,21 +38,60 @@ const PropertyFormContainer = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast({
-          title: "Error",
-          description: "Please log in as a vendor to submit properties",
-          variant: "destructive",
+        // If not authenticated, try to sign up with provided credentials
+        const { data, error } = await supabase.auth.signUp({
+          email: signupData.email,
+          password: signupData.password,
+          options: {
+            data: {
+              communication_opt_in: signupData.communicationOptIn
+            }
+          }
         });
-        setLoading(false);
-        return;
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!data.session) {
+          toast({
+            title: "Please verify your email",
+            description: "Check your email for a verification link before continuing.",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Create vendor profile
+        const { error: profileError } = await supabase
+          .from('vendor_profiles')
+          .insert([{ 
+            id: data.user?.id,
+            communication_opt_in: signupData.communicationOptIn
+          }]);
+
+        if (profileError) {
+          toast({
+            title: "Error",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
       }
 
+      // Get the vendor ID (user ID) from the session
+      const vendorId = session?.user.id;
+
       // Submit the property with vendor ID
-      const property = await submitProperty({
-        ...formData,
-        vendor_id: session.user.id,
-        lead_email: signupData.email
-      }, toast);
+      const property = await submitProperty(formData, vendorId, toast);
       
       if (property) {
         // Get coordinates from the saved property
