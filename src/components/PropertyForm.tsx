@@ -71,10 +71,31 @@ const PropertyForm = () => {
           setLoading(false);
           return;
         }
+
+        // Create vendor profile
+        const { error: profileError } = await supabase
+          .from('vendor_profiles')
+          .insert([{ 
+            id: data.user?.id,
+            communication_opt_in: signupData.communicationOptIn
+          }]);
+
+        if (profileError) {
+          toast({
+            title: "Error",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
       }
 
-      // Submit the property
-      const property = await submitProperty(formData, toast);
+      // Get the vendor ID (user ID) from the session
+      const vendorId = session?.user.id;
+
+      // Submit the property with vendor ID
+      const property = await submitProperty(formData, vendorId, toast);
       
       if (property) {
         // Get coordinates from the saved property

@@ -1,33 +1,35 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { PropertyFormData } from "./PropertyFormState";
 
-interface PropertySubmissionData {
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+export interface PropertySubmissionData extends PropertyFormData {
   vendor_id: string;
-  lead_email?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export const submitProperty = async (
-  formData: PropertySubmissionData,
-  toast: (props: { title: string; description: string; variant?: "default" | "destructive" }) => void
+  formData: PropertyFormData,
+  vendor_id: string,
+  toast: any
 ) => {
   try {
-    // Get coordinates
+    // Get coordinates from address
     const coordinates = await geocodeAddress(formData);
-    console.log("Geocoded coordinates:", coordinates);
 
-    const { data: property, error } = await supabase.from("properties").insert({
-      vendor_id: formData.vendor_id,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      zip_code: formData.zipCode,
-      latitude: coordinates.latitude,
-      longitude: coordinates.longitude,
-    }).select().single();
+    // Insert property with vendor_id
+    const { data: property, error } = await supabase
+      .from("properties")
+      .insert({
+        vendor_id,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+        latitude: coordinates?.latitude,
+        longitude: coordinates?.longitude,
+      })
+      .select()
+      .single();
 
     if (error) throw error;
 
