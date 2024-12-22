@@ -6,13 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
 
-const FEATURE_OPTIONS = [
-  { id: 'contacts', label: 'Contacts' },
-  { id: 'conversations', label: 'Conversations' },
-  { id: 'calendars', label: 'Calendars' },
-  { id: 'opportunities', label: 'Opportunities' }
-] as const;
-
 export const VendorIntegrations = () => {
   const [locationId, setLocationId] = useState("");
   const [privateToken, setPrivateToken] = useState("");
@@ -40,30 +33,6 @@ export const VendorIntegrations = () => {
       toast({
         title: "Error saving integration",
         description: "There was a problem saving your integration settings.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleVoteFeature = async (featureType: string) => {
-    try {
-      const { error } = await supabase
-        .from('integration_feature_votes')
-        .insert({ 
-          feature_type: featureType,
-          vendor_id: vendorProfile?.id // Add vendor_id to satisfy RLS policy
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Vote recorded",
-        description: "Thanks for helping us prioritize our integration roadmap!"
-      });
-    } catch (error) {
-      toast({
-        title: "Error recording vote",
-        description: "There was a problem recording your vote.",
         variant: "destructive"
       });
     }
@@ -111,29 +80,6 @@ export const VendorIntegrations = () => {
           <Button onClick={handleSaveIntegration}>
             Save Integration Settings
           </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Feature Voting</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Which integration features would you like to see first? Your vote helps us prioritize our development roadmap.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {FEATURE_OPTIONS.map((feature) => (
-              <Button
-                key={feature.id}
-                variant="outline"
-                onClick={() => handleVoteFeature(feature.id)}
-                className="w-full"
-              >
-                {feature.label}
-              </Button>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>
