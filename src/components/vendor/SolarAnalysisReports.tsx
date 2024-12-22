@@ -23,7 +23,9 @@ interface DatabaseSolarCalculation {
   };
 }
 
-const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalculation => {
+const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalculation & {
+  properties: { address: string; city: string; state: string; zip_code: string };
+} => {
   return {
     id: calc.id,
     status: calc.status,
@@ -59,9 +61,12 @@ const transformDatabaseCalculation = (calc: DatabaseSolarCalculation): SolarCalc
       imagery: {
         rgb: (calc.building_specs as any)?.imagery?.rgb,
         dsm: (calc.building_specs as any)?.imagery?.dsm,
-        annualFlux: (calc.building_specs as any)?.imagery?.annualFlux
+        mask: (calc.building_specs as any)?.imagery?.mask || null,
+        annualFlux: (calc.building_specs as any)?.imagery?.annualFlux,
+        monthlyFlux: (calc.building_specs as any)?.imagery?.monthlyFlux || null
       }
-    }
+    },
+    properties: calc.properties
   };
 };
 
