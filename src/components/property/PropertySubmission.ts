@@ -1,29 +1,26 @@
 import { supabase } from "@/integrations/supabase/client";
-import { PropertyFormData } from "./PropertyFormState";
 import { toast } from "@/hooks/use-toast";
 
+interface PropertySubmissionData {
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  vendor_id: string;
+  lead_email?: string;
+}
+
 export const submitProperty = async (
-  formData: PropertyFormData,
+  formData: PropertySubmissionData,
   toast: (props: { title: string; description: string; variant?: "default" | "destructive" }) => void
 ) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to submit a property",
-        variant: "destructive",
-      });
-      return null;
-    }
-
     // Get coordinates
     const coordinates = await geocodeAddress(formData);
     console.log("Geocoded coordinates:", coordinates);
 
     const { data: property, error } = await supabase.from("properties").insert({
-      user_id: user.id,
+      vendor_id: formData.vendor_id,
       address: formData.address,
       city: formData.city,
       state: formData.state,
@@ -51,7 +48,7 @@ export const submitProperty = async (
   }
 };
 
-export const geocodeAddress = async (formData: PropertyFormData) => {
+export const geocodeAddress = async (formData: PropertySubmissionData) => {
   const response = await supabase.functions.invoke('geocode-address', {
     body: formData
   });

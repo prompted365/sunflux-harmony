@@ -14,9 +14,7 @@ export interface FinancialFormData {
 
 export interface SignupFormData {
   email: string
-  password: string
   communicationOptIn: boolean
-  termsAccepted: boolean
 }
 
 export const usePropertyFormState = () => {
@@ -34,9 +32,7 @@ export const usePropertyFormState = () => {
   })
   const [signupData, setSignupData] = useState<SignupFormData>({
     email: "",
-    password: "",
-    communicationOptIn: false,
-    termsAccepted: false,
+    communicationOptIn: false
   })
 
   const updateField = (field: keyof PropertyFormData, value: string) => {
