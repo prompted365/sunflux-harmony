@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SolarAnalysisReports from "./SolarAnalysisReports";
 
 const VendorClients = () => {
   return (
@@ -20,6 +21,8 @@ const VendorClients = () => {
           </p>
         </CardContent>
       </Card>
+
+      <SolarAnalysisReports />
     </div>
   );
 };
