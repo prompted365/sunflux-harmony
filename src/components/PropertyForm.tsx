@@ -45,9 +45,32 @@ const PropertyForm = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        setShowAuth(true);
-        setLoading(false);
-        return;
+        // If not authenticated, try to sign up with provided credentials
+        const { data, error } = await supabase.auth.signUp({
+          email: signupData.email,
+          password: signupData.password,
+          options: {
+            data: {
+              communication_opt_in: signupData.communicationOptIn
+            }
+          }
+        });
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!data.session) {
+          setShowAuth(true);
+          setLoading(false);
+          return;
+        }
       }
 
       // Submit the property
@@ -168,6 +191,14 @@ const PropertyForm = () => {
             onMonthlyBillChange={(value) => updateFinancialField('monthlyBill', value)}
             onEnergyCostChange={(value) => updateFinancialField('energyCostPerKwh', value)}
             isUsingDefaults={!financialData.monthlyBill}
+          />
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+          <AccountSignupInputs
+            signupData={signupData}
+            updateSignupField={updateSignupField}
           />
         </Card>
 
