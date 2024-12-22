@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SolarResultCard from "../solar/SolarResultCard";
+import { SolarCalculation } from "@/types/solar/calculations";
 
 const SolarAnalysisReports = () => {
   const { data: calculations, isLoading } = useQuery({
@@ -21,7 +22,7 @@ const SolarAnalysisReports = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as (SolarCalculation & { properties: { address: string; city: string; state: string; zip_code: string; } })[];
     }
   });
 
