@@ -1,75 +1,96 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from "../_shared/cors.ts"
+import { createClient } from '@supabase/supabase-js'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { htmlContent, filename } = await req.json()
+    const { calculationId } = await req.json()
     
-    if (!htmlContent || !filename) {
-      throw new Error('HTML content and filename are required')
-    }
-
-    const supabase = createClient(
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
-    // Generate a unique filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const filePath = `html/${filename}_${timestamp}.html`
+    const { data: calculation, error: calcError } = await supabaseClient
+      .from('solar_calculations')
+      .select('*')
+      .eq('id', calculationId)
+      .single()
 
-    // Upload HTML content to the reports bucket
-    const { error: uploadError } = await supabase
-      .storage
-      .from('reports')
-      .upload(filePath, htmlContent, {
-        contentType: 'text/html; charset=utf-8',
-        upsert: false
-      })
+    if (calcError) throw calcError
 
-    if (uploadError) {
-      throw new Error('Failed to upload HTML file')
-    }
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Solar Calculation Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .section { margin-bottom: 20px; }
+            .data-point { margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Solar System Analysis Report</h1>
+            <p>Generated on ${new Date().toLocaleDateString()}</p>
+          </div>
+          
+          <div class="section">
+            <h2>System Overview</h2>
+            <div class="data-point">
+              <strong>System Size:</strong> ${calculation.system_size.toFixed(2)} kW
+            </div>
+            <div class="data-point">
+              <strong>Status:</strong> ${calculation.status}
+            </div>
+          </div>
 
-    // Create a signed URL for downloading
-    const { data: { signedUrl }, error: urlError } = await supabase
-      .storage
-      .from('reports')
-      .createSignedUrl(filePath, 60 * 60 * 24) // URL valid for 24 hours
+          <div class="section">
+            <h2>Solar Production</h2>
+            <div class="data-point">
+              <strong>Annual Production:</strong> 
+              ${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2)} kWh
+            </div>
+            <div class="data-point">
+              <strong>Max Sunshine Hours:</strong>
+              ${calculation.irradiance_data?.maxSunshineHours} hours/year
+            </div>
+          </div>
 
-    if (urlError) {
-      throw new Error('Failed to generate download URL')
-    }
+          <div class="section">
+            <h2>Environmental Impact</h2>
+            <div class="data-point">
+              <strong>Carbon Offset:</strong>
+              ${calculation.irradiance_data?.carbonOffset?.toFixed(2)} kg CO2/year
+            </div>
+          </div>
+        </body>
+      </html>
+    `
 
     return new Response(
-      JSON.stringify({ 
-        message: 'HTML file generated successfully',
-        downloadUrl: signedUrl
-      }),
+      JSON.stringify({ success: true, html }),
       { 
-        headers: { 
-          ...corsHeaders, 
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json'
         }
       }
     )
-
   } catch (error) {
-    console.error('HTML generation error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 400
       }
     )

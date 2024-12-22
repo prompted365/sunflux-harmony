@@ -1,7 +1,2 @@
 project_id = "golmwofsqcsclztyyfxt"
-
-[functions.calculate-solar]
-verify_jwt = true
-
-[functions.process-solar-imagery]
-verify_jwt = true
+serve_port = 54321
