@@ -11,7 +11,7 @@ const Login = () => {
     // Check if user is already logged in
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/");
+        navigate("/vendor");
       }
     });
   }, [navigate]);
@@ -25,8 +25,8 @@ const Login = () => {
             alt="SunLink.ai Logo"
             className="w-24 h-auto mx-auto mb-4"
           />
-          <h1 className="text-2xl font-bold text-gray-900">SunLink.ai Solar Portal</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
+          <h1 className="text-2xl font-bold text-gray-900">Vendor Portal Login</h1>
+          <p className="text-gray-600 mt-2">Sign in to access your vendor dashboard</p>
         </div>
         
         <Auth

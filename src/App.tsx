@@ -69,14 +69,7 @@ const App = () => (
               <Vendor />
             </ProtectedRoute>
           } />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<Index />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
