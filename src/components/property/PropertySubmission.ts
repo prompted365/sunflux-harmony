@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PropertyFormData } from "./PropertyFormState";
-import { Toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast"; // Fixed import
 
 export interface PropertySubmissionData extends PropertyFormData {
   vendor_id: string;
