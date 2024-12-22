@@ -2,7 +2,9 @@ import { SolarCalculation } from "./types";
 import HeaderSection from "./report/HeaderSection";
 import SystemSpecifications from "./report/SystemSpecifications";
 import FinancialAnalysis from "./report/FinancialAnalysis";
-import EnvironmentalImpact from "./report/EnvironmentalImpact";
+import EnvironmentalImpact from "./report/Environmental
+
+Impact";
 import ROITimeline from "./report/ROITimeline";
 import NextSteps from "./report/NextSteps";
 

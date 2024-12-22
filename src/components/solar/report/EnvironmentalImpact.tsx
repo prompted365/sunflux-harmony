@@ -1,82 +1,69 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "../types";
-import { Leaf, Car, Trees, Factory } from "lucide-react";
+import { Leaf, Trees, Home, Car } from "lucide-react";
 
 interface EnvironmentalImpactProps {
   calc: SolarCalculation;
 }
 
 const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
-  // Calculate realistic environmental metrics based on system size
-  const systemSize = calc.system_size || 0;
-  const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
-  
-  // Using the provided realistic values
-  const carbonOffset = 6.1; // metric tons per year
-  const carsEquivalent = 1.3; // vehicles per year
-  const treesEquivalent = 150; // trees per year
-  const homesEquivalent = 1; // homes powered per year
+  if (!calc.irradiance_data?.carbonOffset) return null;
+
+  const annualCarbonOffset = calc.irradiance_data.carbonOffset;
+  const treesEquivalent = Math.round((annualCarbonOffset * 20) / 0.06); // Average tree absorbs 60kg CO2 per year
+  const homesEquivalent = Math.round((calc.estimated_production?.yearlyEnergyDcKwh || 0) / 10700); // Average US home uses 10,700 kWh/year
+  const carMilesEquivalent = Math.round(annualCarbonOffset * 2481.75); // EPA: 404.2 grams CO2 per mile
 
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-bold text-primary">Environmental Impact</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex flex-col items-center text-center space-y-2">
-            <Leaf className="h-8 w-8 text-green-600" />
-            <span className="text-2xl font-bold text-gray-800">{carbonOffset}</span>
-            <span className="text-sm text-gray-600">Metric Tons CO₂ Offset Annually</span>
+    <Card className="p-6 bg-gradient-to-br from-green-50 via-background to-background">
+      <h3 className="text-2xl font-semibold text-green-700 mb-6">Environmental Impact</h3>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center text-green-600">
+            <Leaf className="w-5 h-5 mr-2" />
+            <span className="font-medium">Carbon Offset</span>
           </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex flex-col items-center text-center space-y-2">
-            <Car className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-800">{carsEquivalent}</span>
-            <span className="text-sm text-gray-600">Cars Removed from Road</span>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex flex-col items-center text-center space-y-2">
-            <Trees className="h-8 w-8 text-green-700" />
-            <span className="text-2xl font-bold text-gray-800">{treesEquivalent}</span>
-            <span className="text-sm text-gray-600">Trees Planted Equivalent</span>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex flex-col items-center text-center space-y-2">
-            <Factory className="h-8 w-8 text-gray-600" />
-            <span className="text-2xl font-bold text-gray-800">{homesEquivalent}</span>
-            <span className="text-sm text-gray-600">Homes Powered with Clean Energy</span>
-          </div>
-        </Card>
-      </div>
-
-      <Card className="p-6">
-        <h3 className="text-xl font-semibold text-primary mb-4">Long-Term Environmental Benefits</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
-          <div>
-            <h4 className="font-medium mb-2">25-Year Impact</h4>
-            <ul className="space-y-2">
-              <li>• {(carbonOffset * 25).toFixed(1)} metric tons of CO₂ avoided</li>
-              <li>• Equivalent to planting {(treesEquivalent * 25).toLocaleString()} trees</li>
-              <li>• {(annualProduction * 25).toLocaleString()} kWh of clean energy generated</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">Community Impact</h4>
-            <ul className="space-y-2">
-              <li>• Reduces local air pollution</li>
-              <li>• Decreases grid dependency</li>
-              <li>• Supports energy independence</li>
-            </ul>
-          </div>
+          <p className="text-2xl font-bold text-green-700">
+            {annualCarbonOffset.toFixed(1)} tons/year
+          </p>
+          <p className="text-sm text-green-600">CO₂ emissions reduced</p>
         </div>
-      </Card>
-    </section>
+        
+        <div className="space-y-2">
+          <div className="flex items-center text-green-600">
+            <Trees className="w-5 h-5 mr-2" />
+            <span className="font-medium">Trees Equivalent</span>
+          </div>
+          <p className="text-2xl font-bold text-green-700">
+            {treesEquivalent.toLocaleString()}
+          </p>
+          <p className="text-sm text-green-600">Trees planted</p>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center text-green-600">
+            <Home className="w-5 h-5 mr-2" />
+            <span className="font-medium">Homes Powered</span>
+          </div>
+          <p className="text-2xl font-bold text-green-700">
+            {homesEquivalent}
+          </p>
+          <p className="text-sm text-green-600">Annual home energy use</p>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center text-green-600">
+            <Car className="w-5 h-5 mr-2" />
+            <span className="font-medium">Car Miles</span>
+          </div>
+          <p className="text-2xl font-bold text-green-700">
+            {carMilesEquivalent.toLocaleString()}
+          </p>
+          <p className="text-sm text-green-600">Miles not driven</p>
+        </div>
+      </div>
+    </Card>
   );
 };
 
