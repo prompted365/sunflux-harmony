@@ -88,11 +88,17 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         return;
       }
 
+      // Extract just the filename from the URL
+      const filename = imageKey.split('/').pop();
+      if (!filename) {
+        throw new Error('Invalid image URL format');
+      }
+
       // Get a signed URL for the image
       const { data: { signedUrl }, error } = await supabase
         .storage
         .from('solar_imagery')
-        .createSignedUrl(imageKey, 3600);
+        .createSignedUrl(filename, 3600);
 
       if (error) {
         console.error('Error getting signed URL:', error);
@@ -215,7 +221,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
                   />
                   <div className="flex gap-2 mt-6">
                     <GenerateHtmlButton 
-                      htmlContent={`Report for ${calc.building_specs?.address || 'Property'}`}
+                      calculationId={calc.id}
                       filename={`solar-report-${calc.id}`}
                     />
                     <GenerateReportButton calculationId={calc.id} />

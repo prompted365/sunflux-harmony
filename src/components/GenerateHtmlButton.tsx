@@ -5,11 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface GenerateHtmlButtonProps {
-  htmlContent: string;
-  filename: string;
+  calculationId: string;
+  filename?: string;
 }
 
-const GenerateHtmlButton = ({ htmlContent, filename }: GenerateHtmlButtonProps) => {
+const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: GenerateHtmlButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -18,7 +18,10 @@ const GenerateHtmlButton = ({ htmlContent, filename }: GenerateHtmlButtonProps) 
       setIsGenerating(true);
       
       const { data, error } = await supabase.functions.invoke('generate-html', {
-        body: { htmlContent, filename }
+        body: { 
+          calculationId,
+          filename 
+        }
       });
 
       if (error) throw error;
