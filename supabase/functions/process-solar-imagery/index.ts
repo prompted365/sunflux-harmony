@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { processAndStoreImage } from "./utils/imageProcessing.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,13 +54,19 @@ serve(async (req) => {
 
     console.log('Images processed:', processedImages);
 
+    // Format dates properly for PostgreSQL
+    const formatDate = (dateObj: any) => {
+      if (!dateObj) return null;
+      return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}-${String(dateObj.day).padStart(2, '0')}`;
+    };
+
     // Store the data layers information
     const { error: insertError } = await supabase
       .from('data_layers')
       .insert({
         calculation_id: calculationId,
-        imagery_date: dataLayers.imageryDate,
-        imagery_processed_date: dataLayers.imageryProcessedDate,
+        imagery_date: formatDate(dataLayers.imageryDate),
+        imagery_processed_date: formatDate(dataLayers.imageryProcessedDate),
         dsm_url: processedImages.dsm,
         rgb_url: processedImages.rgb,
         mask_url: processedImages.mask,
@@ -72,6 +77,7 @@ serve(async (req) => {
       });
 
     if (insertError) {
+      console.error('Error processing solar imagery:', insertError);
       throw insertError;
     }
 
