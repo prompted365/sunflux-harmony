@@ -543,6 +543,7 @@ export type Database = {
           panel_width_meters: number | null
           property_id: string
           updated_at: string
+          visible_layers: Json | null
         }
         Insert: {
           created_at?: string
@@ -556,6 +557,7 @@ export type Database = {
           panel_width_meters?: number | null
           property_id: string
           updated_at?: string
+          visible_layers?: Json | null
         }
         Update: {
           created_at?: string
@@ -569,6 +571,7 @@ export type Database = {
           panel_width_meters?: number | null
           property_id?: string
           updated_at?: string
+          visible_layers?: Json | null
         }
         Relationships: [
           {

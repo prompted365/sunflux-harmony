@@ -3,6 +3,9 @@ import { AlertCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { visualizeGeoTIFF, downloadCanvas } from "./utils/geoTiffVisualizer";
 import { Button } from "@/components/ui/button";
+import { LayerControls } from "./utils/layers/LayerControls";
+import { LayerType, LAYER_CONFIGS } from "./utils/layers/LayerTypes";
+import { LayerRenderer } from "./utils/layers/LayerRenderer";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -13,6 +16,13 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [visibleLayers, setVisibleLayers] = useState<Record<LayerType, boolean>>(() => {
+    const initial: Record<LayerType, boolean> = {} as Record<LayerType, boolean>;
+    Object.entries(LAYER_CONFIGS).forEach(([id, config]) => {
+      initial[id as LayerType] = config.defaultVisible;
+    });
+    return initial;
+  });
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -40,74 +50,33 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
         }
 
         // Try to get the annual flux image first, then fall back to RGB
-        const imageKey = dataLayers.annual_flux_url || dataLayers.rgb_url;
-        
-        if (!imageKey) {
-          console.error('No imagery available for calculation:', calculationId);
-          setImageError(true);
-          setIsLoadingImage(false);
-          return;
+        const rgbUrl = dataLayers.rgb_url;
+        const annualFluxUrl = dataLayers.annual_flux_url;
+
+        // Initialize layer renderer
+        const width = 800; // Set appropriate width
+        const height = 600; // Set appropriate height
+        const renderer = new LayerRenderer(width, height);
+
+        // Render layers based on visibility
+        if (visibleLayers.rgb && rgbUrl) {
+          const rgbData = await visualizeGeoTIFF(rgbUrl);
+          renderer.renderRGB(rgbData, { opacity: 1 });
         }
 
-        // Generate a unique filename for storage
-        const uniqueId = imageKey.split('id=').pop()?.split('&')[0];
-        if (!uniqueId) {
-          throw new Error('Could not extract unique ID from image URL');
-        }
-        const filename = `${calculationId}-${uniqueId}.tiff`;
-
-        // First check if the file exists in storage
-        const { data: existingFile } = await supabase
-          .storage
-          .from('solar_imagery')
-          .list('', {
-            search: filename
+        if (visibleLayers.annual_flux && annualFluxUrl) {
+          const annualFluxData = await visualizeGeoTIFF(annualFluxUrl);
+          renderer.renderPalette(annualFluxData, {
+            min: 0,
+            max: 100, // Set appropriate max value
+            opacity: 0.7,
+            colormap: LAYER_CONFIGS.annual_flux.colormap
           });
-
-        let signedUrl;
-        if (!existingFile || existingFile.length === 0) {
-          // If file doesn't exist, fetch it from Google API and upload to storage
-          const response = await fetch(imageKey);
-          if (!response.ok) {
-            throw new Error('Failed to fetch image from Google API');
-          }
-          const blob = await response.blob();
-          
-          const { error: uploadError } = await supabase
-            .storage
-            .from('solar_imagery')
-            .upload(filename, blob);
-
-          if (uploadError) {
-            throw uploadError;
-          }
         }
 
-        // Get a signed URL for the image
-        const { data: { signedUrl: url }, error: signedUrlError } = await supabase
-          .storage
-          .from('solar_imagery')
-          .createSignedUrl(filename, 3600); // 1 hour expiry
-
-        if (signedUrlError) {
-          throw signedUrlError;
-        }
-
-        // If it's a GeoTIFF (annual flux), visualize it
-        if (dataLayers.annual_flux_url) {
-          try {
-            const visualizedCanvas = await visualizeGeoTIFF(url);
-            setCanvas(visualizedCanvas);
-            setImageUrl(visualizedCanvas.toDataURL('image/png'));
-          } catch (error) {
-            console.error('Error visualizing GeoTIFF:', error);
-            setImageError(true);
-          }
-        } else {
-          // For RGB images, just set the URL directly
-          setImageUrl(url);
-        }
-        
+        // Set the canvas and image URL
+        setCanvas(renderer.getCanvas());
+        setImageUrl(renderer.getCanvas().toDataURL('image/png'));
         setIsLoadingImage(false);
       } catch (error) {
         console.error('Error fetching image:', error);
@@ -117,12 +86,13 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
     };
 
     fetchImage();
-  }, [calculationId]);
+  }, [calculationId, visibleLayers]);
 
-  const handleDownload = () => {
-    if (canvas) {
-      downloadCanvas(canvas, `solar_analysis_${calculationId}.png`);
-    }
+  const handleToggleLayer = (layerId: LayerType) => {
+    setVisibleLayers(prev => ({
+      ...prev,
+      [layerId]: !prev[layerId]
+    }));
   };
 
   if (isLoadingImage) {
@@ -148,23 +118,29 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   }
 
   return imageUrl ? (
-    <div className="relative">
-      <img
-        src={imageUrl}
-        alt="Solar panel analysis visualization"
-        className="w-full h-48 object-cover"
-        onError={() => setImageError(true)}
+    <div className="space-y-4">
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt="Solar panel analysis visualization"
+          className="w-full h-48 object-cover"
+          onError={() => setImageError(true)}
+        />
+        {canvas && (
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+            onClick={() => downloadCanvas(canvas, `solar_analysis_${calculationId}.png`)}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      <LayerControls 
+        visibleLayers={visibleLayers}
+        onToggleLayer={handleToggleLayer}
       />
-      {canvas && (
-        <Button
-          size="icon"
-          variant="secondary"
-          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-          onClick={handleDownload}
-        >
-          <Download className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   ) : null;
 };
