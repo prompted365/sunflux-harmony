@@ -46,26 +46,51 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           return;
         }
 
-        // Extract just the filename from the URL
-        const filename = imageKey.split('/').pop();
-        if (!filename) {
-          throw new Error('Invalid image URL format');
+        // Generate a unique filename for storage
+        const uniqueId = imageKey.split('id=').pop()?.split('&')[0];
+        if (!uniqueId) {
+          throw new Error('Could not extract unique ID from image URL');
+        }
+        const filename = `${calculationId}-${uniqueId}.tiff`;
+
+        // First check if the file exists in storage
+        const { data: existingFile } = await supabase
+          .storage
+          .from('solar_imagery')
+          .list('', {
+            search: filename
+          });
+
+        let signedUrl;
+        if (!existingFile || existingFile.length === 0) {
+          // If file doesn't exist, fetch it from Google API and upload to storage
+          const response = await fetch(imageKey);
+          if (!response.ok) {
+            throw new Error('Failed to fetch image from Google API');
+          }
+          const blob = await response.blob();
+          
+          const { error: uploadError } = await supabase
+            .storage
+            .from('solar_imagery')
+            .upload(filename, blob);
+
+          if (uploadError) {
+            throw uploadError;
+          }
         }
 
         // Get a signed URL for the image
-        const { data: { signedUrl }, error } = await supabase
+        const { data: { signedUrl: url }, error: signedUrlError } = await supabase
           .storage
           .from('solar_imagery')
           .createSignedUrl(filename, 3600); // 1 hour expiry
 
-        if (error) {
-          console.error('Error getting signed URL:', error);
-          setImageError(true);
-          setIsLoadingImage(false);
-          return;
+        if (signedUrlError) {
+          throw signedUrlError;
         }
 
-        setImageUrl(signedUrl);
+        setImageUrl(url);
         setIsLoadingImage(false);
       } catch (error) {
         console.error('Error fetching image:', error);
