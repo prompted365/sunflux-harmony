@@ -27,7 +27,7 @@ export const calculateSolar = async (
       .from('solar_calculations')
       .insert({
         property_id: propertyId,
-        status: 'processing',
+        status: 'completed', // Changed from 'processing' since we don't need imagery processing anymore
         system_size: buildingInsights.yearlyEnergyDcKwh / 1000, // Convert to kW
         irradiance_data: {
           maxSunshineHours: buildingInsights.maxSunshineHoursPerYear,
@@ -47,27 +47,6 @@ export const calculateSolar = async (
       .single();
 
     if (calcError) throw calcError;
-
-    // Trigger imagery processing
-    const { error: imageryError } = await supabase.functions.invoke(
-      'process-solar-imagery',
-      {
-        body: { 
-          calculationId: calculation.id,
-          latitude: coordinates.latitude,
-          longitude: coordinates.longitude
-        }
-      }
-    );
-
-    if (imageryError) {
-      console.error("Error processing imagery:", imageryError);
-      toast({
-        title: "Warning",
-        description: "Solar calculation completed but imagery processing failed. Some visualizations may not be available.",
-        variant: "destructive",
-      });
-    }
 
     // Create solar configuration with financial inputs
     const { error: configError } = await supabase
