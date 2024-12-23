@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 import { Auth } from "@supabase/auth-ui-react"
 import { ThemeSupa } from "@supabase/auth-ui-shared"
+import { handleSignup } from "./property/PropertySignup"
 
 const PropertyForm = () => {
   const { toast } = useToast();
@@ -45,71 +46,19 @@ const PropertyForm = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // If not authenticated, try to sign up with provided credentials
-        const { data, error } = await supabase.auth.signUp({
-          email: signupData.email,
-          password: signupData.password,
-          options: {
-            data: {
-              communication_opt_in: signupData.communicationOptIn
-            }
-          }
-        });
+        // If not authenticated, try to sign up and create profiles
+        const data = await handleSignup(signupData, toast, setLoading);
 
-        if (error) {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
-        }
-
-        if (!data.session) {
+        if (!data) {
           setShowAuth(true);
-          setLoading(false);
-          return;
-        }
-
-        // First create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ 
-            id: data.user?.id,
-          }]);
-
-        if (profileError) {
-          toast({
-            title: "Error",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Then create vendor profile
-        const { error: vendorProfileError } = await supabase
-          .from('vendor_profiles')
-          .insert([{ 
-            id: data.user?.id,
-            communication_opt_in: signupData.communicationOptIn
-          }]);
-
-        if (vendorProfileError) {
-          toast({
-            title: "Error",
-            description: vendorProfileError.message,
-            variant: "destructive",
-          });
           setLoading(false);
           return;
         }
       }
 
       // Get the vendor ID (user ID) from the session
-      const vendorId = session?.user.id;
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const vendorId = currentSession?.user.id;
 
       // Submit the property with vendor ID
       const property = await submitProperty(formData, vendorId, toast);
