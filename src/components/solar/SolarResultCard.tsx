@@ -38,7 +38,6 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
           const updatedCalc = payload.new as SolarCalculation;
           setIsProcessing(updatedCalc.status === 'processing');
           if (updatedCalc.status === 'completed') {
-            // Refresh image when processing completes
             fetchImage();
           }
         }
@@ -58,8 +57,22 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     }
 
     try {
+      // Get the data layers for this calculation
+      const { data: dataLayers, error: dataLayersError } = await supabase
+        .from('data_layers')
+        .select('*')
+        .eq('calculation_id', calc.id)
+        .single();
+
+      if (dataLayersError || !dataLayers) {
+        console.error('Error fetching data layers:', dataLayersError);
+        setImageError(true);
+        setIsLoadingImage(false);
+        return;
+      }
+
       // Try to get the annual flux image first, then fall back to RGB
-      const imageKey = calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb;
+      const imageKey = dataLayers.annual_flux_url || dataLayers.rgb_url;
       
       if (!imageKey) {
         console.error('No imagery available for calculation:', calc.id);
@@ -68,7 +81,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         return;
       }
 
-      // Get a signed URL for the image from the solar_imagery bucket
+      // Get a signed URL for the image
       const { data: { signedUrl }, error } = await supabase
         .storage
         .from('solar_imagery')
@@ -92,7 +105,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
 
   useEffect(() => {
     fetchImage();
-  }, [calc.id, calc.building_specs?.imagery]);
+  }, [calc.id]);
 
   const handleImageError = () => {
     console.error('Failed to load image');
