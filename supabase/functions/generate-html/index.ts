@@ -3,6 +3,7 @@ import { corsHeaders } from "../_shared/cors.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -13,6 +14,8 @@ serve(async (req) => {
     if (!calculationId) {
       throw new Error('Calculation ID is required')
     }
+
+    console.log('Generating HTML for calculation:', calculationId)
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,12 +30,16 @@ serve(async (req) => {
       .maybeSingle()
 
     if (calcError) {
+      console.error('Error fetching calculation:', calcError)
       throw calcError
     }
 
     if (!calculation) {
+      console.error('No calculation found with ID:', calculationId)
       throw new Error('Calculation not found')
     }
+
+    console.log('Found calculation:', calculation.id)
 
     const html = `
       <!DOCTYPE html>
