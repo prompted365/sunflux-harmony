@@ -72,18 +72,35 @@ const PropertyForm = () => {
           return;
         }
 
-        // Create vendor profile
+        // First create profile
         const { error: profileError } = await supabase
-          .from('vendor_profiles')
+          .from('profiles')
           .insert([{ 
             id: data.user?.id,
-            communication_opt_in: signupData.communicationOptIn
           }]);
 
         if (profileError) {
           toast({
             title: "Error",
             description: profileError.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Then create vendor profile
+        const { error: vendorProfileError } = await supabase
+          .from('vendor_profiles')
+          .insert([{ 
+            id: data.user?.id,
+            communication_opt_in: signupData.communicationOptIn
+          }]);
+
+        if (vendorProfileError) {
+          toast({
+            title: "Error",
+            description: vendorProfileError.message,
             variant: "destructive",
           });
           setLoading(false);
