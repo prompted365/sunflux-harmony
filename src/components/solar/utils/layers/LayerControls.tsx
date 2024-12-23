@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Layers, Slider } from 'lucide-react';
+import { Eye, EyeOff, Layers, Sliders } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { LayerType, LAYER_CONFIGS } from './LayerTypes';
 import { 
@@ -51,13 +51,16 @@ export const LayerControls = ({
                 </div>
               </div>
               {onOpacityChange && visibleLayers[id as LayerType] && (
-                <div className="w-32">
-                  <Slider 
-                    defaultValue={[100]}
-                    max={100}
-                    step={1}
-                    onValueChange={([value]) => {
-                      onOpacityChange(id as LayerType, value / 100);
+                <div className="w-32 flex items-center gap-2">
+                  <Sliders className="h-4 w-4" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="100"
+                    className="w-full"
+                    onChange={(e) => {
+                      onOpacityChange(id as LayerType, parseInt(e.target.value) / 100);
                     }}
                   />
                 </div>
