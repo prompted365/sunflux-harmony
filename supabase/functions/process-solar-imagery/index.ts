@@ -9,13 +9,13 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, calculationId, latitude, longitude } = await req.json();
+    const { imageUrl, calculationId } = await req.json();
 
     // Validate required parameters
     if (!imageUrl) {
       console.error('Missing required parameter: imageUrl');
       return new Response(
-        JSON.stringify({ error: 'Missing required parameter: imageUrl' }),
+        JSON.stringify({ error: 'Missing required parameters' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -78,7 +78,7 @@ serve(async (req) => {
       }
     }
 
-    // Append API key to the image URL
+    // Append API key to the image URL if needed
     const fullUrl = `${imageUrl}&key=${apiKey}`;
     console.log('Fetching image from:', fullUrl);
 
