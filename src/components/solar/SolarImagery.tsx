@@ -70,7 +70,8 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           // If file doesn't exist, fetch it through our edge function
           const { data: imageData, error: fetchError } = await supabase.functions.invoke('process-solar-imagery', {
             body: { 
-              imageUrl: imageKey
+              imageUrl: imageKey,
+              calculationId
             }
           });
 
