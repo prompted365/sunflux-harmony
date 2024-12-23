@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LayerControls } from "./utils/layers/LayerControls";
 import { LayerType, LAYER_CONFIGS } from "./utils/layers/LayerTypes";
 import { LayerRenderer } from "./utils/layers/LayerRenderer";
+import { GeoTiff } from "./utils/types";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -58,17 +59,43 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
         const height = 600; // Set appropriate height
         const renderer = new LayerRenderer(width, height);
 
+        // Convert canvas data to GeoTiff format
+        const convertCanvasToGeoTiff = async (canvas: HTMLCanvasElement): Promise<GeoTiff> => {
+          const ctx = canvas.getContext('2d')!;
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const rasters: Array<number>[] = [
+            new Array(canvas.width * canvas.height), // R
+            new Array(canvas.width * canvas.height), // G
+            new Array(canvas.width * canvas.height)  // B
+          ];
+
+          for (let i = 0; i < imageData.data.length; i += 4) {
+            const pixelIndex = i / 4;
+            rasters[0][pixelIndex] = imageData.data[i];     // R
+            rasters[1][pixelIndex] = imageData.data[i + 1]; // G
+            rasters[2][pixelIndex] = imageData.data[i + 2]; // B
+          }
+
+          return {
+            width: canvas.width,
+            height: canvas.height,
+            rasters
+          };
+        };
+
         // Render layers based on visibility
         if (visibleLayers.rgb && rgbUrl) {
           const rgbData = await visualizeGeoTIFF(rgbUrl);
-          renderer.renderRGB(rgbData, { opacity: 1 });
+          const rgbGeoTiff = await convertCanvasToGeoTiff(rgbData);
+          renderer.renderRGB(rgbGeoTiff, { opacity: 1 });
         }
 
         if (visibleLayers.annual_flux && annualFluxUrl) {
           const annualFluxData = await visualizeGeoTIFF(annualFluxUrl);
-          renderer.renderPalette(annualFluxData, {
+          const annualFluxGeoTiff = await convertCanvasToGeoTiff(annualFluxData);
+          renderer.renderPalette(annualFluxGeoTiff, {
             min: 0,
-            max: 100, // Set appropriate max value
+            max: 100,
             opacity: 0.7,
             colormap: LAYER_CONFIGS.annual_flux.colormap
           });
