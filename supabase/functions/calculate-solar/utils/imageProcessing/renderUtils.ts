@@ -1,16 +1,20 @@
-import { GeoTiff, PaletteOptions } from './types';
-import { createPalette, normalize } from './colorUtils';
+import { createCanvas } from 'https://deno.land/x/canvas@v1.4.1/mod.ts';
+import { GeoTiff, PaletteOptions } from './types.ts';
+import { createPalette, normalize } from './colorUtils.ts';
 
-export function renderRGB(rgb: GeoTiff, mask?: GeoTiff): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = mask ? mask.width : rgb.width;
-  canvas.height = mask ? mask.height : rgb.height;
+export function renderRGB(rgb: GeoTiff, mask?: GeoTiff): any {
+  if (!rgb.rasters || rgb.rasters.length < 3) {
+    console.error('Invalid RGB data: requires at least 3 raster bands');
+    throw new Error('Invalid RGB data');
+  }
+
+  const canvas = createCanvas(mask ? mask.width : rgb.width, mask ? mask.height : rgb.height);
+  const ctx = canvas.getContext('2d');
 
   const dw = rgb.width / canvas.width;
   const dh = rgb.height / canvas.height;
 
-  const ctx = canvas.getContext('2d')!;
-  const img = ctx.createImageData(canvas.width, canvas.height);
+  const imageData = ctx.createImageData(canvas.width, canvas.height);
 
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
@@ -18,14 +22,18 @@ export function renderRGB(rgb: GeoTiff, mask?: GeoTiff): HTMLCanvasElement {
       const maskIdx = y * canvas.width + x;
       const imgIdx = y * canvas.width * 4 + x * 4;
       
-      img.data[imgIdx + 0] = rgb.rasters[0][rgbIdx];
-      img.data[imgIdx + 1] = rgb.rasters[1][rgbIdx];
-      img.data[imgIdx + 2] = rgb.rasters[2][rgbIdx];
-      img.data[imgIdx + 3] = mask ? mask.rasters[0][maskIdx] * 255 : 255;
+      // Ensure raster data exists and is within bounds
+      if (rgb.rasters[0] && rgb.rasters[1] && rgb.rasters[2]) {
+        imageData.data[imgIdx + 0] = rgb.rasters[0][rgbIdx] || 0;
+        imageData.data[imgIdx + 1] = rgb.rasters[1][rgbIdx] || 0;
+        imageData.data[imgIdx + 2] = rgb.rasters[2][rgbIdx] || 0;
+        imageData.data[imgIdx + 3] = mask && mask.rasters[0] ? 
+          mask.rasters[0][maskIdx] * 255 : 255;
+      }
     }
   }
 
-  ctx.putImageData(img, 0, 0);
+  ctx.putImageData(imageData, 0, 0);
   return canvas;
 }
 
@@ -36,7 +44,7 @@ export function renderPalette({
   min = 0,
   max = 1,
   index = 0,
-}: PaletteOptions): HTMLCanvasElement {
+}: PaletteOptions): any {
   const palette = createPalette(colors);
   const indices = data.rasters[index]
     .map((x) => normalize(x, max, min))

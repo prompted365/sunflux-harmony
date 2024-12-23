@@ -1,8 +1,8 @@
 import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
 import * as geokeysToProj4 from 'https://esm.sh/geotiff-geokeys-to-proj4@2024.4.13';
 import proj4 from 'https://esm.sh/proj4@2.15.0';
-import { GeoTiff } from './types';
-import { renderRGB, renderPalette } from './renderUtils';
+import { GeoTiff } from './types.ts';
+import { renderRGB, renderPalette } from './renderUtils.ts';
 
 export async function processAndStoreImage(
   url: string, 
