@@ -84,7 +84,19 @@ serve(async (req) => {
     // Update the calculation status to completed
     const { error: updateError } = await supabase
       .from('solar_calculations')
-      .update({ status: 'completed', updated_at: new Date().toISOString() })
+      .update({ 
+        status: 'completed', 
+        updated_at: new Date().toISOString(),
+        building_specs: {
+          imagery: {
+            rgb: processedImages.rgb,
+            dsm: processedImages.dsm,
+            mask: processedImages.mask,
+            annualFlux: processedImages.annualFlux,
+            monthlyFlux: processedImages.monthlyFlux
+          }
+        }
+      })
       .eq('id', calculationId);
 
     if (updateError) {
