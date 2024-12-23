@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { visualizeGeoTIFF, downloadCanvas } from "./utils/geoTiffVisualizer";
+import { Button } from "@/components/ui/button";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -10,6 +12,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -90,7 +93,21 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           throw signedUrlError;
         }
 
-        setImageUrl(url);
+        // If it's a GeoTIFF (annual flux), visualize it
+        if (dataLayers.annual_flux_url) {
+          try {
+            const visualizedCanvas = await visualizeGeoTIFF(url);
+            setCanvas(visualizedCanvas);
+            setImageUrl(visualizedCanvas.toDataURL('image/png'));
+          } catch (error) {
+            console.error('Error visualizing GeoTIFF:', error);
+            setImageError(true);
+          }
+        } else {
+          // For RGB images, just set the URL directly
+          setImageUrl(url);
+        }
+        
         setIsLoadingImage(false);
       } catch (error) {
         console.error('Error fetching image:', error);
@@ -101,6 +118,12 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
     fetchImage();
   }, [calculationId]);
+
+  const handleDownload = () => {
+    if (canvas) {
+      downloadCanvas(canvas, `solar_analysis_${calculationId}.png`);
+    }
+  };
 
   if (isLoadingImage) {
     return (
@@ -125,12 +148,24 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   }
 
   return imageUrl ? (
-    <img
-      src={imageUrl}
-      alt="Solar panel analysis visualization"
-      className="w-full h-48 object-cover"
-      onError={() => setImageError(true)}
-    />
+    <div className="relative">
+      <img
+        src={imageUrl}
+        alt="Solar panel analysis visualization"
+        className="w-full h-48 object-cover"
+        onError={() => setImageError(true)}
+      />
+      {canvas && (
+        <Button
+          size="icon"
+          variant="secondary"
+          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+          onClick={handleDownload}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
   ) : null;
 };
 
