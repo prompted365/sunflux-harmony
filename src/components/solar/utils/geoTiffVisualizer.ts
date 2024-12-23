@@ -20,14 +20,20 @@ export async function visualizeGeoTIFF(
     const arrayBuffer = await response.arrayBuffer();
     const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
     const image = await tiff.getImage();
-    const [width, height] = image.getSize();
+    
+    // Get image dimensions using the proper method
+    const width = image.getWidth();
+    const height = image.getHeight();
     const data = await image.readRasters();
 
+    // Handle TypedArray data properly
+    const values = data[0] as Float32Array | Uint8Array | Int16Array;
+    const valuesArray = Array.from(values);
+    
     // Normalize raster data
-    const values = data[0];
-    const min = options.min ?? Math.min(...values);
-    const max = options.max ?? Math.max(...values);
-    const normalized = values.map(value => 
+    const min = options.min ?? Math.min(...valuesArray);
+    const max = options.max ?? Math.max(...valuesArray);
+    const normalized = valuesArray.map(value => 
       value === -9999 ? 0 : (value - min) / (max - min) * 255
     );
 
@@ -39,7 +45,7 @@ export async function visualizeGeoTIFF(
     const imageData = ctx.createImageData(width, height);
 
     // Render data on canvas
-    for (let i = 0; i < values.length; i++) {
+    for (let i = 0; i < normalized.length; i++) {
       const color = normalized[i];
       imageData.data[i * 4] = color; // Red
       imageData.data[i * 4 + 1] = color; // Green
