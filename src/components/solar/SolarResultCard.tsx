@@ -7,7 +7,7 @@ import { FileText, Trash, AlertCircle, FileDown, FileCode } from "lucide-react";
 import ReportPreview from "./ReportPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GenerateHtmlButton from "@/components/GenerateHtmlButton";
 import GenerateReportButton from "./GenerateReportButton";
 
@@ -18,6 +18,43 @@ interface SolarResultCardProps {
 const SolarResultCard = ({ calc }: SolarResultCardProps) => {
   const { toast } = useToast();
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (!calc.building_specs?.imagery) return;
+
+      try {
+        // Try to get the annual flux image first, then fall back to RGB
+        const imageKey = calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb;
+        
+        if (!imageKey) {
+          console.error('No imagery available for calculation:', calc.id);
+          setImageError(true);
+          return;
+        }
+
+        // Get a signed URL for the image from the solar_imagery bucket
+        const { data: { signedUrl }, error } = await supabase
+          .storage
+          .from('solar_imagery')
+          .createSignedUrl(imageKey, 3600); // 1 hour expiry
+
+        if (error) {
+          console.error('Error getting signed URL:', error);
+          setImageError(true);
+          return;
+        }
+
+        setImageUrl(signedUrl);
+      } catch (error) {
+        console.error('Error fetching image:', error);
+        setImageError(true);
+      }
+    };
+
+    fetchImage();
+  }, [calc.id, calc.building_specs?.imagery]);
 
   const handleDelete = async () => {
     try {
@@ -42,13 +79,8 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     }
   };
 
-  // Get the appropriate visualization image based on calculation status
-  const coverImage = calc.status === 'completed' && calc.building_specs?.imagery
-    ? calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb
-    : "/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png";
-
   const handleImageError = () => {
-    console.error('Failed to load image:', coverImage);
+    console.error('Failed to load image');
     setImageError(true);
   };
 
@@ -62,13 +94,20 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               <p className="text-sm">Image unavailable</p>
             </div>
           </div>
-        ) : (
+        ) : imageUrl ? (
           <img
-            src={coverImage}
+            src={imageUrl}
             alt="Solar panel analysis visualization"
             className="w-full h-full object-cover"
             onError={handleImageError}
           />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="animate-pulse">
+              <div className="h-8 w-8 bg-gray-200 rounded-full mx-auto mb-2" />
+              <p className="text-sm text-gray-400">Loading image...</p>
+            </div>
+          </div>
         )}
         <Button
           variant="ghost"
