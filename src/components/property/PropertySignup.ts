@@ -1,10 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { SignupFormData } from "./PropertyFormState";
-import { Toast } from "@/components/ui/use-toast";
+import { ToastActionElement } from "@/components/ui/toast";
 
 export const handleSignup = async (
   signupData: SignupFormData,
-  toast: any,
+  toast: {
+    (props: {
+      title?: string;
+      description?: string;
+      variant?: "default" | "destructive";
+      action?: ToastActionElement;
+    }): void;
+  },
   setLoading: (loading: boolean) => void
 ) => {
   // Try to sign up with provided credentials
@@ -32,40 +39,52 @@ export const handleSignup = async (
     return null;
   }
 
-  // First create profile
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert([{ 
-      id: data.user?.id,
-    }]);
+  try {
+    // First create profile and wait for it to complete
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([{ 
+        id: data.user?.id,
+      }]);
 
-  if (profileError) {
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    // Verify profile was created
+    const { data: profileData, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user?.id)
+      .single();
+
+    if (profileCheckError || !profileData) {
+      throw new Error('Profile creation verification failed');
+    }
+
+    // Small delay to ensure profile is committed
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Then create vendor profile
+    const { error: vendorProfileError } = await supabase
+      .from('vendor_profiles')
+      .insert([{ 
+        id: data.user?.id,
+        communication_opt_in: signupData.communicationOptIn
+      }]);
+
+    if (vendorProfileError) {
+      throw new Error(vendorProfileError.message);
+    }
+
+    return data;
+  } catch (error: any) {
     toast({
       title: "Error",
-      description: profileError.message,
+      description: error.message,
       variant: "destructive",
     });
     setLoading(false);
     return null;
   }
-
-  // Then create vendor profile
-  const { error: vendorProfileError } = await supabase
-    .from('vendor_profiles')
-    .insert([{ 
-      id: data.user?.id,
-      communication_opt_in: signupData.communicationOptIn
-    }]);
-
-  if (vendorProfileError) {
-    toast({
-      title: "Error",
-      description: vendorProfileError.message,
-      variant: "destructive",
-    });
-    setLoading(false);
-    return null;
-  }
-
-  return data;
 };
