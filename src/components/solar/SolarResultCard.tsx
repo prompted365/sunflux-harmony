@@ -22,7 +22,6 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const [isProcessing, setIsProcessing] = useState(calc.status === 'processing');
 
-  // Subscribe to real-time updates for the calculation status
   useEffect(() => {
     const subscription = supabase
       .channel('solar_calculations_changes')
@@ -62,10 +61,18 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         .from('data_layers')
         .select('*')
         .eq('calculation_id', calc.id)
-        .single();
+        .maybeSingle();
 
-      if (dataLayersError || !dataLayers) {
+      if (dataLayersError) {
         console.error('Error fetching data layers:', dataLayersError);
+        setImageError(true);
+        setIsLoadingImage(false);
+        return;
+      }
+
+      // If no data layers found, show error state
+      if (!dataLayers) {
+        console.log('No data layers found for calculation:', calc.id);
         setImageError(true);
         setIsLoadingImage(false);
         return;
@@ -85,7 +92,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
       const { data: { signedUrl }, error } = await supabase
         .storage
         .from('solar_imagery')
-        .createSignedUrl(imageKey, 3600); // 1 hour expiry
+        .createSignedUrl(imageKey, 3600);
 
       if (error) {
         console.error('Error getting signed URL:', error);
