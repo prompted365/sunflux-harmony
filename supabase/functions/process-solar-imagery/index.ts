@@ -55,13 +55,22 @@ serve(async (req) => {
 
     console.log('Images processed:', processedImages);
 
+    // Format dates properly for PostgreSQL
+    const imageryDate = dataLayers.imageryDate ? 
+      `${dataLayers.imageryDate.year}-${String(dataLayers.imageryDate.month).padStart(2, '0')}-${String(dataLayers.imageryDate.day).padStart(2, '0')}` : 
+      null;
+    
+    const imageryProcessedDate = dataLayers.imageryProcessedDate ?
+      `${dataLayers.imageryProcessedDate.year}-${String(dataLayers.imageryProcessedDate.month).padStart(2, '0')}-${String(dataLayers.imageryProcessedDate.day).padStart(2, '0')}` :
+      null;
+
     // Store the data layers information
     const { error: insertError } = await supabase
       .from('data_layers')
       .insert({
         calculation_id: calculationId,
-        imagery_date: dataLayers.imageryDate,
-        imagery_processed_date: dataLayers.imageryProcessedDate,
+        imagery_date: imageryDate,
+        imagery_processed_date: imageryProcessedDate,
         dsm_url: processedImages.dsm,
         rgb_url: processedImages.rgb,
         mask_url: processedImages.mask,
