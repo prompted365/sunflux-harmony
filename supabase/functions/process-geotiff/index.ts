@@ -1,16 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface ProcessGeoTiffRequest {
-  tiffUrl: string;
-  maskUrl?: string;
-  calculationId: string;
-}
+import { corsHeaders } from "../_shared/cors.ts"
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -19,14 +9,29 @@ serve(async (req) => {
   }
 
   try {
-    const { tiffUrl, maskUrl, calculationId } = await req.json() as ProcessGeoTiffRequest;
+    const { id, tiffUrl, maskUrl } = await req.json();
 
+    // Validate required parameters
     if (!tiffUrl) {
-      throw new Error('Missing required parameter: tiffUrl');
+      console.error('Missing required parameter: tiffUrl');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameter: tiffUrl' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    if (!calculationId) {
-      throw new Error('Missing required parameter: calculationId');
+    if (!id) {
+      console.error('Missing required parameter: id');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameter: id' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Initialize Supabase client
@@ -35,65 +40,50 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch the GeoTIFF data
+    console.log('Fetching GeoTIFF from:', tiffUrl);
     const tiffResponse = await fetch(tiffUrl);
     if (!tiffResponse.ok) {
       throw new Error(`Failed to fetch GeoTIFF: ${tiffResponse.statusText}`);
     }
-
     const tiffData = await tiffResponse.arrayBuffer();
-    console.log('Successfully fetched GeoTIFF data, size:', tiffData.byteLength);
 
     // If mask URL is provided, fetch mask data
     let maskData = null;
     if (maskUrl) {
+      console.log('Fetching mask from:', maskUrl);
       const maskResponse = await fetch(maskUrl);
       if (!maskResponse.ok) {
         throw new Error(`Failed to fetch mask: ${maskResponse.statusText}`);
       }
       maskData = await maskResponse.arrayBuffer();
-      console.log('Successfully fetched mask data, size:', maskData.byteLength);
     }
 
-    // Generate a unique filename for storage
-    const filename = `${calculationId}-${Date.now()}.tiff`;
-
-    // Store the processed GeoTIFF in Supabase Storage
-    const { error: uploadError } = await supabase
+    // Store the processed image in Supabase Storage
+    const timestamp = new Date().getTime();
+    const imagePath = `${id}/${timestamp}.png`;
+    
+    const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('solar_imagery')
-      .upload(filename, tiffData);
+      .upload(imagePath, tiffData, {
+        contentType: 'image/png',
+        upsert: true
+      });
 
     if (uploadError) {
       throw uploadError;
     }
 
-    // Get a signed URL for the uploaded file
-    const { data: { signedUrl }, error: signedUrlError } = await supabase
+    // Get public URL for the uploaded image
+    const { data: { publicUrl } } = supabase
       .storage
       .from('solar_imagery')
-      .createSignedUrl(filename, 3600); // URL valid for 1 hour
-
-    if (signedUrlError) {
-      throw signedUrlError;
-    }
-
-    // Update data_layers table with the new imagery
-    const { error: updateError } = await supabase
-      .from('data_layers')
-      .update({ 
-        processed_at: new Date().toISOString(),
-        rgb_url: signedUrl 
-      })
-      .eq('calculation_id', calculationId);
-
-    if (updateError) {
-      throw updateError;
-    }
+      .getPublicUrl(imagePath);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        url: signedUrl
+        url: publicUrl
       }),
       { 
         headers: { 
@@ -106,13 +96,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing GeoTIFF:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error'
+      }),
       { 
-        status: 400,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

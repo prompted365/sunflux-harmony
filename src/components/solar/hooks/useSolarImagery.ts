@@ -79,9 +79,9 @@ export const useSolarImagery = (calculationId: string) => {
         // Process the GeoTIFF data
         const { data: processedData, error: processError } = await supabase.functions.invoke('process-geotiff', {
           body: {
+            id: calculationId,
             tiffUrl: dataLayers?.rgb_url,
-            maskUrl: dataLayers?.mask_url,
-            calculationId
+            maskUrl: dataLayers?.mask_url
           }
         });
 
