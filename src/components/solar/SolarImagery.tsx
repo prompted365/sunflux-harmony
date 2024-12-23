@@ -46,6 +46,18 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           return;
         }
 
+        // Get the API key from Supabase edge function
+        const { data: { GOOGLE_MAPS_API_KEY } } = await supabase.functions.invoke('get-secret', {
+          body: { name: 'GOOGLE_MAPS_API_KEY' }
+        });
+
+        if (!GOOGLE_MAPS_API_KEY) {
+          console.error('Failed to get Google Maps API key');
+          setImageError(true);
+          setIsLoadingImage(false);
+          return;
+        }
+
         // Generate a unique filename for storage
         const uniqueId = imageKey.split('id=').pop()?.split('&')[0];
         if (!uniqueId) {
@@ -63,8 +75,9 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
         let signedUrl;
         if (!existingFile || existingFile.length === 0) {
-          // If file doesn't exist, fetch it from Google API and upload to storage
-          const response = await fetch(imageKey);
+          // If file doesn't exist, fetch it from Google API with API key
+          const solarUrl = `${imageKey}&key=${GOOGLE_MAPS_API_KEY}`;
+          const response = await fetch(solarUrl);
           if (!response.ok) {
             throw new Error('Failed to fetch image from Google API');
           }
