@@ -19,13 +19,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { calculationId, dataLayers } = await req.json();
+    const { calculationId, latitude, longitude } = await req.json();
 
-    if (!calculationId || !dataLayers) {
+    if (!calculationId || !latitude || !longitude) {
       throw new Error('Missing required parameters');
     }
 
     console.log('Processing imagery for calculation:', calculationId);
+
+    // Get the Google Cloud API key from environment variables
+    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
+    if (!apiKey) {
+      throw new Error('Google Cloud API key not found');
+    }
+
+    // Get data layers for this location
+    const solarAPI = `https://solar.googleapis.com/v1/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=100&view=FULL_LAYERS&key=${apiKey}`;
+    
+    const response = await fetch(solarAPI);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data layers: ${response.statusText}`);
+    }
+
+    const dataLayers = await response.json();
+    console.log('Received data layers:', dataLayers);
 
     // Process and store each image type
     const processedImages = {
@@ -38,18 +55,24 @@ serve(async (req) => {
 
     console.log('Images processed:', processedImages);
 
-    // Update the solar calculation with the processed imagery paths
-    const { error: updateError } = await supabase
-      .from('solar_calculations')
-      .update({
-        building_specs: {
-          imagery: processedImages
-        }
-      })
-      .eq('id', calculationId);
+    // Store the data layers information
+    const { error: insertError } = await supabase
+      .from('data_layers')
+      .insert({
+        calculation_id: calculationId,
+        imagery_date: dataLayers.imageryDate,
+        imagery_processed_date: dataLayers.imageryProcessedDate,
+        dsm_url: processedImages.dsm,
+        rgb_url: processedImages.rgb,
+        mask_url: processedImages.mask,
+        annual_flux_url: processedImages.annualFlux,
+        monthly_flux_url: processedImages.monthlyFlux,
+        imagery_quality: dataLayers.imageryQuality,
+        raw_response: dataLayers
+      });
 
-    if (updateError) {
-      throw updateError;
+    if (insertError) {
+      throw insertError;
     }
 
     return new Response(
