@@ -43,6 +43,12 @@ serve(async (req) => {
     const dataLayers = await response.json();
     console.log('Received data layers:', dataLayers);
 
+    // Format dates properly for PostgreSQL
+    const formatDate = (dateObj: any) => {
+      if (!dateObj) return null;
+      return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}-${String(dateObj.day).padStart(2, '0')}`;
+    };
+
     // Process and store each image type
     const processedImages = {
       dsm: dataLayers.dsmUrl ? await processAndStoreImage(dataLayers.dsmUrl, 'dsm', calculationId, supabase, apiKey) : null,
@@ -53,12 +59,6 @@ serve(async (req) => {
     };
 
     console.log('Images processed:', processedImages);
-
-    // Format dates properly for PostgreSQL
-    const formatDate = (dateObj: any) => {
-      if (!dateObj) return null;
-      return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}-${String(dateObj.day).padStart(2, '0')}`;
-    };
 
     // Store the data layers information
     const { error: insertError } = await supabase
@@ -77,9 +77,22 @@ serve(async (req) => {
       });
 
     if (insertError) {
-      console.error('Error processing solar imagery:', insertError);
+      console.error('Error inserting data layers:', insertError);
       throw insertError;
     }
+
+    // Update the calculation status to completed
+    const { error: updateError } = await supabase
+      .from('solar_calculations')
+      .update({ status: 'completed', updated_at: new Date().toISOString() })
+      .eq('id', calculationId);
+
+    if (updateError) {
+      console.error('Error updating calculation status:', updateError);
+      throw updateError;
+    }
+
+    console.log('Successfully updated calculation status to completed');
 
     return new Response(
       JSON.stringify({ 
