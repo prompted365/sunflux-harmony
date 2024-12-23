@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { downloadAndProcessImage } from "./utils/imageProcessing.ts"
+import { processAndStoreImage } from "./utils/imageProcessing.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,11 +46,11 @@ serve(async (req) => {
 
     // Process and store each image type
     const processedImages = {
-      rgb: dataLayers.rgbUrl ? await processAndStoreImage(dataLayers.rgbUrl, 'rgb', calculationId, supabase) : null,
-      dsm: dataLayers.dsmUrl ? await processAndStoreImage(dataLayers.dsmUrl, 'dsm', calculationId, supabase) : null,
-      mask: dataLayers.maskUrl ? await processAndStoreImage(dataLayers.maskUrl, 'mask', calculationId, supabase) : null,
-      annualFlux: dataLayers.annualFluxUrl ? await processAndStoreImage(dataLayers.annualFluxUrl, 'annual-flux', calculationId, supabase) : null,
-      monthlyFlux: dataLayers.monthlyFluxUrl ? await processAndStoreImage(dataLayers.monthlyFluxUrl, 'monthly-flux', calculationId, supabase) : null,
+      dsm: dataLayers.dsmUrl ? await processAndStoreImage(dataLayers.dsmUrl, 'dsm', calculationId, supabase, apiKey) : null,
+      rgb: dataLayers.rgbUrl ? await processAndStoreImage(dataLayers.rgbUrl, 'rgb', calculationId, supabase, apiKey) : null,
+      mask: dataLayers.maskUrl ? await processAndStoreImage(dataLayers.maskUrl, 'mask', calculationId, supabase, apiKey) : null,
+      annualFlux: dataLayers.annualFluxUrl ? await processAndStoreImage(dataLayers.annualFluxUrl, 'annual-flux', calculationId, supabase, apiKey) : null,
+      monthlyFlux: dataLayers.monthlyFluxUrl ? await processAndStoreImage(dataLayers.monthlyFluxUrl, 'monthly-flux', calculationId, supabase, apiKey) : null,
     };
 
     console.log('Images processed:', processedImages);
@@ -110,23 +110,21 @@ async function processAndStoreImage(
   url: string,
   type: string,
   calculationId: string,
-  supabase: any
+  supabase: any,
+  apiKey: string
 ): Promise<string | null> {
   try {
-    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
-    if (!apiKey) {
-      throw new Error('Google Cloud API key not found');
-    }
-
-    // Download and process the image
-    const base64Data = await downloadAndProcessImage(url, apiKey);
-    if (!base64Data) {
-      console.warn(`No data returned for ${type} image`);
+    // Add API key to the URL if it's a Google Solar API URL
+    const solarUrl = url.includes('solar.googleapis.com') ? `${url}&key=${apiKey}` : url;
+    const response = await fetch(solarUrl);
+    
+    if (!response.ok) {
+      console.error(`Failed to download ${type} image:`, await response.json());
       return null;
     }
 
-    // Convert base64 to Uint8Array for storage
-    const binaryData = Uint8Array.from(atob(base64Data.split(',')[1]), c => c.charCodeAt(0));
+    // Convert response to binary data
+    const binaryData = await response.arrayBuffer();
 
     // Generate a unique filename
     const filename = `${calculationId}/${type}.png`;
@@ -135,7 +133,7 @@ async function processAndStoreImage(
     const { error: uploadError } = await supabase
       .storage
       .from('solar_imagery')
-      .upload(filename, binaryData, {
+      .upload(filename, new Uint8Array(binaryData), {
         contentType: 'image/png',
         upsert: true
       });
