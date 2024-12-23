@@ -16,6 +16,19 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
   const handleGenerateHtml = async () => {
     try {
       setIsGenerating(true);
+
+      // First verify the calculation exists and is complete
+      const { data: calculation, error: fetchError } = await supabase
+        .from('solar_calculations')
+        .select('status')
+        .eq('id', calculationId)
+        .single();
+
+      if (fetchError) throw new Error('Failed to fetch calculation status');
+      if (!calculation) throw new Error('Calculation not found');
+      if (calculation.status !== 'completed') {
+        throw new Error('Calculation is still processing. Please wait for it to complete.');
+      }
       
       const { data, error } = await supabase.functions.invoke('generate-html', {
         body: { 
@@ -40,7 +53,7 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
       console.error('HTML generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate HTML file",
+        description: error instanceof Error ? error.message : "Failed to generate HTML file",
         variant: "destructive",
       });
     } finally {
