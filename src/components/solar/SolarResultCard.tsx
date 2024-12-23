@@ -19,10 +19,15 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
   const { toast } = useToast();
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
 
   useEffect(() => {
     const fetchImage = async () => {
-      if (!calc.building_specs?.imagery) return;
+      if (!calc.building_specs?.imagery) {
+        setIsLoadingImage(false);
+        setImageError(true);
+        return;
+      }
 
       try {
         // Try to get the annual flux image first, then fall back to RGB
@@ -31,6 +36,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         if (!imageKey) {
           console.error('No imagery available for calculation:', calc.id);
           setImageError(true);
+          setIsLoadingImage(false);
           return;
         }
 
@@ -43,13 +49,16 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
         if (error) {
           console.error('Error getting signed URL:', error);
           setImageError(true);
+          setIsLoadingImage(false);
           return;
         }
 
         setImageUrl(signedUrl);
+        setIsLoadingImage(false);
       } catch (error) {
         console.error('Error fetching image:', error);
         setImageError(true);
+        setIsLoadingImage(false);
       }
     };
 
@@ -94,6 +103,13 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               <p className="text-sm">Image unavailable</p>
             </div>
           </div>
+        ) : isLoadingImage ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="animate-pulse">
+              <div className="h-8 w-8 bg-gray-200 rounded-full mx-auto mb-2" />
+              <p className="text-sm text-gray-400">Loading image...</p>
+            </div>
+          </div>
         ) : imageUrl ? (
           <img
             src={imageUrl}
@@ -101,14 +117,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
             className="w-full h-full object-cover"
             onError={handleImageError}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <div className="animate-pulse">
-              <div className="h-8 w-8 bg-gray-200 rounded-full mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Loading image...</p>
-            </div>
-          </div>
-        )}
+        ) : null}
         <Button
           variant="ghost"
           size="icon"
