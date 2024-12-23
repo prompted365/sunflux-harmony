@@ -59,22 +59,17 @@ const VendorDashboard = () => {
         throw configError;
       }
 
-      // Trigger solar calculation
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-solar`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Trigger solar calculation using functions.invoke()
+      const { error: calcError } = await supabase.functions.invoke('calculate-solar', {
+        body: {
           propertyId: property.id,
           latitude: property.latitude,
           longitude: property.longitude,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to trigger solar calculation');
+      if (calcError) {
+        throw calcError;
       }
 
       toast({
