@@ -10,18 +10,29 @@ serve(async (req) => {
   try {
     const { calculationId } = await req.json()
     
+    if (!calculationId) {
+      throw new Error('Calculation ID is required')
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
+    // Use maybeSingle() instead of single() to handle no results case
     const { data: calculation, error: calcError } = await supabaseClient
       .from('solar_calculations')
-      .select('*')
+      .select('*, properties(address, city, state, zip_code)')
       .eq('id', calculationId)
-      .single()
+      .maybeSingle()
 
-    if (calcError) throw calcError
+    if (calcError) {
+      throw calcError
+    }
+
+    if (!calculation) {
+      throw new Error('Calculation not found')
+    }
 
     const html = `
       <!DOCTYPE html>
@@ -39,12 +50,15 @@ serve(async (req) => {
           <div class="header">
             <h1>Solar System Analysis Report</h1>
             <p>Generated on ${new Date().toLocaleDateString()}</p>
+            ${calculation.properties ? `
+              <p>Property: ${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}</p>
+            ` : ''}
           </div>
           
           <div class="section">
             <h2>System Overview</h2>
             <div class="data-point">
-              <strong>System Size:</strong> ${calculation.system_size.toFixed(2)} kW
+              <strong>System Size:</strong> ${calculation.system_size?.toFixed(2) || 'N/A'} kW
             </div>
             <div class="data-point">
               <strong>Status:</strong> ${calculation.status}
@@ -55,11 +69,11 @@ serve(async (req) => {
             <h2>Solar Production</h2>
             <div class="data-point">
               <strong>Annual Production:</strong> 
-              ${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2)} kWh
+              ${calculation.estimated_production?.yearlyEnergyDcKwh?.toFixed(2) || 'N/A'} kWh
             </div>
             <div class="data-point">
               <strong>Max Sunshine Hours:</strong>
-              ${calculation.irradiance_data?.maxSunshineHours} hours/year
+              ${calculation.irradiance_data?.maxSunshineHours || 'N/A'} hours/year
             </div>
           </div>
 
@@ -67,7 +81,7 @@ serve(async (req) => {
             <h2>Environmental Impact</h2>
             <div class="data-point">
               <strong>Carbon Offset:</strong>
-              ${calculation.irradiance_data?.carbonOffset?.toFixed(2)} kg CO2/year
+              ${calculation.irradiance_data?.carbonOffset?.toFixed(2) || 'N/A'} kg CO2/year
             </div>
           </div>
         </body>
@@ -84,6 +98,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('HTML generation error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

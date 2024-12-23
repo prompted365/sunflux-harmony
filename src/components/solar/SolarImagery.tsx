@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SolarImageryProps {
@@ -56,7 +56,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
         const { data: { signedUrl }, error } = await supabase
           .storage
           .from('solar_imagery')
-          .createSignedUrl(filename, 3600);
+          .createSignedUrl(filename, 3600); // 1 hour expiry
 
         if (error) {
           console.error('Error getting signed URL:', error);
