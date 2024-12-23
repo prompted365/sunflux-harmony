@@ -76,67 +76,22 @@ export const useSolarImagery = (calculationId: string) => {
           }
         }
 
-        // Try to get the annual flux image first, then fall back to RGB
-        const imageKey = dataLayers?.annual_flux_url || dataLayers?.rgb_url;
-        
-        if (!imageKey) {
-          console.error('No imagery available for calculation:', calculationId);
-          setImageError(true);
-          setIsLoadingImage(false);
-          toast({
-            title: "Error",
-            description: "No imagery available",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Generate a unique filename for storage
-        const uniqueId = imageKey.split('id=').pop()?.split('&')[0];
-        if (!uniqueId) {
-          throw new Error('Could not extract unique ID from image URL');
-        }
-        const filename = `${calculationId}-${uniqueId}.tiff`;
-
-        // First check if the file exists in storage
-        const { data: existingFile } = await supabase
-          .storage
-          .from('solar_imagery')
-          .list('', {
-            search: filename
-          });
-
-        if (!existingFile || existingFile.length === 0) {
-          console.log('File does not exist, fetching from Google API...');
-          
-          const { data: imageData, error: fetchError } = await supabase.functions.invoke('process-solar-imagery', {
-            body: { 
-              imageUrl: imageKey,
-              calculationId
-            }
-          });
-
-          if (fetchError) {
-            throw fetchError;
+        // Process the GeoTIFF data
+        const { data: processedData, error: processError } = await supabase.functions.invoke('process-geotiff', {
+          body: {
+            tiffUrl: dataLayers?.rgb_url,
+            maskUrl: dataLayers?.mask_url,
+            calculationId
           }
+        });
 
-          const { error: uploadError } = await supabase
-            .storage
-            .from('solar_imagery')
-            .upload(filename, imageData);
-
-          if (uploadError) throw uploadError;
+        if (processError) {
+          throw processError;
         }
 
-        const { data: { signedUrl: url }, error: signedUrlError } = await supabase
-          .storage
-          .from('solar_imagery')
-          .createSignedUrl(filename, 3600);
-
-        if (signedUrlError) throw signedUrlError;
-
-        setImageUrl(url);
+        setImageUrl(processedData.url);
         setIsLoadingImage(false);
+
       } catch (error) {
         console.error('Error fetching image:', error);
         setImageError(true);
