@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -10,6 +11,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -27,6 +29,11 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           console.error('Error fetching data layers:', dataLayersError);
           setImageError(true);
           setIsLoadingImage(false);
+          toast({
+            title: "Error",
+            description: "Failed to fetch data layers",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -35,6 +42,11 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           console.log('No data layers found for calculation:', calculationId);
           setImageError(true);
           setIsLoadingImage(false);
+          toast({
+            title: "Error",
+            description: "No data layers found",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -45,6 +57,11 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           console.error('No imagery available for calculation:', calculationId);
           setImageError(true);
           setIsLoadingImage(false);
+          toast({
+            title: "Error",
+            description: "No imagery available",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -77,7 +94,14 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
           if (fetchError) {
             console.error('Error fetching image:', fetchError);
-            throw fetchError;
+            setImageError(true);
+            setIsLoadingImage(false);
+            toast({
+              title: "Error",
+              description: "Failed to fetch image from Google API",
+              variant: "destructive",
+            });
+            return;
           }
 
           // Upload the received image data to storage
@@ -88,7 +112,14 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
           if (uploadError) {
             console.error('Error uploading image:', uploadError);
-            throw uploadError;
+            setImageError(true);
+            setIsLoadingImage(false);
+            toast({
+              title: "Error",
+              description: "Failed to upload image to storage",
+              variant: "destructive",
+            });
+            return;
           }
         }
 
@@ -100,7 +131,14 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
         if (signedUrlError) {
           console.error('Error getting signed URL:', signedUrlError);
-          throw signedUrlError;
+          setImageError(true);
+          setIsLoadingImage(false);
+          toast({
+            title: "Error",
+            description: "Failed to get image URL",
+            variant: "destructive",
+          });
+          return;
         }
 
         setImageUrl(url);
@@ -109,6 +147,11 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
         console.error('Error fetching image:', error);
         setImageError(true);
         setIsLoadingImage(false);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
       }
     };
 

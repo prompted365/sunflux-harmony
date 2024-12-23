@@ -16,7 +16,18 @@ serve(async (req) => {
     if (!imageUrl) {
       console.error('Missing required parameter: imageUrl');
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters' }),
+        JSON.stringify({ error: 'Missing required parameter: imageUrl' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (!calculationId) {
+      console.error('Missing required parameter: calculationId');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameter: calculationId' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -42,40 +53,38 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // If calculationId is provided, store data layers info
-    if (calculationId) {
-      const { data: dataLayers, error: fetchError } = await supabase
+    // First check if we have data layers info for this calculation
+    const { data: dataLayers, error: fetchError } = await supabase
+      .from('data_layers')
+      .select('*')
+      .eq('calculation_id', calculationId)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('Error fetching data layers:', fetchError);
+      throw fetchError;
+    }
+
+    if (dataLayers) {
+      // Format dates properly for PostgreSQL
+      const formatDate = (dateObj: any) => {
+        if (!dateObj) return null;
+        const { year, month, day } = dateObj;
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      };
+
+      const { error: updateError } = await supabase
         .from('data_layers')
-        .select('*')
-        .eq('calculation_id', calculationId)
-        .maybeSingle();
+        .update({
+          imagery_date: formatDate(dataLayers.imagery_date),
+          imagery_processed_date: formatDate(dataLayers.imagery_processed_date),
+          processed_at: new Date().toISOString()
+        })
+        .eq('calculation_id', calculationId);
 
-      if (fetchError) {
-        console.error('Error fetching data layers:', fetchError);
-        throw fetchError;
-      }
-
-      if (dataLayers) {
-        // Format dates properly for PostgreSQL
-        const formatDate = (dateObj: any) => {
-          if (!dateObj) return null;
-          const { year, month, day } = dateObj;
-          return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        };
-
-        const { error: updateError } = await supabase
-          .from('data_layers')
-          .update({
-            imagery_date: formatDate(dataLayers.imagery_date),
-            imagery_processed_date: formatDate(dataLayers.imagery_processed_date),
-            processed_at: new Date().toISOString()
-          })
-          .eq('calculation_id', calculationId);
-
-        if (updateError) {
-          console.error('Error updating data layers:', updateError);
-          throw updateError;
-        }
+      if (updateError) {
+        console.error('Error updating data layers:', updateError);
+        throw updateError;
       }
     }
 
