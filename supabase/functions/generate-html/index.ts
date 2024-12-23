@@ -8,18 +8,20 @@ serve(async (req) => {
   }
 
   try {
-    const { calculationId } = await req.json()
+    const { calculationId, filename = 'solar-report' } = await req.json()
     
     if (!calculationId) {
       throw new Error('Calculation ID is required')
     }
+
+    console.log('Generating HTML for calculation:', calculationId)
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
-    // Use maybeSingle() instead of single() to handle no results case
+    // Use maybeSingle() to handle no results case
     const { data: calculation, error: calcError } = await supabaseClient
       .from('solar_calculations')
       .select('*, properties(address, city, state, zip_code)')
@@ -27,12 +29,16 @@ serve(async (req) => {
       .maybeSingle()
 
     if (calcError) {
+      console.error('Database error:', calcError)
       throw calcError
     }
 
     if (!calculation) {
+      console.error('Calculation not found:', calculationId)
       throw new Error('Calculation not found')
     }
+
+    console.log('Found calculation:', calculation.id)
 
     const html = `
       <!DOCTYPE html>
