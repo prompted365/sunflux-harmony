@@ -17,8 +17,6 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
     try {
       setIsGenerating(true);
       
-      console.log('Generating HTML for calculation:', calculationId);
-      
       const { data, error } = await supabase.functions.invoke('generate-html', {
         body: { 
           calculationId,
@@ -26,27 +24,13 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
         }
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data?.html) {
-        throw new Error('No HTML content returned');
+      if (data?.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      } else {
+        throw new Error('No download URL returned');
       }
-
-      // Create a Blob from the HTML content
-      const blob = new Blob([data.html], { type: 'text/html' });
-      const url = window.URL.createObjectURL(blob);
-      
-      // Create a link and trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${filename}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Success",
@@ -56,7 +40,7 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
       console.error('HTML generation error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate HTML file",
+        description: "Failed to generate HTML file",
         variant: "destructive",
       });
     } finally {

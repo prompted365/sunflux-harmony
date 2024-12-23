@@ -1,9 +1,8 @@
-import { decodeGeoTiff } from './geoTiffDecoder.ts';
-import { resizeImage, calculateDimensions } from './resizeUtils.ts';
-import { uploadToStorage, checkFileExists } from './storageUtils.ts';
-import { GeoTiff, RGBColor, PaletteOptions } from '../types.ts';
-
-const MAX_IMAGE_DIMENSION = 2048; // Maximum dimension for resized images
+import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
+import * as geokeysToProj4 from 'https://esm.sh/geotiff-geokeys-to-proj4@2024.4.13';
+import proj4 from 'https://esm.sh/proj4@2.15.0';
+import { GeoTiff } from './types.ts';
+import { renderRGB, renderPalette } from './renderUtils.ts';
 
 export async function processAndStoreImage(
   url: string, 
@@ -25,58 +24,60 @@ export async function processAndStoreImage(
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const decodedData = await decodeGeoTiff(arrayBuffer);
+    const tiff = await geotiff.fromArrayBuffer(arrayBuffer);
+    const image = await tiff.getImage();
+    const rasters = await image.readRasters();
 
-    // Calculate new dimensions if needed
-    const { width: targetWidth, height: targetHeight } = calculateDimensions(
-      decodedData.width,
-      decodedData.height,
-      MAX_IMAGE_DIMENSION
-    );
-
-    // Generate unique filename
-    const uniqueId = url.split('id=').pop()?.split('&')[0];
-    if (!uniqueId) {
-      throw new Error('Could not extract unique ID from image URL');
-    }
-    const filename = `${propertyId}/${imageType}.png`;
-
-    // Check if file already exists
-    const fileExists = await checkFileExists(supabase, 'solar_imagery', filename);
-    if (fileExists) {
-      console.log(`File ${filename} already exists in storage`);
-      const { data: { signedUrl } } = await supabase.storage
-        .from('solar_imagery')
-        .createSignedUrl(filename, 3600);
-      return signedUrl;
-    }
-
-    // Process and resize image data
-    const processedData = useHeatmap ? 
+    // Create canvas and render image
+    const canvas = useHeatmap ? 
       renderPalette({
-        data: decodedData,
+        data: {
+          width: rasters.width,
+          height: rasters.height,
+          rasters: [...Array(rasters.length).keys()].map(i => 
+            Array.from(rasters[i] as unknown as Uint8Array)
+          ),
+          bounds: { north: 0, south: 0, east: 0, west: 0 }
+        },
         colors: ['0000FF', '00FF00', 'FFFF00', 'FF0000'],
         min: 0,
-        max: Math.max(...decodedData.rasters[0])
+        max: Math.max(...Array.from(rasters[0] as unknown as Uint8Array))
       }) :
-      renderRGB(decodedData);
+      renderRGB({
+        width: rasters.width,
+        height: rasters.height,
+        rasters: [...Array(rasters.length).keys()].map(i => 
+          Array.from(rasters[i] as unknown as Uint8Array)
+        ),
+        bounds: { north: 0, south: 0, east: 0, west: 0 }
+      });
 
-    const resizedData = resizeImage(
-      decodedData.width,
-      decodedData.height,
-      targetWidth,
-      targetHeight,
-      processedData
+    // Convert canvas to blob
+    const blob = await new Promise<Blob>((resolve) => 
+      canvas.toBlob(resolve!, 'image/png')
     );
+    const arrayBufferPng = await blob.arrayBuffer();
 
-    // Upload to storage
-    return await uploadToStorage(
-      supabase,
-      'solar_imagery',
-      filename,
-      resizedData
-    );
+    // Upload to Supabase Storage
+    const filePath = `${propertyId}/${imageType}.png`;
+    const { error: uploadError } = await supabase.storage
+      .from('solar_imagery')
+      .upload(filePath, new Uint8Array(arrayBufferPng), {
+        contentType: 'image/png',
+        upsert: true
+      });
 
+    if (uploadError) {
+      console.error(`Error uploading ${imageType} image:`, uploadError);
+      return null;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('solar_imagery')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   } catch (error) {
     console.error(`Error processing ${imageType} image:`, error);
     return null;
