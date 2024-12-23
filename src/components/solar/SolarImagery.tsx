@@ -54,9 +54,9 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
         const rgbUrl = dataLayers.rgb_url;
         const annualFluxUrl = dataLayers.annual_flux_url;
 
-        // Initialize layer renderer
-        const width = 800; // Set appropriate width
-        const height = 600; // Set appropriate height
+        // Initialize layer renderer with smaller dimensions for the card
+        const width = 400; // Reduced from 800
+        const height = 300; // Reduced from 600
         const renderer = new LayerRenderer(width, height);
 
         // Convert canvas data to GeoTiff format
