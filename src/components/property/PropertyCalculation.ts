@@ -27,7 +27,7 @@ export const calculateSolar = async (
       .from('solar_calculations')
       .insert({
         property_id: propertyId,
-        status: 'processing', // Changed from 'completed' to 'processing'
+        status: 'processing',
         system_size: buildingInsights.yearlyEnergyDcKwh / 1000, // Convert to kW
         irradiance_data: {
           maxSunshineHours: buildingInsights.maxSunshineHoursPerYear,
@@ -41,7 +41,7 @@ export const calculateSolar = async (
             lifetimeProduction: environmentalAnalysis.lifetimeProduction
           }
         },
-        building_specs: buildingInsights.buildingSpecs || {}
+        building_specs: buildingInsights.solarPotential?.buildingStats || {}
       })
       .select()
       .single();
