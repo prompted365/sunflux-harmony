@@ -22,11 +22,12 @@ const VendorDashboard = () => {
 
       const vendorId = session.user.id;
 
-      // Create a test property with random coordinates in the US
+      // First create a test property
       const { data: property, error: propertyError } = await supabase
         .from('properties')
         .insert({
           vendor_id: vendorId,
+          user_id: vendorId, // Set user_id to vendor_id since we're creating a test property
           address: "123 Test Street",
           city: "Lafayette",
           state: "IN",
