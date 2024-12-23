@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -37,21 +37,80 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           return;
         }
 
-        // If no data layers found, show error state
+        // If no data layers found, create them from the calculation data
         if (!dataLayers) {
-          console.log('No data layers found for calculation:', calculationId);
-          setImageError(true);
-          setIsLoadingImage(false);
-          toast({
-            title: "Error",
-            description: "No data layers found",
-            variant: "destructive",
-          });
-          return;
+          console.log('No data layers found, fetching calculation data...');
+          
+          const { data: calculation, error: calcError } = await supabase
+            .from('solar_calculations')
+            .select('building_specs')
+            .eq('id', calculationId)
+            .maybeSingle();
+
+          if (calcError || !calculation?.building_specs) {
+            console.error('Error fetching calculation:', calcError);
+            setImageError(true);
+            setIsLoadingImage(false);
+            toast({
+              title: "Error",
+              description: "Failed to fetch calculation data",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          const buildingSpecs = calculation.building_specs;
+          
+          // Insert the data layers
+          const { error: insertError } = await supabase
+            .from('data_layers')
+            .insert({
+              calculation_id: calculationId,
+              imagery_date: buildingSpecs.imageryDate,
+              imagery_processed_date: buildingSpecs.imageryProcessedDate,
+              dsm_url: buildingSpecs.imagery?.dsm || null,
+              rgb_url: buildingSpecs.imagery?.rgb || null,
+              mask_url: buildingSpecs.imagery?.mask || null,
+              annual_flux_url: buildingSpecs.imagery?.annualFlux || null,
+              monthly_flux_url: buildingSpecs.imagery?.monthlyFlux || null,
+              imagery_quality: buildingSpecs.imageryQuality,
+              raw_response: buildingSpecs
+            });
+
+          if (insertError) {
+            console.error('Error inserting data layers:', insertError);
+            setImageError(true);
+            setIsLoadingImage(false);
+            toast({
+              title: "Error",
+              description: "Failed to create data layers",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // Fetch the newly created data layers
+          const { data: newDataLayers, error: newDataLayersError } = await supabase
+            .from('data_layers')
+            .select('*')
+            .eq('calculation_id', calculationId)
+            .maybeSingle();
+
+          if (newDataLayersError || !newDataLayers) {
+            console.error('Error fetching new data layers:', newDataLayersError);
+            setImageError(true);
+            setIsLoadingImage(false);
+            toast({
+              title: "Error",
+              description: "Failed to fetch new data layers",
+              variant: "destructive",
+            });
+            return;
+          }
         }
 
         // Try to get the annual flux image first, then fall back to RGB
-        const imageKey = dataLayers.annual_flux_url || dataLayers.rgb_url;
+        const imageKey = dataLayers?.annual_flux_url || dataLayers?.rgb_url;
         
         if (!imageKey) {
           console.error('No imagery available for calculation:', calculationId);
