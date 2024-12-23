@@ -46,18 +46,6 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           return;
         }
 
-        // Get the API key from Supabase edge function
-        const { data: { GOOGLE_MAPS_API_KEY } } = await supabase.functions.invoke('get-secret', {
-          body: { name: 'GOOGLE_MAPS_API_KEY' }
-        });
-
-        if (!GOOGLE_MAPS_API_KEY) {
-          console.error('Failed to get Google Maps API key');
-          setImageError(true);
-          setIsLoadingImage(false);
-          return;
-        }
-
         // Generate a unique filename for storage
         const uniqueId = imageKey.split('id=').pop()?.split('&')[0];
         if (!uniqueId) {
@@ -75,18 +63,20 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
         let signedUrl;
         if (!existingFile || existingFile.length === 0) {
-          // If file doesn't exist, fetch it from Google API with API key
-          const solarUrl = `${imageKey}&key=${GOOGLE_MAPS_API_KEY}`;
-          const response = await fetch(solarUrl);
-          if (!response.ok) {
-            throw new Error('Failed to fetch image from Google API');
+          // If file doesn't exist, fetch it through our edge function
+          const { data: imageData, error: fetchError } = await supabase.functions.invoke('process-solar-imagery', {
+            body: { imageUrl: imageKey, calculationId }
+          });
+
+          if (fetchError) {
+            throw fetchError;
           }
-          const blob = await response.blob();
-          
+
+          // Upload the received image data to storage
           const { error: uploadError } = await supabase
             .storage
             .from('solar_imagery')
-            .upload(filename, blob);
+            .upload(filename, imageData);
 
           if (uploadError) {
             throw uploadError;
