@@ -14,5 +14,10 @@ export interface BuildingSpecs {
     month: number;
     day: number;
   };
+  imageryProcessedDate?: {
+    year: number;
+    month: number;
+    day: number;
+  };
   imageryQuality?: string;
 }

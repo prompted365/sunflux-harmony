@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { BuildingSpecs } from "./types/imagery";
 
 interface SolarImageryProps {
   calculationId: string;
@@ -59,15 +60,21 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
             return;
           }
 
-          const buildingSpecs = calculation.building_specs;
+          const buildingSpecs = calculation.building_specs as BuildingSpecs;
           
+          // Format dates for PostgreSQL
+          const formatDate = (date?: { year: number; month: number; day: number }) => {
+            if (!date) return null;
+            return new Date(date.year, date.month - 1, date.day).toISOString();
+          };
+
           // Insert the data layers
           const { error: insertError } = await supabase
             .from('data_layers')
             .insert({
               calculation_id: calculationId,
-              imagery_date: buildingSpecs.imageryDate,
-              imagery_processed_date: buildingSpecs.imageryProcessedDate,
+              imagery_date: formatDate(buildingSpecs.imageryDate),
+              imagery_processed_date: formatDate(buildingSpecs.imageryProcessedDate),
               dsm_url: buildingSpecs.imagery?.dsm || null,
               rgb_url: buildingSpecs.imagery?.rgb || null,
               mask_url: buildingSpecs.imagery?.mask || null,
