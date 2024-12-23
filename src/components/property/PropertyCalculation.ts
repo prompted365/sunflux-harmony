@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSolarAPI } from "@/lib/solar-sdk";
-import { toast } from "@/hooks/use-toast";
 
 export const calculateSolar = async (
   propertyId: string, 
@@ -23,11 +22,12 @@ export const calculateSolar = async (
       coordinates.longitude
     );
 
-    const { error: calcError } = await supabase
+    // Insert solar calculation
+    const { data: calculation, error: calcError } = await supabase
       .from('solar_calculations')
       .insert({
         property_id: propertyId,
-        status: 'completed',
+        status: 'processing', // Changed from 'completed' to 'processing'
         system_size: buildingInsights.yearlyEnergyDcKwh / 1000, // Convert to kW
         irradiance_data: {
           maxSunshineHours: buildingInsights.maxSunshineHoursPerYear,
@@ -40,10 +40,34 @@ export const calculateSolar = async (
             annualProduction: environmentalAnalysis.annualProduction,
             lifetimeProduction: environmentalAnalysis.lifetimeProduction
           }
-        }
-      });
+        },
+        building_specs: buildingInsights.buildingSpecs || {}
+      })
+      .select()
+      .single();
 
     if (calcError) throw calcError;
+
+    // Trigger imagery processing
+    const { error: imageryError } = await supabase.functions.invoke(
+      'process-solar-imagery',
+      {
+        body: { 
+          calculationId: calculation.id,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude
+        }
+      }
+    );
+
+    if (imageryError) {
+      console.error("Error processing imagery:", imageryError);
+      toast({
+        title: "Warning",
+        description: "Solar calculation completed but imagery processing failed. Some visualizations may not be available.",
+        variant: "destructive",
+      });
+    }
 
     // Create solar configuration with financial inputs
     const { error: configError } = await supabase
@@ -62,7 +86,7 @@ export const calculateSolar = async (
       description: "Solar calculation completed",
     });
 
-    return true;
+    return calculation;
   } catch (error) {
     console.error("Error calculating solar:", error);
     toast({
@@ -70,6 +94,6 @@ export const calculateSolar = async (
       description: error instanceof Error ? error.message : "Failed to complete solar calculation",
       variant: "destructive",
     });
-    return false;
+    return null;
   }
 };

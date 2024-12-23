@@ -3,7 +3,7 @@ import { SolarCalculation } from "./types";
 import SolarMetrics from "./SolarMetrics";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash, AlertCircle, FileDown, FileCode } from "lucide-react";
+import { FileText, Trash, AlertCircle, Loader2 } from "lucide-react";
 import ReportPreview from "./ReportPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,50 +20,84 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(calc.status === 'processing');
 
+  // Subscribe to real-time updates for the calculation status
   useEffect(() => {
-    const fetchImage = async () => {
-      if (!calc.building_specs?.imagery) {
-        setIsLoadingImage(false);
+    const subscription = supabase
+      .channel('solar_calculations_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'solar_calculations',
+          filter: `id=eq.${calc.id}`,
+        },
+        (payload) => {
+          const updatedCalc = payload.new as SolarCalculation;
+          setIsProcessing(updatedCalc.status === 'processing');
+          if (updatedCalc.status === 'completed') {
+            // Refresh image when processing completes
+            fetchImage();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [calc.id]);
+
+  const fetchImage = async () => {
+    if (!calc.building_specs?.imagery) {
+      setIsLoadingImage(false);
+      setImageError(true);
+      return;
+    }
+
+    try {
+      // Try to get the annual flux image first, then fall back to RGB
+      const imageKey = calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb;
+      
+      if (!imageKey) {
+        console.error('No imagery available for calculation:', calc.id);
         setImageError(true);
+        setIsLoadingImage(false);
         return;
       }
 
-      try {
-        // Try to get the annual flux image first, then fall back to RGB
-        const imageKey = calc.building_specs.imagery.annualFlux || calc.building_specs.imagery.rgb;
-        
-        if (!imageKey) {
-          console.error('No imagery available for calculation:', calc.id);
-          setImageError(true);
-          setIsLoadingImage(false);
-          return;
-        }
+      // Get a signed URL for the image from the solar_imagery bucket
+      const { data: { signedUrl }, error } = await supabase
+        .storage
+        .from('solar_imagery')
+        .createSignedUrl(imageKey, 3600); // 1 hour expiry
 
-        // Get a signed URL for the image from the solar_imagery bucket
-        const { data: { signedUrl }, error } = await supabase
-          .storage
-          .from('solar_imagery')
-          .createSignedUrl(imageKey, 3600); // 1 hour expiry
-
-        if (error) {
-          console.error('Error getting signed URL:', error);
-          setImageError(true);
-          setIsLoadingImage(false);
-          return;
-        }
-
-        setImageUrl(signedUrl);
-        setIsLoadingImage(false);
-      } catch (error) {
-        console.error('Error fetching image:', error);
+      if (error) {
+        console.error('Error getting signed URL:', error);
         setImageError(true);
         setIsLoadingImage(false);
+        return;
       }
-    };
 
+      setImageUrl(signedUrl);
+      setIsLoadingImage(false);
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      setImageError(true);
+      setIsLoadingImage(false);
+    }
+  };
+
+  useEffect(() => {
     fetchImage();
   }, [calc.id, calc.building_specs?.imagery]);
+
+  const handleImageError = () => {
+    console.error('Failed to load image');
+    setImageError(true);
+  };
 
   const handleDelete = async () => {
     try {
@@ -88,15 +122,17 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
     }
   };
 
-  const handleImageError = () => {
-    console.error('Failed to load image');
-    setImageError(true);
-  };
-
   return (
     <Card key={calc.id} className="overflow-hidden">
       <div className="relative h-48 bg-secondary">
-        {imageError ? (
+        {isProcessing ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="text-center text-gray-500">
+              <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin" />
+              <p className="text-sm">Processing solar analysis...</p>
+            </div>
+          </div>
+        ) : imageError ? (
           <div className="w-full h-full flex items-center justify-center bg-gray-100">
             <div className="text-center text-gray-500">
               <AlertCircle className="h-8 w-8 mx-auto mb-2" />
@@ -170,7 +206,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
           </>
         )}
 
-        {calc.status === 'pending' && (
+        {calc.status === 'processing' && (
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
             <div className="grid grid-cols-2 gap-4">
