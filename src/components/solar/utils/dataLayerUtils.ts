@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BuildingSpecs } from "../types/imagery";
+import { Json } from "@/integrations/supabase/types"; // Import Json type
 
 export const formatDate = (date?: { year: number; month: number; day: number }) => {
   if (!date) return null;

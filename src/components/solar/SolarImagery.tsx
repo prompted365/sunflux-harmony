@@ -1,12 +1,14 @@
 import { AlertCircle } from "lucide-react";
 import { useSolarImagery } from "./hooks/useSolarImagery";
+import { useState } from "react"; // Add useState import
 
 interface SolarImageryProps {
   calculationId: string;
 }
 
 const SolarImagery = ({ calculationId }: SolarImageryProps) => {
-  const { imageUrl, imageError, isLoadingImage } = useSolarImagery(calculationId);
+  const [imageError, setImageError] = useState(false); // Add local error state
+  const { imageUrl, imageError: hookImageError, isLoadingImage } = useSolarImagery(calculationId);
 
   if (isLoadingImage) {
     return (
@@ -19,7 +21,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
     );
   }
 
-  if (imageError) {
+  if (hookImageError || imageError) {
     return (
       <div className="w-full h-48 flex items-center justify-center bg-gray-100">
         <div className="text-center text-gray-500">
