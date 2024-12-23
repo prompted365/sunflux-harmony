@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { processAndStoreImage } from "./utils/imageProcessing.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,147 +13,71 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
+    const { imageUrl } = await req.json();
 
-    const { calculationId, latitude, longitude } = await req.json();
-
-    if (!calculationId || !latitude || !longitude) {
-      throw new Error('Missing required parameters');
+    // Validate required parameters
+    if (!imageUrl) {
+      console.error('Missing required parameter: imageUrl');
+      return new Response(
+        JSON.stringify({ error: 'Missing required parameter: imageUrl' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
-
-    console.log('Processing imagery for calculation:', calculationId);
 
     // Get the Google Cloud API key from environment variables
     const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY');
     if (!apiKey) {
-      throw new Error('Google Cloud API key not found');
+      console.error('Google Cloud API key not found');
+      return new Response(
+        JSON.stringify({ error: 'Internal server error - API key not configured' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    // Get data layers for this location
-    const solarAPI = `https://solar.googleapis.com/v1/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=100&view=FULL_LAYERS&key=${apiKey}`;
-    
-    const response = await fetch(solarAPI);
+    // Append API key to the image URL
+    const fullUrl = `${imageUrl}&key=${apiKey}`;
+    console.log('Fetching image from:', fullUrl);
+
+    // Fetch the image
+    const response = await fetch(fullUrl);
     if (!response.ok) {
-      throw new Error(`Failed to fetch data layers: ${response.statusText}`);
+      console.error('Failed to fetch image:', await response.text());
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch image: ${response.statusText}` }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const dataLayers = await response.json();
-    console.log('Received data layers:', dataLayers);
-
-    // Process and store each image type
-    const processedImages = {
-      dsm: dataLayers.dsmUrl ? await processAndStoreImage(dataLayers.dsmUrl, 'dsm', calculationId, supabase, apiKey) : null,
-      rgb: dataLayers.rgbUrl ? await processAndStoreImage(dataLayers.rgbUrl, 'rgb', calculationId, supabase, apiKey) : null,
-      mask: dataLayers.maskUrl ? await processAndStoreImage(dataLayers.maskUrl, 'mask', calculationId, supabase, apiKey) : null,
-      annualFlux: dataLayers.annualFluxUrl ? await processAndStoreImage(dataLayers.annualFluxUrl, 'annual-flux', calculationId, supabase, apiKey) : null,
-      monthlyFlux: dataLayers.monthlyFluxUrl ? await processAndStoreImage(dataLayers.monthlyFluxUrl, 'monthly-flux', calculationId, supabase, apiKey) : null,
-    };
-
-    console.log('Images processed:', processedImages);
-
-    // Format dates properly for PostgreSQL
-    const imageryDate = dataLayers.imageryDate ? 
-      `${dataLayers.imageryDate.year}-${String(dataLayers.imageryDate.month).padStart(2, '0')}-${String(dataLayers.imageryDate.day).padStart(2, '0')}` : 
-      null;
+    // Get the image data
+    const imageData = await response.arrayBuffer();
     
-    const imageryProcessedDate = dataLayers.imageryProcessedDate ?
-      `${dataLayers.imageryProcessedDate.year}-${String(dataLayers.imageryProcessedDate.month).padStart(2, '0')}-${String(dataLayers.imageryProcessedDate.day).padStart(2, '0')}` :
-      null;
-
-    // Store the data layers information
-    const { error: insertError } = await supabase
-      .from('data_layers')
-      .insert({
-        calculation_id: calculationId,
-        imagery_date: imageryDate,
-        imagery_processed_date: imageryProcessedDate,
-        dsm_url: processedImages.dsm,
-        rgb_url: processedImages.rgb,
-        mask_url: processedImages.mask,
-        annual_flux_url: processedImages.annualFlux,
-        monthly_flux_url: processedImages.monthlyFlux,
-        imagery_quality: dataLayers.imageryQuality,
-        raw_response: dataLayers
-      });
-
-    if (insertError) {
-      throw insertError;
-    }
-
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Imagery processed successfully',
-        imagery: processedImages 
-      }),
+      new Uint8Array(imageData),
       { 
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+          'Content-Type': 'application/octet-stream'
+        }
       }
     );
 
   } catch (error) {
     console.error('Error processing solar imagery:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 400
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
 });
-
-async function processAndStoreImage(
-  url: string,
-  type: string,
-  calculationId: string,
-  supabase: any,
-  apiKey: string
-): Promise<string | null> {
-  try {
-    // Add API key to the URL if it's a Google Solar API URL
-    const solarUrl = url.includes('solar.googleapis.com') ? `${url}&key=${apiKey}` : url;
-    const response = await fetch(solarUrl);
-    
-    if (!response.ok) {
-      console.error(`Failed to download ${type} image:`, await response.json());
-      return null;
-    }
-
-    // Convert response to binary data
-    const binaryData = await response.arrayBuffer();
-
-    // Generate a unique filename
-    const filename = `${calculationId}/${type}.png`;
-
-    // Store the processed image
-    const { error: uploadError } = await supabase
-      .storage
-      .from('solar_imagery')
-      .upload(filename, new Uint8Array(binaryData), {
-        contentType: 'image/png',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error(`Error uploading ${type} image:`, uploadError);
-      return null;
-    }
-
-    return filename;
-  } catch (error) {
-    console.error(`Error processing ${type} image:`, error);
-    return null;
-  }
-}

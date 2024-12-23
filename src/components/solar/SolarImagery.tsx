@@ -14,6 +14,8 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
   useEffect(() => {
     const fetchImage = async () => {
       try {
+        console.log('Fetching data layers for calculation:', calculationId);
+        
         // Get the data layers for this calculation
         const { data: dataLayers, error: dataLayersError } = await supabase
           .from('data_layers')
@@ -63,12 +65,17 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
 
         let signedUrl;
         if (!existingFile || existingFile.length === 0) {
+          console.log('File does not exist, fetching from Google API...');
+          
           // If file doesn't exist, fetch it through our edge function
           const { data: imageData, error: fetchError } = await supabase.functions.invoke('process-solar-imagery', {
-            body: { imageUrl: imageKey, calculationId }
+            body: { 
+              imageUrl: imageKey
+            }
           });
 
           if (fetchError) {
+            console.error('Error fetching image:', fetchError);
             throw fetchError;
           }
 
@@ -79,6 +86,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
             .upload(filename, imageData);
 
           if (uploadError) {
+            console.error('Error uploading image:', uploadError);
             throw uploadError;
           }
         }
@@ -90,6 +98,7 @@ const SolarImagery = ({ calculationId }: SolarImageryProps) => {
           .createSignedUrl(filename, 3600); // 1 hour expiry
 
         if (signedUrlError) {
+          console.error('Error getting signed URL:', signedUrlError);
           throw signedUrlError;
         }
 
