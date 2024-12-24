@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { BuildingSpecs } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderSectionProps {
   propertyAddress: string;
@@ -7,6 +8,25 @@ interface HeaderSectionProps {
 }
 
 const HeaderSection = ({ propertyAddress, buildingSpecs }: HeaderSectionProps) => {
+  // Create a signed URL for the RGB image if it exists
+  const getSignedUrl = async (path: string) => {
+    try {
+      const { data: { publicUrl }, error } = await supabase.storage
+        .from('solar_imagery')
+        .getPublicUrl(path);
+        
+      if (error) {
+        console.error('Error getting signed URL:', error);
+        return null;
+      }
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Error in getSignedUrl:', error);
+      return null;
+    }
+  };
+
   return (
     <Card className="p-6 space-y-4">
       <div className="space-y-2">
@@ -20,9 +40,13 @@ const HeaderSection = ({ propertyAddress, buildingSpecs }: HeaderSectionProps) =
           <p className="text-muted-foreground">{propertyAddress}</p>
           {buildingSpecs?.imagery?.rgb && (
             <img 
-              src={buildingSpecs.imagery.rgb} 
+              src={buildingSpecs.imagery.rgb}
               alt="Property" 
               className="mt-4 rounded-lg w-full object-cover h-48"
+              onError={(e) => {
+                console.error('Image load error:', e);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           )}
         </div>
@@ -31,9 +55,13 @@ const HeaderSection = ({ propertyAddress, buildingSpecs }: HeaderSectionProps) =
           <div>
             <h3 className="font-semibold mb-2">Solar Analysis</h3>
             <img 
-              src={buildingSpecs.imagery.annualFlux} 
+              src={buildingSpecs.imagery.annualFlux}
               alt="Solar Analysis" 
               className="mt-4 rounded-lg w-full object-cover h-48"
+              onError={(e) => {
+                console.error('Image load error:', e);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         )}
