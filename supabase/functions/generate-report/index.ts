@@ -9,9 +9,15 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
 
   try {
     const { calculationId } = await req.json()
@@ -20,12 +26,39 @@ serve(async (req) => {
       throw new Error('Calculation ID is required')
     }
 
-    console.log('Generating report for calculation:', calculationId)
+    console.log('Starting report generation for calculation:', calculationId)
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Get auth user
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+
+    if (userError || !user) {
+      console.error('Auth error:', userError)
+      throw new Error('Unauthorized')
+    }
+
+    // Check vendor profile and trial limits
+    const { data: vendorProfile, error: vendorError } = await supabase
+      .from('vendor_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (vendorError) {
+      console.error('Vendor profile error:', vendorError)
+      throw new Error('Failed to fetch vendor profile')
+    }
+
+    if (!vendorProfile.bypass_trial_limits && 
+        vendorProfile.account_tier === 'trial' && 
+        vendorProfile.trial_reports_remaining <= 0) {
+      throw new Error('No trial reports remaining')
+    }
 
     // Fetch calculation data with property information
     const { data: calculation, error: calcError } = await supabase
@@ -33,10 +66,12 @@ serve(async (req) => {
       .select(`
         *,
         properties (
+          id,
           address,
           city,
           state,
-          zip_code
+          zip_code,
+          vendor_id
         )
       `)
       .eq('id', calculationId)
@@ -47,31 +82,53 @@ serve(async (req) => {
       throw new Error('Failed to fetch calculation data')
     }
 
-    const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
-    
-    // Transform calculation data for the report
-    const reportData = {
-      propertyAddress,
-      systemSize: calculation.system_size || 0,
-      annualProduction: calculation.estimated_production?.yearlyEnergyDcKwh || 0,
-      initialInvestment: calculation.financial_analysis?.initialCost || 0,
-      federalTaxCredit: calculation.financial_analysis?.federalIncentive || 0,
-      monthlySavings: calculation.financial_analysis?.monthlyBillSavings || 0,
-      carbonOffset: calculation.estimated_production?.environmentalImpact?.carbonOffset || 0,
-      treesEquivalent: Math.round((calculation.estimated_production?.environmentalImpact?.carbonOffset || 0) * 20 / 21.7)
+    // Verify vendor has access to this property
+    if (calculation.properties.vendor_id !== user.id) {
+      throw new Error('Unauthorized access to property')
     }
 
-    // Generate HTML report
+    // Get signed URLs for any images
+    const getSignedUrl = async (path: string) => {
+      if (!path) return null
+      const { data: { signedUrl }, error } = await supabase
+        .storage
+        .from('solar_imagery')
+        .createSignedUrl(path, 3600) // 1 hour expiry
+
+      if (error) {
+        console.error('Error getting signed URL:', error)
+        return null
+      }
+      return signedUrl
+    }
+
+    // Transform building specs to include signed URLs
+    const buildingSpecs = calculation.building_specs || {}
+    if (buildingSpecs.imagery) {
+      buildingSpecs.imagery = {
+        ...buildingSpecs.imagery,
+        rgb: await getSignedUrl(buildingSpecs.imagery.rgb),
+        mask: await getSignedUrl(buildingSpecs.imagery.mask),
+        dsm: await getSignedUrl(buildingSpecs.imagery.dsm)
+      }
+    }
+
+    const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
+    
+    // Generate HTML report content
     console.log('Generating HTML report')
-    const htmlContent = generateReport(reportData)
+    const htmlContent = generateReport({
+      ...calculation,
+      buildingSpecs,
+      propertyAddress
+    })
 
     // Convert to PDF
     console.log('Converting to PDF')
     const doc = new jsPDF()
     
-    // Basic PDF generation - this should be enhanced
-    doc.html(htmlContent, {
-      callback: function (doc) {
+    await doc.html(htmlContent, {
+      callback: async function (doc) {
         // Save PDF to storage
         const pdfBuffer = doc.output('arraybuffer')
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -118,6 +175,18 @@ serve(async (req) => {
           throw new Error('Failed to save report reference')
         }
 
+        // Decrement trial reports if needed
+        if (!vendorProfile.bypass_trial_limits && vendorProfile.account_tier === 'trial') {
+          const { error: updateError } = await supabase
+            .from('vendor_profiles')
+            .update({ trial_reports_remaining: vendorProfile.trial_reports_remaining - 1 })
+            .eq('id', user.id)
+
+          if (updateError) {
+            console.error('Failed to update trial reports count:', updateError)
+          }
+        }
+
         console.log('Report generation completed successfully')
         return new Response(
           JSON.stringify({ 
@@ -139,10 +208,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Report generation error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: error instanceof Error && error.message === 'Unauthorized' ? 401 : 500
       }
     )
   }
