@@ -14,20 +14,22 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  )
-
   try {
+    console.log('Starting report generation request')
+    
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     const { calculationId } = await req.json()
     
     if (!calculationId) {
       throw new Error('Calculation ID is required')
     }
 
-    console.log('Starting report generation for calculation:', calculationId)
-
+    console.log('Validating auth and vendor profile...')
+    
     // Get auth user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
@@ -60,6 +62,8 @@ serve(async (req) => {
       throw new Error('No trial reports remaining')
     }
 
+    console.log('Fetching calculation data...')
+
     // Fetch calculation data with property information
     const { data: calculation, error: calcError } = await supabase
       .from('solar_calculations')
@@ -86,6 +90,8 @@ serve(async (req) => {
     if (calculation.properties.vendor_id !== user.id) {
       throw new Error('Unauthorized access to property')
     }
+
+    console.log('Getting signed URLs for imagery...')
 
     // Get signed URLs for any images
     const getSignedUrl = async (path: string) => {
@@ -115,7 +121,6 @@ serve(async (req) => {
 
     const propertyAddress = `${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}`
     
-    // Generate HTML report content
     console.log('Generating HTML report')
     const htmlContent = generateReport({
       ...calculation,
