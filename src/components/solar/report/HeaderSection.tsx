@@ -11,16 +11,11 @@ const HeaderSection = ({ propertyAddress, buildingSpecs }: HeaderSectionProps) =
   // Create a signed URL for the RGB image if it exists
   const getSignedUrl = async (path: string) => {
     try {
-      const { data: { publicUrl }, error } = await supabase.storage
+      const { data } = await supabase.storage
         .from('solar_imagery')
         .getPublicUrl(path);
         
-      if (error) {
-        console.error('Error getting signed URL:', error);
-        return null;
-      }
-      
-      return publicUrl;
+      return data.publicUrl;
     } catch (error) {
       console.error('Error in getSignedUrl:', error);
       return null;
