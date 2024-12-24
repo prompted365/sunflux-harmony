@@ -9,7 +9,7 @@ serve(async (req) => {
   }
 
   try {
-    const { calculationId } = await req.json()
+    const { calculationId, filename = 'solar-report' } = await req.json()
     
     if (!calculationId) {
       throw new Error('Calculation ID is required')
@@ -19,7 +19,7 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // Use maybeSingle() instead of single() to handle no results case
@@ -41,6 +41,31 @@ serve(async (req) => {
 
     console.log('Found calculation:', calculation.id)
 
+    // Get the RGB image URL from data_layers
+    const { data: dataLayer, error: dataLayerError } = await supabaseClient
+      .from('data_layers')
+      .select('rgb_url')
+      .eq('calculation_id', calculationId)
+      .maybeSingle()
+
+    if (dataLayerError) {
+      console.error('Error fetching data layer:', dataLayerError)
+      throw dataLayerError
+    }
+
+    // Get the image data from storage if URL exists
+    let rgbImageUrl = ''
+    if (dataLayer?.rgb_url) {
+      const { data: imageData, error: storageError } = await supabaseClient
+        .storage
+        .from('solar_imagery')
+        .createSignedUrl(dataLayer.rgb_url, 3600) // 1 hour expiry
+
+      if (!storageError && imageData) {
+        rgbImageUrl = imageData.signedUrl
+      }
+    }
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -51,6 +76,7 @@ serve(async (req) => {
             .header { text-align: center; margin-bottom: 30px; }
             .section { margin-bottom: 20px; }
             .data-point { margin: 10px 0; }
+            img { max-width: 100%; height: auto; }
           </style>
         </head>
         <body>
@@ -59,6 +85,9 @@ serve(async (req) => {
             <p>Generated on ${new Date().toLocaleDateString()}</p>
             ${calculation.properties ? `
               <p>Property: ${calculation.properties.address}, ${calculation.properties.city}, ${calculation.properties.state} ${calculation.properties.zip_code}</p>
+            ` : ''}
+            ${rgbImageUrl ? `
+              <img src="${rgbImageUrl}" alt="Property Aerial View" />
             ` : ''}
           </div>
           
