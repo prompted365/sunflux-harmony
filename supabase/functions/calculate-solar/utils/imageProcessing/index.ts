@@ -1,6 +1,4 @@
 import * as geotiff from 'https://esm.sh/geotiff@2.1.3';
-import * as geokeysToProj4 from 'https://esm.sh/geotiff-geokeys-to-proj4@2024.4.13';
-import proj4 from 'https://esm.sh/proj4@2.15.0';
 import { GeoTiff } from './types.ts';
 import { renderRGB, renderPalette } from './renderUtils.ts';
 
@@ -52,13 +50,11 @@ export async function processAndStoreImage(
         bounds: { north: 0, south: 0, east: 0, west: 0 }
       });
 
-    // Convert canvas to blob
-    const blob = await new Promise<Blob>((resolve) => 
-      canvas.toBlob(resolve!, 'image/png')
-    );
+    // Convert to PNG buffer
+    const blob = await canvas.convertToBlob();
     const arrayBufferPng = await blob.arrayBuffer();
 
-    // Upload to Supabase Storage
+    // Upload to storage
     const filePath = `${propertyId}/${imageType}.png`;
     const { error: uploadError } = await supabase.storage
       .from('solar_imagery')
@@ -72,7 +68,6 @@ export async function processAndStoreImage(
       return null;
     }
 
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('solar_imagery')
       .getPublicUrl(filePath);

@@ -22,7 +22,6 @@ export function renderRGB(rgb: GeoTiff, mask?: GeoTiff): any {
       const maskIdx = y * canvas.width + x;
       const imgIdx = y * canvas.width * 4 + x * 4;
       
-      // Ensure raster data exists and is within bounds
       if (rgb.rasters[0] && rgb.rasters[1] && rgb.rasters[2]) {
         imageData.data[imgIdx + 0] = rgb.rasters[0][rgbIdx] || 0;
         imageData.data[imgIdx + 1] = rgb.rasters[1][rgbIdx] || 0;
