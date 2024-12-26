@@ -7,8 +7,9 @@ import VendorDashboard from "@/components/vendor/VendorDashboard";
 import VendorIntegrations from "@/components/vendor/integrations/VendorIntegrations";
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
-const Vendor = () => {
+const VendorContent = () => {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const { vendorProfile, loading } = useVendorProfile();
 
@@ -43,6 +44,14 @@ const Vendor = () => {
         {renderContent()}
       </VendorLayout>
     </div>
+  );
+};
+
+const Vendor = () => {
+  return (
+    <ErrorBoundary>
+      <VendorContent />
+    </ErrorBoundary>
   );
 };
 
