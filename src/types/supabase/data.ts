@@ -15,9 +15,4 @@ export interface DataLayer {
   processed_at: string | null;
 }
 
-export interface Report {
-  id: string;
-  calculation_id: string;
-  file_path: string;
-  created_at: string;
-}
+export type DataLayerInsert = Omit<DataLayer, 'id' | 'created_at'>;

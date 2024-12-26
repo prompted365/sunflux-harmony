@@ -30,3 +30,16 @@ export interface InstallationCost {
   created_at: string;
   updated_at: string;
 }
+
+export interface Incentive {
+  id: number;
+  region: string;
+  incentive_type: string;
+  value: number;
+  expiration_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ROIResultInsert = Omit<ROIResult, 'id' | 'created_at' | 'updated_at'>;
+export type ClientUsageInsert = Omit<ClientUsage, 'id' | 'created_at' | 'updated_at'>;

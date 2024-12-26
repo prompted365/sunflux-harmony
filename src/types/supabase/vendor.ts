@@ -1,3 +1,18 @@
+export interface VendorProfile {
+  id: string;
+  company_name: string | null;
+  logo_url: string | null;
+  primary_color: string;
+  secondary_color: string;
+  trial_reports_remaining: number | null;
+  trial_reports_reset_date: string | null;
+  communication_opt_in: boolean;
+  account_tier: string;
+  bypass_trial_limits: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface VendorIntegration {
   id: string;
   vendor_id: string | null;
@@ -40,12 +55,5 @@ export interface Addon {
   updated_at: string;
 }
 
-export interface Incentive {
-  id: number;
-  region: string;
-  incentive_type: string;
-  value: number;
-  expiration_date: string;
-  created_at: string;
-  updated_at: string;
-}
+export type VendorProfileInsert = Omit<VendorProfile, 'created_at' | 'updated_at'>;
+export type VendorIntegrationInsert = Omit<VendorIntegration, 'id' | 'created_at' | 'updated_at'>;
