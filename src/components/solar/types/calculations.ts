@@ -54,4 +54,10 @@ export interface SolarCalculation {
   estimated_production: EstimatedProduction | null;
   financial_analysis: FinancialAnalysis | null;
   building_specs: BuildingSpecs | null;
+  property?: {
+    address: string;
+    city: string;
+    state: string;
+    zip_code: string;
+  };
 }

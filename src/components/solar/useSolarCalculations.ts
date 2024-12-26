@@ -24,7 +24,7 @@ export const useSolarCalculations = () => {
         city: calc.properties.city,
         state: calc.properties.state,
         zip_code: calc.properties.zip_code
-      } : null
+      } : undefined
     };
   };
 
