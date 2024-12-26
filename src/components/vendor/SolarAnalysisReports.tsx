@@ -1,34 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import SolarResultCard from "../solar/SolarResultCard";
-import { DatabaseSolarCalculation } from "./types/database";
-import { transformDatabaseCalculation } from "./utils/transformations";
+import { useSolarCalculations } from "../solar/useSolarCalculations";
 
 const SolarAnalysisReports = () => {
-  const { data: calculations, isLoading } = useQuery({
-    queryKey: ['solar-calculations'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('solar_calculations')
-        .select(`
-          *,
-          properties (
-            address,
-            city,
-            state,
-            zip_code
-          )
-        `)
-        .order('created_at', { ascending: false });
+  const { calculations, loading } = useSolarCalculations();
 
-      if (error) throw error;
-      
-      return (data as DatabaseSolarCalculation[]).map(transformDatabaseCalculation);
-    }
-  });
-
-  if (isLoading) {
+  if (loading) {
     return (
       <Card>
         <CardContent className="p-6">

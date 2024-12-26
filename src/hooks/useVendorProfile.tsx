@@ -3,10 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface VendorProfile {
+  id: string;
+  company_name: string | null;
+  logo_url: string | null;
+  primary_color: string;
+  secondary_color: string;
+  trial_reports_remaining: number | null;
+  trial_reports_reset_date: string | null;
+  communication_opt_in: boolean;
+  account_tier: string;
+  bypass_trial_limits: boolean;
+}
+
 export const useVendorProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [vendorProfile, setVendorProfile] = useState<any>(null);
+  const [vendorProfile, setVendorProfile] = useState<VendorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,6 +79,30 @@ export const useVendorProfile = () => {
     };
 
     fetchVendorProfile();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('vendor_profile_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vendor_profiles',
+          filter: `id=eq.${supabase.auth.getSession().then(({ data }) => data.session?.user.id)}`
+        },
+        (payload) => {
+          console.log('Vendor profile changed:', payload);
+          if (payload.eventType !== 'DELETE') {
+            setVendorProfile(payload.new as VendorProfile);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [navigate, toast]);
 
   return { vendorProfile, loading };
