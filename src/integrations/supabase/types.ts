@@ -273,6 +273,71 @@ export type Database = {
         }
         Relationships: []
       }
+      processing_jobs: {
+        Row: {
+          calculation_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          result_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          result_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          result_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_jobs_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_service_config: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          service_url: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          service_url: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          service_url?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
