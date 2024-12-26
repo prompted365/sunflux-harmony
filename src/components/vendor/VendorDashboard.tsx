@@ -1,7 +1,10 @@
 import { DashboardMetrics } from "./dashboard/DashboardMetrics";
 import { TestPropertyButton } from "./dashboard/TestPropertyButton";
+import { useToast } from "@/hooks/use-toast";
 
 const VendorDashboard = () => {
+  const { toast } = useToast();
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">

@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 export const TestPropertyButton = () => {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const createTestProperty = async () => {
     try {
+      setIsLoading(true);
+
       // Get current vendor ID from session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -82,6 +86,8 @@ export const TestPropertyButton = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,8 +95,9 @@ export const TestPropertyButton = () => {
     <Button 
       onClick={createTestProperty}
       className="bg-orange-600 hover:bg-orange-700"
+      disabled={isLoading}
     >
-      Create Test Property
+      {isLoading ? "Creating..." : "Create Test Property"}
     </Button>
   );
 };
