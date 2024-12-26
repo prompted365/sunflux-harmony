@@ -1,49 +1,4 @@
-import { BuildingSpecs } from './imagery';
-
-export interface IrradianceData {
-  maxSunshineHours: number;
-  carbonOffset: number;
-  annualSunlight?: number;
-}
-
-export interface PanelLayout {
-  maxPanels: number;
-  maxArea: number;
-  panelDimensions: {
-    height: number;
-    width: number;
-  };
-  optimalConfiguration?: {
-    panelCount: number;
-    yearlyEnergy: number;
-    segments?: any[];
-  };
-}
-
-export interface EstimatedProduction {
-  yearlyEnergyDcKwh: number | null;
-  monthlyBill: string | null;
-  financialDetails?: {
-    initialCost: number | null;
-    federalIncentive: number | null;
-    monthlyBillSavings: number | null;
-    paybackYears: number | null;
-    lifetimeSavings: number | null;
-    firstYearSavings: number | null;
-  };
-  environmentalImpact?: {
-    carbonOffset: number;
-    treesEquivalent: number;
-    homesEquivalent: number;
-  };
-}
-
-export interface FinancialAnalysis {
-  initialCost: number;
-  federalIncentive: number;
-  monthlyBillSavings: number;
-  paybackYears: number;
-}
+import { Json } from "@/integrations/supabase/types";
 
 export interface SolarCalculation {
   id: string;
@@ -54,10 +9,12 @@ export interface SolarCalculation {
   estimated_production: EstimatedProduction | null;
   financial_analysis: FinancialAnalysis | null;
   building_specs: BuildingSpecs | null;
-  property?: {
-    address: string;
-    city: string;
-    state: string;
-    zip_code: string;
-  };
+  property?: PropertyData;
+}
+
+export interface PropertyData {
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
 }
