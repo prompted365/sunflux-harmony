@@ -1,4 +1,3 @@
-import { Json } from "@/integrations/supabase/types";
 import { BuildingSpecs } from './imagery';
 
 export interface IrradianceData {
@@ -55,12 +54,4 @@ export interface SolarCalculation {
   estimated_production: EstimatedProduction | null;
   financial_analysis: FinancialAnalysis | null;
   building_specs: BuildingSpecs | null;
-  property?: PropertyData;
-}
-
-export interface PropertyData {
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
 }

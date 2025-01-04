@@ -1,137 +1,116 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { corsHeaders } from "../_shared/cors.ts"
+import { storeDataLayers } from "./utils/solarApi.ts"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const GOOGLE_CLOUD_API_KEY = Deno.env.get('GOOGLE_CLOUD_API_KEY')!;
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { calculationId, latitude, longitude } = await req.json()
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!calculationId || !latitude || !longitude) {
-      throw new Error('Missing required parameters')
+    // Parse request body
+    const { calculationId, latitude, longitude } = await req.json();
+
+    // Validate required parameters
+    if (!calculationId) {
+      throw new Error('calculationId is required');
+    }
+    if (!latitude || typeof latitude !== 'number') {
+      throw new Error('latitude is required and must be a number');
+    }
+    if (!longitude || typeof longitude !== 'number') {
+      throw new Error('longitude is required and must be a number');
     }
 
-    console.log('Processing imagery for calculation:', calculationId)
+    console.log('Processing solar imagery for:', { calculationId, latitude, longitude });
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    // Fetch and store data layers
+    const dataLayers = await storeDataLayers(
+      { latitude, longitude },
+      calculationId,
+      supabase,
+      GOOGLE_CLOUD_API_KEY
+    );
 
-    // Get the Google Cloud API key
-    const apiKey = Deno.env.get('GOOGLE_CLOUD_API_KEY')
-    if (!apiKey) {
-      throw new Error('Google Cloud API key not found')
+    if (!dataLayers) {
+      throw new Error('Failed to fetch data layers');
     }
 
-    // Get data layers from Google Solar API
-    const solarAPI = `https://solar.googleapis.com/v1/dataLayers:get?location.latitude=${latitude}&location.longitude=${longitude}&radiusMeters=100&view=FULL_LAYERS&key=${apiKey}`
-    const response = await fetch(solarAPI)
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data layers: ${response.statusText}`)
+    // Format dates properly for PostgreSQL
+    const formatDate = (dateObj: { year: number; month: number; day: number }) => {
+      return `${dateObj.year}-${String(dateObj.month).padStart(2, '0')}-${String(dateObj.day).padStart(2, '0')}`;
+    };
+
+    // Store data layers information
+    const { error: dataLayersError } = await supabase
+      .from('data_layers')
+      .insert({
+        calculation_id: calculationId,
+        imagery_date: dataLayers.imageryDate ? formatDate(dataLayers.imageryDate) : null,
+        imagery_processed_date: dataLayers.imageryProcessedDate ? formatDate(dataLayers.imageryProcessedDate) : null,
+        dsm_url: dataLayers.dsmUrl,
+        rgb_url: dataLayers.rgbUrl,
+        mask_url: dataLayers.maskUrl,
+        annual_flux_url: dataLayers.annualFluxUrl,
+        monthly_flux_url: dataLayers.monthlyFluxUrl,
+        hourly_shade_urls: dataLayers.hourlyShadeUrls,
+        imagery_quality: dataLayers.imageryQuality,
+        raw_response: dataLayers,
+        processed_at: new Date().toISOString()
+      });
+
+    if (dataLayersError) {
+      console.error('Failed to store data layers:', dataLayersError);
+      throw new Error(`Failed to store data layers: ${dataLayersError.message}`);
     }
 
-    const dataLayers = await response.json()
-    console.log('Received data layers:', dataLayers)
+    console.log('Successfully stored data layers');
 
-    // Process each layer in parallel
-    const processPromises = []
-
-    if (dataLayers.dsmUrl) {
-      processPromises.push(
-        fetch('https://solar.googleapis.com/v1/geoTiff:get', {
-          method: 'POST',
-          body: JSON.stringify({
-            url: dataLayers.dsmUrl,
-            propertyId: calculationId,
-            apiKey
-          })
-        })
-      )
-    }
-
-    if (dataLayers.rgbUrl) {
-      processPromises.push(
-        fetch('https://solar.googleapis.com/v1/geoTiff:get', {
-          method: 'POST',
-          body: JSON.stringify({
-            url: dataLayers.rgbUrl,
-            propertyId: calculationId,
-            apiKey
-          })
-        })
-      )
-    }
-
-    if (dataLayers.annualFluxUrl) {
-      processPromises.push(
-        fetch('https://solar.googleapis.com/v1/geoTiff:get', {
-          method: 'POST',
-          body: JSON.stringify({
-            url: dataLayers.annualFluxUrl,
-            propertyId: calculationId,
-            apiKey,
-            type: 'annual'
-          })
-        })
-      )
-    }
-
-    // Wait for all processing to complete
-    const results = await Promise.allSettled(processPromises)
-    const processedImages = results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value
-      } else {
-        console.error(`Failed to process image ${index}:`, result.reason)
-        return null
-      }
-    })
-
-    // Update the calculation with processed imagery
+    // Update solar calculation status
     const { error: updateError } = await supabase
       .from('solar_calculations')
-      .update({
+      .update({ 
         status: 'completed',
         building_specs: {
           imagery: {
-            dsm: processedImages[0]?.filePath,
-            rgb: processedImages[1]?.filePath,
-            annualFlux: processedImages[2]?.filePath
+            dsm: dataLayers.dsmUrl,
+            rgb: dataLayers.rgbUrl,
+            mask: dataLayers.maskUrl,
+            annualFlux: dataLayers.annualFluxUrl,
+            monthlyFlux: dataLayers.monthlyFluxUrl
           }
         }
       })
-      .eq('id', calculationId)
+      .eq('id', calculationId);
 
     if (updateError) {
-      throw updateError
+      console.error('Failed to update calculation:', updateError);
+      throw new Error(`Failed to update calculation: ${updateError.message}`);
     }
 
+    console.log('Successfully updated calculation status');
+
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: 'Imagery processed successfully',
-        processedImages 
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
 
   } catch (error) {
-    console.error('Error processing solar imagery:', error)
+    console.error('Error processing solar imagery:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});

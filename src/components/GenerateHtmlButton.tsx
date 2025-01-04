@@ -5,36 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface GenerateHtmlButtonProps {
-  calculationId: string;
-  filename?: string;
+  htmlContent: string;
+  filename: string;
 }
 
-const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: GenerateHtmlButtonProps) => {
+const GenerateHtmlButton = ({ htmlContent, filename }: GenerateHtmlButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleGenerateHtml = async () => {
     try {
       setIsGenerating(true);
-
-      // First verify the calculation exists and is complete
-      const { data: calculation, error: fetchError } = await supabase
-        .from('solar_calculations')
-        .select('status')
-        .eq('id', calculationId)
-        .single();
-
-      if (fetchError) throw new Error('Failed to fetch calculation status');
-      if (!calculation) throw new Error('Calculation not found');
-      if (calculation.status !== 'completed') {
-        throw new Error('Calculation is still processing. Please wait for it to complete.');
-      }
       
       const { data, error } = await supabase.functions.invoke('generate-html', {
-        body: { 
-          calculationId,
-          filename 
-        }
+        body: { htmlContent, filename }
       });
 
       if (error) throw error;
@@ -53,7 +37,7 @@ const GenerateHtmlButton = ({ calculationId, filename = "solar-report" }: Genera
       console.error('HTML generation error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate HTML file",
+        description: "Failed to generate HTML file",
         variant: "destructive",
       });
     } finally {

@@ -1,36 +1,17 @@
-import { formatDate } from '../utils/formatters';
-
-export const generateHeader = (data: any) => `
-<div class="section header">
-    <div class="logo-container">
-        <img src="${data.logoUrl || '/logo.png'}" alt="Company Logo" class="logo" />
+export function generateHeaderSection(data: any): string {
+  return `
+    <div class="header">
+      <div class="logo-container">
+        <img 
+          src="/lovable-uploads/b72825ac-f807-4e0e-8dd7-d11fa7046731.png" 
+          alt="SunLink.ai Logo" 
+          class="logo"
+        />
+        <span class="brand-name">SunLink.ai</span>
+      </div>
+      <h1>Solar Installation Analysis</h1>
+      <p>Generated on: ${data.generatedDate}</p>
+      <p>${data.propertyAddress}</p>
     </div>
-    <h1 class="report-title">Solar Installation Analysis</h1>
-    <div class="report-meta">
-        <p>Generated on ${formatDate(new Date())}</p>
-        <p class="property-address">${data.propertyAddress}</p>
-    </div>
-    ${generateImagerySection(data.buildingSpecs?.imagery)}
-</div>
-`;
-
-const generateImagerySection = (imagery: any) => {
-    if (!imagery) return '';
-    
-    return `
-    <div class="imagery-grid">
-        ${imagery.rgb ? `
-        <div class="imagery-box">
-            <img src="${imagery.rgb}" alt="Property Aerial View" />
-            <div class="imagery-overlay">Aerial View</div>
-        </div>
-        ` : ''}
-        ${imagery.annualFlux ? `
-        <div class="imagery-box">
-            <img src="${imagery.annualFlux}" alt="Solar Analysis" />
-            <div class="imagery-overlay">Solar Potential Analysis</div>
-        </div>
-        ` : ''}
-    </div>
-    `;
-};
+  `;
+}

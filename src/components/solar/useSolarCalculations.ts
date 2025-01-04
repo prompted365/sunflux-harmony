@@ -18,13 +18,7 @@ export const useSolarCalculations = () => {
       panel_layout: calc.panel_layout as SolarCalculation['panel_layout'],
       estimated_production: calc.estimated_production as SolarCalculation['estimated_production'],
       financial_analysis: calc.financial_analysis as SolarCalculation['financial_analysis'],
-      building_specs: calc.building_specs as SolarCalculation['building_specs'],
-      property: calc.properties ? {
-        address: calc.properties.address,
-        city: calc.properties.city,
-        state: calc.properties.state,
-        zip_code: calc.properties.zip_code
-      } : undefined
+      building_specs: calc.building_specs as SolarCalculation['building_specs']
     };
   };
 
@@ -40,18 +34,13 @@ export const useSolarCalculations = () => {
           panel_layout,
           estimated_production,
           financial_analysis,
-          building_specs,
-          properties (
-            address,
-            city,
-            state,
-            zip_code
-          )
+          building_specs
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
+      // Ensure data exists and transform it
       const transformedData = (data || []).map(transformDatabaseCalculation);
       setCalculations(transformedData);
     } catch (error) {
@@ -79,45 +68,14 @@ export const useSolarCalculations = () => {
           schema: 'public',
           table: 'solar_calculations'
         },
-        async (payload) => {
+        (payload) => {
           console.log('Change received!', payload);
           if (payload.eventType === 'DELETE') {
+            // Remove the deleted calculation from state
             setCalculations(prev => prev.filter(calc => calc.id !== payload.old.id));
           } else {
-            // For INSERT and UPDATE, fetch the complete record with property data
-            const { data, error } = await supabase
-              .from('solar_calculations')
-              .select(`
-                id,
-                status,
-                system_size,
-                irradiance_data,
-                panel_layout,
-                estimated_production,
-                financial_analysis,
-                building_specs,
-                properties (
-                  address,
-                  city,
-                  state,
-                  zip_code
-                )
-              `)
-              .eq('id', payload.new.id)
-              .single();
-
-            if (!error && data) {
-              const transformedCalc = transformDatabaseCalculation(data);
-              setCalculations(prev => {
-                const index = prev.findIndex(calc => calc.id === transformedCalc.id);
-                if (index >= 0) {
-                  const newCalcs = [...prev];
-                  newCalcs[index] = transformedCalc;
-                  return newCalcs;
-                }
-                return [transformedCalc, ...prev];
-              });
-            }
+            // For INSERT and UPDATE, fetch all calculations again
+            fetchCalculations();
           }
         }
       )

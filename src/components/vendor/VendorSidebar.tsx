@@ -1,4 +1,4 @@
-import { Building2, Home, Palette, Settings, Users, Link } from "lucide-react";
+import { Building2, Home, Palette, Settings, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +19,6 @@ export const VendorSidebar = ({ activeSection, onSectionChange }: VendorSidebarP
     { id: "dashboard", title: "Dashboard", icon: Home },
     { id: "branding", title: "Branding", icon: Palette },
     { id: "inputs", title: "Vendor Inputs", icon: Settings },
-    { id: "integrations", title: "Integrations", icon: Link },
     { id: "clients", title: "Clients", icon: Users },
   ];
 

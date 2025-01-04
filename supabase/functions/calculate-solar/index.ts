@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from "../_shared/cors.ts"
+import { getBuildingInsights } from "./utils/solarApi.ts"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -13,12 +10,7 @@ const GOOGLE_CLOUD_API_KEY = Deno.env.get('GOOGLE_CLOUD_API_KEY')!;
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      },
-    })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -40,60 +32,63 @@ serve(async (req) => {
 
     console.log('Calculating solar potential for:', { propertyId, latitude, longitude });
 
-    // Call Google Solar API
-    const solarResponse = await fetch(
-      `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${latitude}&location.longitude=${longitude}&key=${GOOGLE_CLOUD_API_KEY}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    // Get building insights from Google Solar API
+    const buildingInsights = await getBuildingInsights(
+      { latitude, longitude },
+      GOOGLE_CLOUD_API_KEY
     );
 
-    if (!solarResponse.ok) {
-      throw new Error('Failed to fetch solar data from Google API');
+    if (!buildingInsights) {
+      throw new Error('Failed to get building insights');
     }
 
-    const solarData = await solarResponse.json();
+    console.log('Successfully retrieved building insights');
 
     // Create solar calculation record
     const { data: calculation, error: insertError } = await supabase
       .from('solar_calculations')
       .insert({
         property_id: propertyId,
-        status: 'completed',
-        system_size: solarData.solarPotential?.maxArrayPanelsCount 
-          ? (solarData.solarPotential.maxArrayPanelsCount * solarData.solarPotential.panelCapacityWatts / 1000)
+        status: 'pending',
+        system_size: buildingInsights.solarPotential?.maxArrayPanelsCount 
+          ? (buildingInsights.solarPotential.maxArrayPanelsCount * buildingInsights.solarPotential.panelCapacityWatts / 1000)
           : null,
         irradiance_data: {
-          maxSunshineHours: solarData.solarPotential?.maxSunshineHoursPerYear,
-          carbonOffset: solarData.solarPotential?.carbonOffsetFactorKgPerMwh,
-          annualSunlight: solarData.solarPotential?.wholeRoofStats?.sunshineQuantiles?.[0]
+          maxSunshineHours: buildingInsights.solarPotential?.maxSunshineHoursPerYear,
+          carbonOffset: buildingInsights.solarPotential?.carbonOffsetFactorKgPerMwh,
+          annualSunlight: buildingInsights.solarPotential?.wholeRoofStats?.sunshineQuantiles?.[0]
         },
         panel_layout: {
-          maxPanels: solarData.solarPotential?.maxArrayPanelsCount,
-          maxArea: solarData.solarPotential?.maxArrayAreaMeters2,
+          maxPanels: buildingInsights.solarPotential?.maxArrayPanelsCount,
+          maxArea: buildingInsights.solarPotential?.maxArrayAreaMeters2,
           panelDimensions: {
-            height: solarData.solarPotential?.panelHeightMeters,
-            width: solarData.solarPotential?.panelWidthMeters
+            height: buildingInsights.solarPotential?.panelHeightMeters,
+            width: buildingInsights.solarPotential?.panelWidthMeters
           },
-          optimalConfiguration: solarData.solarPotential?.solarPanelConfigs?.[0]
+          optimalConfiguration: buildingInsights.solarPotential?.solarPanelConfigs?.[0]
         },
-        estimated_production: solarData.solarPotential?.solarPanelConfigs?.[0] 
+        estimated_production: buildingInsights.solarPotential?.solarPanelConfigs?.[0] 
           ? {
-              yearlyEnergyDcKwh: solarData.solarPotential.solarPanelConfigs[0].yearlyEnergyDcKwh,
-              monthlyBill: solarData.solarPotential.financialAnalyses?.[0]?.monthlyBill,
-              financialDetails: solarData.solarPotential.financialAnalyses?.[0]?.financialDetails,
+              yearlyEnergyDcKwh: buildingInsights.solarPotential.solarPanelConfigs[0].yearlyEnergyDcKwh,
+              monthlyBill: buildingInsights.solarPotential.financialAnalyses?.[0]?.monthlyBill,
+              financialDetails: buildingInsights.solarPotential.financialAnalyses?.[0]?.financialDetails,
               environmentalImpact: {
-                carbonOffset: solarData.solarPotential.carbonOffsetFactorKgPerMwh,
-                treesEquivalent: Math.round((solarData.solarPotential.carbonOffsetFactorKgPerMwh * 20) / 21.7),
-                homesEquivalent: Math.round(solarData.solarPotential.solarPanelConfigs[0].yearlyEnergyDcKwh / 10000)
+                carbonOffset: buildingInsights.solarPotential.carbonOffsetFactorKgPerMwh,
+                treesEquivalent: Math.round((buildingInsights.solarPotential.carbonOffsetFactorKgPerMwh * 20) / 21.7),
+                homesEquivalent: Math.round(buildingInsights.solarPotential.solarPanelConfigs[0].yearlyEnergyDcKwh / 10000)
               }
             }
           : null,
+        financial_analysis: buildingInsights.solarPotential?.financialAnalyses?.[0]?.financialDetails
+          ? {
+              initialCost: buildingInsights.solarPotential.financialAnalyses[0].financialDetails.costOfElectricityWithoutSolar,
+              federalIncentive: buildingInsights.solarPotential.financialAnalyses[0].financialDetails.federalIncentive,
+              monthlyBillSavings: buildingInsights.solarPotential.financialAnalyses[0].financialDetails.lifetimeSrecTotal,
+              paybackYears: buildingInsights.solarPotential.financialAnalyses[0].cashPurchaseSavings?.paybackYears || 0
+            }
+          : null,
         building_specs: {
-          address: solarData.postalCode,
+          address: buildingInsights.postalCode,
           imagery: {}  // This will be populated by the process-imagery function
         }
       })
@@ -107,28 +102,35 @@ serve(async (req) => {
 
     console.log('Successfully created calculation:', calculation.id);
 
-    // Return response with CORS headers
+    // Trigger imagery processing
+    const { error: functionError } = await supabase.functions.invoke(
+      'process-solar-imagery',
+      {
+        body: { 
+          calculationId: calculation.id,
+          latitude,
+          longitude
+        }
+      }
+    );
+
+    if (functionError) {
+      console.error('Failed to trigger imagery processing:', functionError);
+      throw new Error(`Failed to trigger imagery processing: ${functionError.message}`);
+    }
+
     return new Response(
       JSON.stringify({ success: true, calculationId: calculation.id }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error calculating solar potential:', error);
-    
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 400,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

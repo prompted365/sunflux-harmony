@@ -4,12 +4,10 @@ import VendorBranding from "@/components/vendor/VendorBranding";
 import VendorInputs from "@/components/vendor/VendorInputs";
 import VendorClients from "@/components/vendor/VendorClients";
 import VendorDashboard from "@/components/vendor/VendorDashboard";
-import VendorIntegrations from "@/components/vendor/integrations/VendorIntegrations";
 import { VendorLayout } from "@/components/vendor/VendorLayout";
 import { useVendorProfile } from "@/hooks/useVendorProfile";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
 
-const VendorContent = () => {
+const Vendor = () => {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const { vendorProfile, loading } = useVendorProfile();
 
@@ -25,8 +23,6 @@ const VendorContent = () => {
         return <VendorBranding vendorProfile={vendorProfile} />;
       case "inputs":
         return <VendorInputs />;
-      case "integrations":
-        return <VendorIntegrations />;
       case "clients":
         return <VendorClients />;
       default:
@@ -44,14 +40,6 @@ const VendorContent = () => {
         {renderContent()}
       </VendorLayout>
     </div>
-  );
-};
-
-const Vendor = () => {
-  return (
-    <ErrorBoundary>
-      <VendorContent />
-    </ErrorBoundary>
   );
 };
 

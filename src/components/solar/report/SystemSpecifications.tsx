@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { SolarCalculation } from "../types";
-import { Sun, Zap, Grid, Ruler } from "lucide-react";
+import { Sun, Zap, MapPin, Battery } from "lucide-react";
 
 interface SystemSpecificationsProps {
   calc: SolarCalculation;
@@ -8,53 +8,44 @@ interface SystemSpecificationsProps {
 
 const SystemSpecifications = ({ calc }: SystemSpecificationsProps) => {
   return (
-    <Card className="p-6">
-      <h3 className="text-2xl font-semibold text-primary mb-6">System Specifications</h3>
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-primary">System Specifications</h2>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {calc.system_size && (
-          <div className="space-y-2">
-            <div className="flex items-center text-primary">
-              <Sun className="w-5 h-5 mr-2" />
-              <span className="font-medium">System Size</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 bg-gradient-to-br from-secondary/10 via-background to-background">
+          <h3 className="text-xl font-semibold text-primary mb-4">Core System Details</h3>
+          <div className="space-y-3 text-gray-700">
+            <div className="flex items-center gap-2">
+              <Sun className="h-5 w-5 text-primary" />
+              <span>System Size: {calc.system_size?.toFixed(2) || 'N/A'} kW</span>
             </div>
-            <p className="text-2xl font-bold">{calc.system_size.toFixed(1)} kW</p>
-          </div>
-        )}
-        
-        {calc.estimated_production?.yearlyEnergyDcKwh && (
-          <div className="space-y-2">
-            <div className="flex items-center text-primary">
-              <Zap className="w-5 h-5 mr-2" />
-              <span className="font-medium">Annual Production</span>
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              <span>Annual Production: {calc.estimated_production?.yearlyEnergyDcKwh?.toFixed(0).toLocaleString() || 'N/A'} kWh</span>
             </div>
-            <p className="text-2xl font-bold">
-              {Math.round(calc.estimated_production.yearlyEnergyDcKwh).toLocaleString()} kWh
-            </p>
-          </div>
-        )}
-        
-        {calc.panel_layout?.maxPanels && (
-          <div className="space-y-2">
-            <div className="flex items-center text-primary">
-              <Grid className="w-5 h-5 mr-2" />
-              <span className="font-medium">Panel Count</span>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              <span>Panel Count: {calc.panel_layout?.maxPanels || 'N/A'} panels</span>
             </div>
-            <p className="text-2xl font-bold">{calc.panel_layout.maxPanels}</p>
-          </div>
-        )}
-        
-        {calc.panel_layout?.maxArea && (
-          <div className="space-y-2">
-            <div className="flex items-center text-primary">
-              <Ruler className="w-5 h-5 mr-2" />
-              <span className="font-medium">Array Area</span>
+            <div className="flex items-center gap-2">
+              <Battery className="h-5 w-5 text-primary" />
+              <span>Array Area: {calc.panel_layout?.maxArea?.toFixed(1) || 'N/A'} m²</span>
             </div>
-            <p className="text-2xl font-bold">{calc.panel_layout.maxArea.toFixed(1)} m²</p>
           </div>
-        )}
+        </Card>
+
+        <Card className="p-6">
+          <div className="aspect-video rounded-lg overflow-hidden bg-muted mb-2">
+            <img 
+              src="/lovable-uploads/72267891-30ba-449d-a6f0-6882b77dc9e4.png"
+              alt="Annual Solar Exposure Analysis"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <p className="text-sm text-gray-600 text-center">Annual Solar Exposure Analysis</p>
+        </Card>
       </div>
-    </Card>
+    </section>
   );
 };
 

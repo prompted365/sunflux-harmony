@@ -6,13 +6,6 @@ export interface BuildingInsights {
   lifetimeEnergyDcKwh: number;
   annualCarbonOffsetKg: number;
   maxSunshineHoursPerYear: number;
-  solarPotential?: {
-    buildingStats?: {
-      areaMeters2: number;
-      sunshineQuantiles: number[];
-      groundAreaMeters2: number;
-    };
-  };
 }
 
 export interface EnvironmentalAnalysis {

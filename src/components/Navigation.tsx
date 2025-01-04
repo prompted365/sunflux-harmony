@@ -10,24 +10,35 @@ const Navigation = () => {
 
   const handleLogout = async () => {
     try {
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If no session exists, just redirect to login
+        navigate("/login");
+        return;
+      }
+
+      // Attempt to sign out
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        // If we get an error (like 403), force a redirect to login
         console.error("Logout error:", error);
         toast({
-          title: "Error signing out",
-          description: error.message,
-          variant: "destructive",
+          title: "Session expired",
+          description: "You have been logged out due to an expired session.",
         });
+        navigate("/login");
+        return;
       }
 
-      // Always navigate to login page, even if there was an error
-      // This ensures users can get back to a working state
+      // Successful logout
       navigate("/login");
       
     } catch (error) {
       console.error("Logout error:", error);
-      // For any unexpected errors, still redirect to login
+      // For any other errors, force navigation to login
       navigate("/login");
     }
   };
