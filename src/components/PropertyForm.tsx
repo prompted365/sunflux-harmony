@@ -73,6 +73,26 @@ const PropertyForm = () => {
           longitude: property.longitude
         };
 
+        // Call the Python processing endpoint via Supabase Edge Function
+        const { data: processingData, error: processingError } = await supabase.functions.invoke(
+          'process-solar-data',
+          {
+            body: {
+              propertyId: property.id,
+              coordinates,
+              financialData,
+              address: formData
+            }
+          }
+        );
+
+        if (processingError) {
+          console.error('Processing error:', processingError);
+          throw new Error('Failed to process solar data');
+        }
+
+        console.log('Processing results:', processingData);
+
         // Trigger solar calculation with coordinates
         await calculateSolar(property.id, coordinates, financialData, toast);
 
