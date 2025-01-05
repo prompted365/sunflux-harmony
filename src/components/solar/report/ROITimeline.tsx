@@ -12,9 +12,16 @@ interface ROITimelineProps {
     energyCostPerKwh: number;
     isUsingDefaults: boolean;
   };
+  roiResults?: {
+    payback_period: number;
+    npv: number;
+    irr: number;
+    lifetime_production: number;
+    co2_offset: number;
+  } | null;
 }
 
-const ROITimeline = ({ calc, financialConfig }: ROITimelineProps) => {
+const ROITimeline = ({ calc, financialConfig, roiResults }: ROITimelineProps) => {
   if (!calc.financial_analysis) return null;
 
   const utilityRate = financialConfig?.energyCostPerKwh || 0.15;
@@ -24,8 +31,15 @@ const ROITimeline = ({ calc, financialConfig }: ROITimelineProps) => {
   const federalIncentive = calc.financial_analysis.federalIncentive;
   const netCost = initialCost - federalIncentive;
   
+  // Use ROI results if available, otherwise calculate
+  const breakEvenYear = roiResults?.payback_period || 
+    generateTimelineData().find(point => point.value >= 0)?.year || 0;
+  
+  const lifetimeSavings = roiResults?.npv || 
+    generateTimelineData()[25].value;
+
   // Calculate cumulative savings and costs over 25 years
-  const generateTimelineData = () => {
+  function generateTimelineData() {
     const data = [];
     let cumulativeSavings = -netCost; // Start with negative net cost
     
@@ -47,7 +61,6 @@ const ROITimeline = ({ calc, financialConfig }: ROITimelineProps) => {
   };
 
   const timelineData = generateTimelineData();
-  const breakEvenYear = timelineData.find(point => point.value >= 0)?.year || 0;
 
   return (
     <Card className="p-6 bg-gradient-to-br from-primary/5 via-background to-background">
@@ -63,11 +76,17 @@ const ROITimeline = ({ calc, financialConfig }: ROITimelineProps) => {
       )}
 
       <div className="space-y-4">
-        <ROIChart timelineData={timelineData} />
+        <ROIChart 
+          timelineData={timelineData} 
+          breakEvenYear={breakEvenYear}
+        />
         <ROIMetrics 
           netCost={netCost}
           breakEvenYear={breakEvenYear}
-          lifetimeSavings={timelineData[25].value}
+          lifetimeSavings={lifetimeSavings}
+          irr={roiResults?.irr}
+          lifetimeProduction={roiResults?.lifetime_production}
+          co2Offset={roiResults?.co2_offset}
         />
       </div>
     </Card>
