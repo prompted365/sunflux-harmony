@@ -36,13 +36,13 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
   // Fetch HTML report URL
   const { data: report } = useQuery({
     queryKey: ['property-report', property?.id],
-    enabled: !!property?.id,
+    enabled: !!property?.id && !!property.solar_calculations?.[0]?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reports')
         .select('*')
         .eq('calculation_id', property.solar_calculations[0].id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
