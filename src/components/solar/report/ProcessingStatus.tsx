@@ -1,8 +1,8 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface ProcessingStatusProps {
-  status: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   error?: string | null;
 }
 
@@ -16,17 +16,13 @@ const ProcessingStatus = ({ status, error }: ProcessingStatusProps) => {
       ) : status === 'processing' ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <CheckCircle2 className="h-4 w-4" />
+        <AlertCircle className="h-4 w-4" />
       )}
-      <AlertTitle>
-        {error ? 'Processing Error' : 
-         status === 'processing' ? 'Processing Solar Analysis' : 
-         'Analysis Pending'}
-      </AlertTitle>
       <AlertDescription>
-        {error || 
-         status === 'processing' ? 'Your solar analysis is being processed. This may take a few minutes.' :
-         'Your analysis is queued for processing.'}
+        {error ? error : 
+          status === 'processing' ? 
+            'Processing solar analysis...' : 
+            'Waiting to start processing...'}
       </AlertDescription>
     </Alert>
   );
