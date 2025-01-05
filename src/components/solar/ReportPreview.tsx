@@ -56,6 +56,8 @@ const ReportPreview = ({ calc, propertyAddress, financialConfig }: ReportPreview
   const hasFinancialData = calc.financial_analysis && 
     calc.estimated_production?.yearlyEnergyDcKwh;
 
+  const status = processingJob?.status as 'pending' | 'processing' | 'completed' | 'failed';
+
   return (
     <div className="space-y-8 p-6">
       <HeaderSection 
@@ -64,7 +66,7 @@ const ReportPreview = ({ calc, propertyAddress, financialConfig }: ReportPreview
       />
       
       <ProcessingStatus 
-        status={processingJob?.status || 'pending'}
+        status={status}
         error={processingJob?.error_message}
       />
       
