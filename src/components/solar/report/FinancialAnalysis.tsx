@@ -15,6 +15,13 @@ interface FinancialAnalysisProps {
     energyCostPerKwh: number;
     isUsingDefaults: boolean;
   };
+  roiResults?: {
+    payback_period: number;
+    npv: number;
+    irr: number;
+    lifetime_production: number;
+    co2_offset: number;
+  } | null;
 }
 
 const FinancialAnalysis = ({ calc, financialConfig }: FinancialAnalysisProps) => {

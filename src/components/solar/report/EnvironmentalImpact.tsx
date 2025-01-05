@@ -4,18 +4,22 @@ import { Leaf, Car, Trees, Factory } from "lucide-react";
 
 interface EnvironmentalImpactProps {
   calc: SolarCalculation;
+  roiResults?: {
+    co2_offset: number;
+    lifetime_production: number;
+  } | null;
 }
 
-const EnvironmentalImpact = ({ calc }: EnvironmentalImpactProps) => {
-  // Calculate realistic environmental metrics based on system size
+const EnvironmentalImpact = ({ calc, roiResults }: EnvironmentalImpactProps) => {
+  // Calculate realistic environmental metrics based on system size and ROI results
   const systemSize = calc.system_size || 0;
   const annualProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   
-  // Using the provided realistic values
-  const carbonOffset = 6.1; // metric tons per year
-  const carsEquivalent = 1.3; // vehicles per year
-  const treesEquivalent = 150; // trees per year
-  const homesEquivalent = 1; // homes powered per year
+  // Use ROI results if available, otherwise fallback to default calculations
+  const carbonOffset = roiResults?.co2_offset || 6.1;
+  const carsEquivalent = carbonOffset / 4.6; // Average car emits 4.6 metric tons per year
+  const treesEquivalent = carbonOffset * 24.6; // Each tree absorbs ~0.041 metric tons per year
+  const homesEquivalent = (roiResults?.lifetime_production || annualProduction) / 10400; // Average home uses 10,400 kWh per year
 
   return (
     <section className="space-y-6">

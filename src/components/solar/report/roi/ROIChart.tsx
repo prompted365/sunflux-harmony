@@ -6,9 +6,10 @@ interface ROIChartProps {
     value: number;
     savings: number;
   }[];
+  breakEvenYear: number;
 }
 
-const ROIChart = ({ timelineData }: ROIChartProps) => {
+const ROIChart = ({ timelineData, breakEvenYear }: ROIChartProps) => {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">

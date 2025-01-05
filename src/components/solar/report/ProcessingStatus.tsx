@@ -10,7 +10,7 @@ const ProcessingStatus = ({ status, error }: ProcessingStatusProps) => {
   if (status === 'completed') return null;
 
   return (
-    <Alert variant={error ? "destructive" : status === 'processing' ? "default" : "warning"}>
+    <Alert variant={error ? "destructive" : "default"}>
       {error ? (
         <AlertCircle className="h-4 w-4" />
       ) : status === 'processing' ? (
