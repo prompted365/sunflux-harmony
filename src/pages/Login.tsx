@@ -17,7 +17,7 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-secondary flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         <div className="mb-8 text-center">
           <img
