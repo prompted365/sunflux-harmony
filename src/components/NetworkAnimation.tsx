@@ -10,7 +10,10 @@ const NetworkAnimation = () => {
     // Scene setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      alpha: true,
+      antialias: true 
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
@@ -19,7 +22,7 @@ const NetworkAnimation = () => {
     const sunMaterial = new THREE.MeshBasicMaterial({
       color: 0xFFAA5A,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.4
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sun);
@@ -27,7 +30,7 @@ const NetworkAnimation = () => {
     // Create nodes (representing features)
     const nodes: THREE.Mesh[] = [];
     const nodeConnections: THREE.Line[] = [];
-    const nodeCount = 6; // One for each feature card
+    const nodeCount = 6;
     const radius = 15;
 
     for (let i = 0; i < nodeCount; i++) {
@@ -36,7 +39,7 @@ const NetworkAnimation = () => {
       const nodeMaterial = new THREE.MeshBasicMaterial({
         color: 0xC84B31,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.6
       });
       const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
       
@@ -55,7 +58,7 @@ const NetworkAnimation = () => {
       const lineMaterial = new THREE.LineBasicMaterial({
         color: 0xFFAA5A,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.2
       });
       const line = new THREE.Line(lineGeometry, lineMaterial);
       nodeConnections.push(line);
@@ -111,7 +114,7 @@ const NetworkAnimation = () => {
   return (
     <div 
       ref={containerRef} 
-      className="fixed inset-0 pointer-events-none"
+      className="w-full h-full pointer-events-none"
       style={{ zIndex: 0 }}
     />
   );
