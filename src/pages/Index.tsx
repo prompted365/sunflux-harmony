@@ -18,9 +18,12 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen relative">
+      {/* Background Gradient */}
+      <div className="fixed inset-0 bg-gradient-to-b from-secondary/10 to-background -z-20" />
+      
       {/* Background Network Animation */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 -z-10">
         <NetworkAnimation />
       </div>
       
