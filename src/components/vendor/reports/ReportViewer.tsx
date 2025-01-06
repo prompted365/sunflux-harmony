@@ -17,10 +17,24 @@ import {
 } from 'recharts';
 
 interface ReportViewerProps {
-  property: Property | undefined;
+  propertyId: string;
 }
 
-const ReportViewer = ({ property }: ReportViewerProps) => {
+export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
+  const { data: property } = useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", propertyId)
+        .single();
+
+      if (error) throw error;
+      return data as Property;
+    }
+  });
+
   const buildingInsights = property?.building_insights_jsonb;
 
   if (!buildingInsights) {
@@ -103,7 +117,7 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
         </TabsContent>
 
         <TabsContent value="imagery">
-          {property?.id && <ImageryTab propertyId={property.id} />}
+          <ImageryTab propertyId={propertyId} />
         </TabsContent>
 
         <TabsContent value="analysis">
@@ -140,5 +154,3 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
     </div>
   );
 };
-
-export default ReportViewer;
