@@ -28,7 +28,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Smart Solar Analysis</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Advanced algorithms analyze roof orientation, shading, and local weather patterns 
               to provide accurate solar potential calculations and optimal panel placement recommendations.
             </p>
@@ -42,7 +42,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Real-time Monitoring</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Track system performance, energy production, and savings in real-time with our 
               intuitive dashboard. Make data-driven decisions with comprehensive analytics.
             </p>
@@ -56,7 +56,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Custom Reports</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Generate professional, branded reports with detailed financial analysis and 
               environmental impact metrics. Easily share with clients via email or download.
             </p>
@@ -70,7 +70,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Lead Management</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Streamline your sales process with integrated lead tracking and automated 
               follow-ups. Never miss an opportunity to convert a potential customer.
             </p>
@@ -84,7 +84,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Performance Analytics</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Gain valuable insights with detailed analytics on system performance, sales 
               metrics, and customer engagement. Make informed decisions based on real data.
             </p>
@@ -98,7 +98,7 @@ const Features = () => {
               </div>
               <h3 className="text-xl font-semibold">Quick Integration</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Seamlessly integrate with your existing CRM and marketing tools. Get up and 
               running quickly with our easy-to-use API and comprehensive documentation.
             </p>
@@ -111,7 +111,7 @@ const Features = () => {
             <h2 className="text-2xl font-semibold mb-4">
               Ready to Transform Your Solar Business?
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-600 mb-6">
               Join leading solar providers who are already using our platform to grow their business 
               and deliver better results for their customers.
             </p>
