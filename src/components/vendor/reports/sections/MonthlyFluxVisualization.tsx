@@ -19,8 +19,11 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
 
         if (listError) throw listError;
 
-        // Find the monthly flux composite GIF
-        const gifFile = files?.find(f => f.name.startsWith('MonthlyFluxCompositeGIF_'));
+        // Find the monthly flux composite GIF by matching the property ID portion before the timestamp
+        const gifFile = files?.find(f => {
+          const [filePropertyId] = f.name.split('_');
+          return filePropertyId === propertyId;
+        });
         
         if (gifFile) {
           const { data } = await supabase.storage
