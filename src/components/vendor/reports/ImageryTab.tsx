@@ -38,6 +38,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
         });
 
       if (folderError) throw folderError;
+      console.log('Available folders:', folders?.map(f => f.name));
 
       // Find the folder that starts with our property ID
       const propertyFolder = folders?.find(f => f.name.startsWith(propertyId));
@@ -46,6 +47,8 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
         return [];
       }
 
+      console.log('Found property folder:', propertyFolder.name);
+
       // List files in the property folder
       const { data: files, error: filesError } = await supabase
         .storage
@@ -53,7 +56,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
         .list(propertyFolder.name);
 
       if (filesError) throw filesError;
-      console.log('Files found:', files);
+      console.log('Files found in folder:', files);
 
       // Get signed URLs for each file
       const signedUrls = await Promise.all(
