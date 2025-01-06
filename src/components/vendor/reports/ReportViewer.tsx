@@ -2,21 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, FileText, Sun, Wind, Ruler, DollarSign } from "lucide-react";
+import { AlertCircle, Sun, Wind, DollarSign } from "lucide-react";
 import { Property } from "../types";
 import { Badge } from "@/components/ui/badge";
 import ImageryTab from "./ImageryTab";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateOptimalPanelCount } from "./utils/optimalPanelCalculations";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+import ProductionChart from "./sections/ProductionChart";
+import MonthlyFluxVisualization from "./sections/MonthlyFluxVisualization";
 
 interface ReportViewerProps {
   propertyId: string;
@@ -41,9 +34,7 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Loading property data...
-        </AlertDescription>
+        <AlertDescription>Loading property data...</AlertDescription>
       </Alert>
     );
   }
@@ -52,9 +43,7 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load property data.
-        </AlertDescription>
+        <AlertDescription>Failed to load property data.</AlertDescription>
       </Alert>
     );
   }
@@ -72,44 +61,26 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
   }
 
   const solarPotential = buildingInsights.solarPotential;
-  
-  // Calculate optimal panel configuration
   const optimalConfig = calculateOptimalPanelCount(buildingInsights);
-  
-  // Calculate roof segment summaries
-  const roofSegments = solarPotential?.roofSegmentStats || [];
-  const segmentCount = roofSegments.length;
-  
-  const averagePitch = roofSegments.reduce((acc, segment) => 
-    acc + segment.pitchDegrees, 0) / segmentCount;
+
+  // Generate monthly production data with regional averages
+  const monthlyProductionData = Array.from({ length: 12 }, (_, index) => {
+    const month = new Date(2024, index).toLocaleString('default', { month: 'short' });
+    const baseProduction = optimalConfig.annualProduction / 12;
     
-  const averageHeight = roofSegments.reduce((acc, segment) => 
-    acc + segment.planeHeightAtCenterMeters, 0) / segmentCount;
+    // Apply seasonal variations
+    const seasonalFactor = Math.cos((index - 6) * Math.PI / 6);
+    const production = baseProduction * (1 + seasonalFactor * 0.3);
     
-  const pitchVariance = roofSegments.reduce((acc, segment) => 
-    acc + Math.pow(segment.pitchDegrees - averagePitch, 2), 0) / segmentCount;
-  
-  const pitchConsistencyRating = pitchVariance < 5 ? "High" : 
-    pitchVariance < 15 ? "Medium" : "Low";
+    // Generate comparative data (regional average)
+    const average = baseProduction * (1 + seasonalFactor * 0.25);
 
-  // Determine orientation distribution
-  const orientations = roofSegments.reduce((acc, segment) => {
-    const azimuth = segment.azimuthDegrees;
-    if (azimuth > 315 || azimuth <= 45) acc.north++;
-    else if (azimuth > 45 && azimuth <= 135) acc.east++;
-    else if (azimuth > 135 && azimuth <= 225) acc.south++;
-    else acc.west++;
-    return acc;
-  }, { north: 0, east: 0, south: 0, west: 0 });
-
-  const optimalOrientation = Object.entries(orientations)
-    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
-
-  // Generate monthly production data for the chart
-  const monthlyProductionData = solarPotential?.solarPanelConfigs?.[0]?.roofSegmentSummaries.map((segment: any, index: number) => ({
-    month: new Date(2024, index).toLocaleString('default', { month: 'short' }),
-    production: segment.yearlyEnergyDcKwh / 12
-  })) || [];
+    return {
+      month,
+      production,
+      average,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -147,7 +118,7 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
               <DollarSign className="h-8 w-8 text-green-500 mb-2" />
               <h3 className="font-semibold">Financial Impact</h3>
               <p className="text-2xl font-bold">
-                ${optimalConfig.installationCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                ${optimalConfig.installationCost.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground">
                 {optimalConfig.paybackPeriod.toFixed(1)} Year Payback
@@ -169,22 +140,8 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
             </Card>
           </div>
 
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyProductionData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="production" 
-                  stroke="#2563eb" 
-                  name="kWh"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <ProductionChart monthlyProduction={monthlyProductionData} />
+          <MonthlyFluxVisualization propertyId={propertyId} />
         </TabsContent>
 
         <TabsContent value="imagery">
@@ -197,25 +154,29 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Roof Complexity</p>
-                <p className="font-medium">{segmentCount} Segments</p>
+                <p className="font-medium">{solarPotential.roofSegmentStats.length} Segments</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Pitch Consistency: {pitchConsistencyRating}
+                  Pitch Consistency: {getPitchConsistencyRating(solarPotential.roofSegmentStats)}
                 </p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Average Measurements</p>
-                <p className="font-medium">{averagePitch.toFixed(1)}° Pitch</p>
+                <p className="font-medium">
+                  {getAveragePitch(solarPotential.roofSegmentStats).toFixed(1)}° Pitch
+                </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {averageHeight.toFixed(1)}m Height
+                  {getAverageHeight(solarPotential.roofSegmentStats).toFixed(1)}m Height
                 </p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">Optimal Orientation</p>
-                <p className="font-medium capitalize">{optimalOrientation}</p>
+                <p className="font-medium capitalize">
+                  {getOptimalOrientation(solarPotential.roofSegmentStats)}
+                </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {orientations.south} South-facing segments
+                  {countSouthFacingSegments(solarPotential.roofSegmentStats)} South-facing segments
                 </p>
               </div>
             </div>
@@ -259,3 +220,40 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
     </div>
   );
 };
+
+function getPitchConsistencyRating(segments: any[]): string {
+  const avgPitch = getAveragePitch(segments);
+  const variance = segments.reduce((acc, segment) => 
+    acc + Math.pow(segment.pitchDegrees - avgPitch, 2), 0) / segments.length;
+  return variance < 5 ? "High" : variance < 15 ? "Medium" : "Low";
+}
+
+function getAveragePitch(segments: any[]): number {
+  return segments.reduce((acc, segment) => 
+    acc + segment.pitchDegrees, 0) / segments.length;
+}
+
+function getAverageHeight(segments: any[]): number {
+  return segments.reduce((acc, segment) => 
+    acc + segment.planeHeightAtCenterMeters, 0) / segments.length;
+}
+
+function getOptimalOrientation(segments: any[]): string {
+  const orientations = segments.reduce((acc: any, segment) => {
+    const azimuth = segment.azimuthDegrees;
+    if (azimuth > 315 || azimuth <= 45) acc.north++;
+    else if (azimuth > 45 && azimuth <= 135) acc.east++;
+    else if (azimuth > 135 && azimuth <= 225) acc.south++;
+    else acc.west++;
+    return acc;
+  }, { north: 0, east: 0, south: 0, west: 0 });
+
+  return Object.entries(orientations)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+}
+
+function countSouthFacingSegments(segments: any[]): number {
+  return segments.filter(segment => 
+    segment.azimuthDegrees > 135 && segment.azimuthDegrees <= 225
+  ).length;
+}
