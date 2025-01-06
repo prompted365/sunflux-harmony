@@ -78,12 +78,14 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
 
           // Determine image type from filename
           const type = file.name.split('_')[0].toLowerCase();
+          const fileExtension = file.name.split('.').pop()?.toLowerCase();
           
           return {
             name: file.name,
             url: signedUrl,
             type,
-            displayName: getDisplayName(type)
+            displayName: getDisplayName(type),
+            contentType: getContentType(fileExtension || '')
           };
         })
       );
@@ -101,6 +103,16 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
       dsm: 'Surface Model'
     };
     return displayNames[type] || type;
+  };
+
+  const getContentType = (extension: string) => {
+    const contentTypes: Record<string, string> = {
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'gif': 'image/gif'
+    };
+    return contentTypes[extension] || 'image/png';
   };
 
   if (property?.status !== 'completed') {
@@ -149,6 +161,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
               src={image.url}
               alt={`Solar analysis - ${image.displayName}`}
               className="absolute inset-0 w-full h-full object-cover"
+              type={image.contentType}
             />
           </div>
           <div className="p-4">
