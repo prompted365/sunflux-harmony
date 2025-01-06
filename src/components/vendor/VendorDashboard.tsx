@@ -1,86 +1,52 @@
+import { PropertySubmissionForm } from "./PropertySubmissionForm";
+import { PropertyList } from "./dashboard/PropertyList";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import ReportViewer from "./reports/ReportViewer";
-import { DashboardMetrics } from "./dashboard/DashboardMetrics";
-import { PropertyList } from "./dashboard/PropertyList";
 import { Property } from "./types";
+import { ReportViewer } from "./reports/ReportViewer";
 
 const VendorDashboard = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
 
-  const { data: properties, isLoading } = useQuery({
+  const { data: properties, refetch } = useQuery({
     queryKey: ['vendor-properties'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          id,
-          address,
-          city,
-          state,
-          status,
-          building_insights_jsonb,
-          solar_calculations (
-            id,
-            status,
-            system_size,
-            panel_layout,
-            estimated_production,
-            building_specs
-          )
-        `)
-        .or(`user_id.eq.${user?.id},vendor_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
+        .from("properties")
+        .select("*")
+        .eq("vendor_id", user.id);
 
       if (error) throw error;
-      console.log('Fetched properties:', data);
       return data as Property[];
-    },
+    }
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Vendor Dashboard</h2>
-        <p className="text-muted-foreground">
-          Overview of your solar projects and reports.
-        </p>
-      </div>
-
-      <DashboardMetrics properties={properties} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-1">
-          <CardContent className="p-6">
+    <div className="container mx-auto p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Add New Property</h2>
+          <PropertySubmissionForm onSuccess={refetch} />
+          
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Your Properties</h2>
             <PropertyList
-              properties={properties}
+              properties={properties || []}
               selectedPropertyId={selectedPropertyId}
               onSelectProperty={setSelectedPropertyId}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            {selectedPropertyId ? (
-              <ReportViewer 
-                property={properties?.find(p => p.id === selectedPropertyId)} 
-              />
-            ) : (
-              <div className="text-center text-muted-foreground py-8">
-                Select a project to view its report
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div>
+          {selectedPropertyId && (
+            <ReportViewer propertyId={selectedPropertyId} />
+          )}
+        </div>
       </div>
     </div>
   );
