@@ -13,6 +13,13 @@ const About = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center">
+            <div className="relative mb-8">
+              <img
+                src="/lovable-uploads/c68a4f1c-772a-463b-8bd1-46be8cd8588e.png"
+                alt="SunLink.ai Logo"
+                className="w-32 h-auto mx-auto opacity-10 animate-solar-pulse"
+              />
+            </div>
             <h1 className="text-4xl font-bold mb-4">About SunLink.ai</h1>
             <div className="relative">
               <NetworkAnimation />
