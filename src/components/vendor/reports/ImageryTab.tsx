@@ -21,8 +21,8 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
       return data;
     },
     refetchInterval: (data) => {
-      // Refetch every 10 seconds if imagery is still being processed
-      return data?.property?.imagery_status === 'pending' ? 10000 : false;
+      if (!data?.property?.imagery_status) return false;
+      return data.property.imagery_status === 'pending' ? 10000 : false;
     }
   });
 
@@ -58,13 +58,13 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  if (data.property.imagery_status === 'pending') {
+  if (!data?.property?.imagery_status || data.property.imagery_status === 'pending') {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           Solar imagery is being processed. This may take a few minutes.
-          Current status: {data.status || 'initializing'}
+          Current status: {data?.status || 'initializing'}
         </AlertDescription>
       </Alert>
     );

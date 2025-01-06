@@ -31,6 +31,6 @@ export interface ImageryResponse {
   urls: Record<string, string | string[]>;
   status: string;
   property: {
-    imagery_status: string;
+    imagery_status: string | null;
   };
 }
