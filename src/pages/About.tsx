@@ -18,11 +18,6 @@ const About = () => {
               <NetworkAnimation />
               <div className="relative mb-8">
                 <SunAnimation />
-                <img
-                  src="/lovable-uploads/c68a4f1c-772a-463b-8bd1-46be8cd8588e.png"
-                  alt="SunLink.ai Logo"
-                  className="w-32 h-auto mx-auto opacity-10 animate-solar-pulse"
-                />
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none" />
             </div>
