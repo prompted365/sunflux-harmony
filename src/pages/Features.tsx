@@ -1,24 +1,27 @@
 import { List, Zap, Clock, FileText, Sun, Users, ChartBar, Rocket } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import NetworkAnimation from "@/components/NetworkAnimation";
 
 const Features = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <NetworkAnimation />
+      
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-primary/10 to-background pt-24 pb-16">
+      <div className="relative bg-gradient-to-b from-primary/10 to-transparent pt-24 pb-16">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-6">
-            Powerful Features for Solar Success
+            AI-Powered Features for Solar Success
           </h1>
-          <p className="text-lg text-center text-muted-foreground max-w-2xl mx-auto">
-            Transform your solar sales process with our comprehensive suite of tools designed 
-            to streamline operations and boost conversions.
+          <p className="text-lg text-center text-gray-600 max-w-2xl mx-auto">
+            Our intelligent agents work tirelessly to streamline your solar operations,
+            connecting every aspect of your business through advanced automation.
           </p>
         </div>
       </div>
 
       {/* Main Features Grid */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 relative">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Smart Solar Analysis */}
           <Card className="p-6 hover:shadow-lg transition-shadow">
@@ -107,12 +110,12 @@ const Features = () => {
 
         {/* Bottom CTA Section */}
         <div className="mt-16 text-center">
-          <div className="max-w-2xl mx-auto bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-lg p-8">
+          <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm rounded-lg p-8">
             <h2 className="text-2xl font-semibold mb-4">
               Ready to Transform Your Solar Business?
             </h2>
             <p className="text-gray-600 mb-6">
-              Join leading solar providers who are already using our platform to grow their business 
+              Join leading solar providers who are already using our AI-driven platform to grow their business 
               and deliver better results for their customers.
             </p>
             <button className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors">
