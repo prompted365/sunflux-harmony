@@ -13,6 +13,8 @@ const VendorDashboard = () => {
   const { data: properties, isLoading } = useQuery({
     queryKey: ['vendor-properties'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase
         .from('properties')
         .select(`
@@ -21,6 +23,7 @@ const VendorDashboard = () => {
           city,
           state,
           status,
+          building_insights_jsonb,
           solar_calculations (
             id,
             status,
@@ -30,9 +33,11 @@ const VendorDashboard = () => {
             building_specs
           )
         `)
+        .or(`user_id.eq.${user?.id},vendor_id.eq.${user?.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Fetched properties:', data);
       return data as Property[];
     },
   });

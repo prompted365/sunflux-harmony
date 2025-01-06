@@ -18,36 +18,45 @@ import {
 } from 'recharts';
 
 interface ReportViewerProps {
-  property: Property;
+  property: Property | undefined;
 }
 
 const ReportViewer = ({ property }: ReportViewerProps) => {
-  // Fetch property images
+  // Fetch property images with signed URLs
   const { data: images } = useQuery({
     queryKey: ['property-images', property?.id],
     enabled: !!property?.id,
     queryFn: async () => {
-      const folderPath = `${property.id}_${Date.now()}`;
-      const { data: imageUrls, error } = await supabase
+      const timestamp = Date.now();
+      const folderPath = `${property?.id}_${timestamp}`;
+      
+      // List all files in the property's folder
+      const { data: files, error } = await supabase
         .storage
         .from('property-images')
         .list(folderPath);
 
-      if (error) throw error;
-      
+      if (error) {
+        console.error('Error listing files:', error);
+        throw error;
+      }
+
+      // Get signed URLs for each file
       const signedUrls = await Promise.all(
-        imageUrls.map(async (file) => {
+        (files || []).map(async (file) => {
           const { data: { signedUrl } } = await supabase
             .storage
             .from('property-images')
             .createSignedUrl(`${folderPath}/${file.name}`, 3600);
+
           return {
             name: file.name,
             url: signedUrl
           };
         })
       );
-      
+
+      console.log('Signed URLs:', signedUrls);
       return signedUrls;
     },
   });
@@ -68,7 +77,7 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
   const solarPotential = buildingInsights.solarPotential;
   
   // Generate monthly production data for the chart
-  const monthlyProductionData = solarPotential?.solarPanelConfigs?.[0]?.roofSegmentSummaries.map((segment, index) => ({
+  const monthlyProductionData = solarPotential?.solarPanelConfigs?.[0]?.roofSegmentSummaries.map((segment: any, index: number) => ({
     month: new Date(2024, index).toLocaleString('default', { month: 'short' }),
     production: segment.yearlyEnergyDcKwh / 12
   })) || [];
@@ -160,7 +169,7 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
           <Card className="p-6">
             <h3 className="font-semibold mb-4">Roof Segment Analysis</h3>
             <div className="space-y-4">
-              {solarPotential.roofSegmentStats.map((segment, index) => (
+              {solarPotential.roofSegmentStats.map((segment: any, index: number) => (
                 <div key={index} className="border-b pb-4">
                   <h4 className="font-medium">Segment {index + 1}</h4>
                   <div className="grid grid-cols-2 gap-4 mt-2">

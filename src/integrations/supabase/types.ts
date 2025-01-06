@@ -425,53 +425,6 @@ export type Database = {
           },
         ]
       }
-      property_details: {
-        Row: {
-          address: string
-          created_at: string
-          id: string
-          latitude: number
-          longitude: number
-          roof_area: number
-          roof_tilt: number | null
-          shading: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          address: string
-          created_at?: string
-          id?: string
-          latitude: number
-          longitude: number
-          roof_area: number
-          roof_tilt?: number | null
-          shading?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          address?: string
-          created_at?: string
-          id?: string
-          latitude?: number
-          longitude?: number
-          roof_area?: number
-          roof_tilt?: number | null
-          shading?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_details_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       reports: {
         Row: {
           calculation_id: string

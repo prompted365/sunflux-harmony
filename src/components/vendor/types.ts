@@ -4,6 +4,7 @@ export interface Property {
   city: string;
   state: string;
   status: string | null;
+  building_insights_jsonb?: any;
   solar_calculations?: Array<{
     id: string;
     status: string;
