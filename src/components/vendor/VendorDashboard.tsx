@@ -1,14 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, Building2, Zap } from "lucide-react";
+import { Users, FileText, Building2, Zap, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import ReportViewer from "./reports/ReportViewer";
+import { toast } from "sonner";
 
 const VendorDashboard = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ['vendor-properties'],
@@ -20,6 +23,7 @@ const VendorDashboard = () => {
           address,
           city,
           state,
+          status,
           solar_calculations (
             id,
             status,
@@ -35,6 +39,41 @@ const VendorDashboard = () => {
       return data;
     },
   });
+
+  const deleteProperty = useMutation({
+    mutationFn: async (propertyId: string) => {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendor-properties'] });
+      toast.success("Property deleted successfully");
+      if (selectedPropertyId === propertyId) {
+        setSelectedPropertyId(null);
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to delete property");
+      console.error("Delete error:", error);
+    }
+  });
+
+  const getStatusColor = (status: string | null) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-500 hover:bg-green-600';
+      case 'processing':
+        return 'bg-yellow-500 hover:bg-yellow-600';
+      case 'error':
+        return 'bg-red-500 hover:bg-red-600';
+      default:
+        return 'bg-gray-500 hover:bg-gray-600';
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -109,19 +148,43 @@ const VendorDashboard = () => {
             <ScrollArea className="h-[600px] pr-4">
               <div className="space-y-2">
                 {properties?.map((property) => (
-                  <Button
+                  <div
                     key={property.id}
-                    variant={selectedPropertyId === property.id ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedPropertyId(property.id)}
+                    className="flex items-center space-x-2"
                   >
-                    <div className="text-left">
-                      <p className="font-medium">{property.address}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {property.city}, {property.state}
-                      </p>
-                    </div>
-                  </Button>
+                    <Button
+                      variant={selectedPropertyId === property.id ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => setSelectedPropertyId(property.id)}
+                    >
+                      <div className="flex flex-col items-start gap-1">
+                        <p className="font-medium">{property.address}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground">
+                            {property.city}, {property.state}
+                          </p>
+                          <Badge 
+                            variant="outline"
+                            className={getStatusColor(property.status)}
+                          >
+                            {property.status || 'pending'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex-shrink-0 text-destructive hover:text-destructive/90"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this property?')) {
+                          deleteProperty.mutate(property.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             </ScrollArea>
