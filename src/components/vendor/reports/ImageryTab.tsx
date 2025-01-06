@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { ImageryResponse } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -18,17 +18,22 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
+      if (!propertyId) throw new Error('Property ID is required');
+      
       const { data, error } = await supabase.functions.invoke('get-property-imagery', {
-        body: { property_id: propertyId }
+        body: { propertyId }
       });
 
       if (error) throw error;
       return data as ImageryResponse;
-    }
+    },
+    enabled: !!propertyId
   });
 
   // Subscribe to property changes
   useEffect(() => {
+    if (!propertyId) return;
+
     const channel = supabase
       .channel('imagery-updates')
       .on(

@@ -22,7 +22,7 @@ interface ReportViewerProps {
 }
 
 export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
-  const { data: property } = useQuery({
+  const { data: property, isLoading, error } = useQuery({
     queryKey: ['property', propertyId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,7 +36,29 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
     }
   });
 
-  const buildingInsights = property?.building_insights_jsonb;
+  if (isLoading) {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Loading property data...
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load property data.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  const buildingInsights = property.building_insights_jsonb;
 
   if (!buildingInsights) {
     return (

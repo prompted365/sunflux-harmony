@@ -11,6 +11,7 @@ export interface Property {
   status: string;
   imagery_status: string | null;
   imagery_processed_at: string | null;
+  building_insights_jsonb: any | null;
   created_at: string;
   updated_at: string;
   solar_calculations?: SolarCalculation[];
