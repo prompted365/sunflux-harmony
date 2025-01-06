@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, FileText, Download, Sun, Wind, Ruler, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle, FileText, Sun, Wind, Ruler } from "lucide-react";
 import { Property } from "../types";
 import { Badge } from "@/components/ui/badge";
+import ImageryTab from "./ImageryTab";
 import {
   LineChart,
   Line,
@@ -22,45 +21,6 @@ interface ReportViewerProps {
 }
 
 const ReportViewer = ({ property }: ReportViewerProps) => {
-  // Fetch property images with signed URLs
-  const { data: images } = useQuery({
-    queryKey: ['property-images', property?.id],
-    enabled: !!property?.id,
-    queryFn: async () => {
-      const timestamp = Date.now();
-      const folderPath = `${property?.id}_${timestamp}`;
-      
-      // List all files in the property's folder
-      const { data: files, error } = await supabase
-        .storage
-        .from('property-images')
-        .list(folderPath);
-
-      if (error) {
-        console.error('Error listing files:', error);
-        throw error;
-      }
-
-      // Get signed URLs for each file
-      const signedUrls = await Promise.all(
-        (files || []).map(async (file) => {
-          const { data: { signedUrl } } = await supabase
-            .storage
-            .from('property-images')
-            .createSignedUrl(`${folderPath}/${file.name}`, 3600);
-
-          return {
-            name: file.name,
-            url: signedUrl
-          };
-        })
-      );
-
-      console.log('Signed URLs:', signedUrls);
-      return signedUrls;
-    },
-  });
-
   const buildingInsights = property?.building_insights_jsonb;
 
   if (!buildingInsights) {
@@ -91,10 +51,6 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
             {buildingInsights.imageryQuality}
           </Badge>
         </h2>
-        <div className="text-sm text-muted-foreground">
-          <Calendar className="inline-block w-4 h-4 mr-1" />
-          Imagery Date: {new Date(buildingInsights.imageryDate).toLocaleDateString()}
-        </div>
       </div>
 
       <Tabs defaultValue="overview">
@@ -146,26 +102,11 @@ const ReportViewer = ({ property }: ReportViewerProps) => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="imagery" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {images?.map((image, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="aspect-video relative">
-                  <img
-                    src={image.url}
-                    alt={`Solar analysis visualization - ${image.name}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="text-sm font-medium">{image.name.replace(/_/g, ' ').replace('.png', '')}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="imagery">
+          {property?.id && <ImageryTab propertyId={property.id} />}
         </TabsContent>
 
-        <TabsContent value="analysis" className="space-y-6">
+        <TabsContent value="analysis">
           <Card className="p-6">
             <h3 className="font-semibold mb-4">Roof Segment Analysis</h3>
             <div className="space-y-4">
