@@ -10,7 +10,7 @@ interface ImageryTabProps {
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
-  const { data: imagery, isLoading } = useQuery<ImageryResponse>({
+  const { data, isLoading } = useQuery<ImageryResponse>({
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-property-imagery', {
@@ -47,7 +47,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  if (!imagery?.success) {
+  if (!data?.success) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -58,21 +58,21 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  if (imagery.imagery_status === 'pending') {
+  if (data.imagery_status === 'pending') {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           Solar imagery is being processed. This may take a few minutes.
-          Current status: {imagery.status || 'initializing'}
+          Current status: {data.status || 'initializing'}
         </AlertDescription>
       </Alert>
     );
   }
 
   // Get all available single images
-  const availableImages = Object.entries(imagery.urls)
-    .filter(([type]) => !Array.isArray(imagery.urls[type]))
+  const availableImages = Object.entries(data.urls)
+    .filter(([type]) => !Array.isArray(data.urls[type]))
     .map(([type, url]) => ({
       url: url as string,
       displayName: getDisplayName(type),
