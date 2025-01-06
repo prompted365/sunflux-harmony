@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, FileText, Sun, Wind, Ruler } from "lucide-react";
+import { AlertCircle, FileText, Sun, Wind, Ruler, DollarSign } from "lucide-react";
 import { Property } from "../types";
 import { Badge } from "@/components/ui/badge";
 import ImageryTab from "./ImageryTab";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateOptimalPanelCount } from "./utils/optimalPanelCalculations";
 import {
   LineChart,
   Line,
@@ -59,7 +60,6 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
   }
 
   const buildingInsights = property.building_insights_jsonb;
-
   if (!buildingInsights) {
     return (
       <Alert>
@@ -72,6 +72,9 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
   }
 
   const solarPotential = buildingInsights.solarPotential;
+  
+  // Calculate optimal panel configuration
+  const optimalConfig = calculateOptimalPanelCount(buildingInsights);
   
   // Calculate roof segment summaries
   const roofSegments = solarPotential?.roofSegmentStats || [];
@@ -130,42 +133,58 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="p-6">
               <Sun className="h-8 w-8 text-yellow-500 mb-2" />
-              <h3 className="font-semibold">Maximum Panel Count</h3>
-              <p className="text-2xl font-bold">{solarPotential.maxArrayPanelsCount}</p>
+              <h3 className="font-semibold">Optimal System</h3>
+              <p className="text-2xl font-bold">{optimalConfig.panelCount} Panels</p>
+              <p className="text-sm text-muted-foreground">
+                {optimalConfig.systemSizeKw.toFixed(1)} kW System
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                ({solarPotential.maxArrayPanelsCount - optimalConfig.panelCount} additional possible)
+              </p>
             </Card>
             
             <Card className="p-6">
-              <Ruler className="h-8 w-8 text-blue-500 mb-2" />
-              <h3 className="font-semibold">Array Area</h3>
-              <p className="text-2xl font-bold">{solarPotential.maxArrayAreaMeters2.toFixed(1)} m²</p>
+              <DollarSign className="h-8 w-8 text-green-500 mb-2" />
+              <h3 className="font-semibold">Financial Impact</h3>
+              <p className="text-2xl font-bold">
+                ${optimalConfig.installationCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {optimalConfig.paybackPeriod.toFixed(1)} Year Payback
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {optimalConfig.monthlyBillOffset.toFixed(0)}% Bill Offset
+              </p>
             </Card>
             
             <Card className="p-6">
-              <Wind className="h-8 w-8 text-green-500 mb-2" />
-              <h3 className="font-semibold">Annual Sunshine</h3>
-              <p className="text-2xl font-bold">{solarPotential.maxSunshineHoursPerYear.toFixed(0)} hours</p>
+              <Wind className="h-8 w-8 text-blue-500 mb-2" />
+              <h3 className="font-semibold">Annual Production</h3>
+              <p className="text-2xl font-bold">
+                {optimalConfig.annualProduction.toLocaleString()} kWh
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Optimal Energy Generation
+              </p>
             </Card>
           </div>
 
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Estimated Monthly Production</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyProductionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="production" 
-                    stroke="#2563eb" 
-                    name="kWh"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyProductionData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="production" 
+                  stroke="#2563eb" 
+                  name="kWh"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </TabsContent>
 
         <TabsContent value="imagery">
