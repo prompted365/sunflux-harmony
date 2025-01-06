@@ -137,7 +137,7 @@ const PropertyForm = ({ onSuccess }: PropertyFormProps) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-gradient-to-br from-white via-white to-muted/10 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
+    <div className="max-w-2xl mx-auto bg-white/95 backdrop-blur-lg rounded-xl shadow-xl p-8 mb-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-muted">Experience Our AI Workflow</h2>
         <p className="text-xl text-gray-600 mt-4">
@@ -153,7 +153,7 @@ const PropertyForm = ({ onSuccess }: PropertyFormProps) => {
           updateSignupField={updateSignupField}
         />
 
-        <Card className="p-6">
+        <Card className="p-6 bg-white/90">
           <h3 className="text-lg font-semibold mb-4">Property Location</h3>
           <AddressInput
             id="address"
@@ -188,7 +188,7 @@ const PropertyForm = ({ onSuccess }: PropertyFormProps) => {
           />
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 bg-white/90">
           <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
           <FinancialInputs
             monthlyBill={financialData.monthlyBill}
