@@ -76,21 +76,26 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
             .from('property-images')
             .createSignedUrl(`${mostRecentFolder.name}/${file.name}`, 3600);
 
-          // Determine image type from filename
-          const type = file.name.split('_')[0].toLowerCase();
-          const fileExtension = file.name.split('.').pop()?.toLowerCase();
+          // Extract the base type from filename (before any numbers or timestamp)
+          const baseType = file.name.split('_')[0].toLowerCase();
           
           return {
             name: file.name,
             url: signedUrl,
-            type,
-            displayName: getDisplayName(type),
-            contentType: getContentType(fileExtension || '')
+            type: baseType,
+            displayName: getDisplayName(baseType)
           };
         })
       );
 
-      return signedUrls;
+      // Filter out monthly flux individual frames if we have the composite
+      const hasComposite = signedUrls.some(img => img.name.includes('MonthlyFluxComposite'));
+      return signedUrls.filter(img => {
+        if (hasComposite && img.name.match(/MonthlyFlux_\d+/)) {
+          return false;
+        }
+        return true;
+      });
     },
   });
 
@@ -98,21 +103,12 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     const displayNames: Record<string, string> = {
       rgb: 'Satellite View',
       annualflux: 'Annual Solar Analysis',
-      monthlyflux: 'Monthly Solar Analysis',
+      monthlyfluxcomposite: 'Monthly Solar Analysis',
       mask: 'Roof Mask Analysis',
-      dsm: 'Surface Model'
+      dsm: 'Surface Model',
+      fluxoverrgb: 'Solar Analysis Overlay'
     };
-    return displayNames[type] || type;
-  };
-
-  const getContentType = (extension: string) => {
-    const contentTypes: Record<string, string> = {
-      'png': 'image/png',
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'gif': 'image/gif'
-    };
-    return contentTypes[extension] || 'image/png';
+    return displayNames[type.toLowerCase()] || type;
   };
 
   if (property?.status !== 'completed') {
@@ -161,7 +157,6 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
               src={image.url}
               alt={`Solar analysis - ${image.displayName}`}
               className="absolute inset-0 w-full h-full object-cover"
-              type={image.contentType}
             />
           </div>
           <div className="p-4">
