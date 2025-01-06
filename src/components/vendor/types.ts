@@ -26,7 +26,7 @@ export interface Property {
   }>;
 }
 
-interface ImageryResponse {
+export interface ImageryResponse {
   success: boolean;
   urls: Record<string, string | string[]>;
   status: string;
