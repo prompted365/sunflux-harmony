@@ -70,7 +70,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  // Get all available single images
+  // Get all available single images from the signed URLs
   const availableImages = Object.entries(data.urls)
     .filter(([type]) => !Array.isArray(data.urls[type]))
     .map(([type, url]) => ({

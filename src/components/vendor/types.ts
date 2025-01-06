@@ -16,14 +16,6 @@ export interface Property {
   MonthlyFluxCompositeGIF?: string | null;
   MonthlyFlux12?: string[] | null;
   MonthlyFluxComposites?: string[] | null;
-  solar_calculations?: Array<{
-    id: string;
-    status: string;
-    system_size: number;
-    panel_layout: any;
-    estimated_production: any;
-    building_specs: any;
-  }>;
 }
 
 export interface ImageryResponse {
