@@ -17,17 +17,17 @@ const NetworkAnimation = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
-    // Create central sun
+    // Create central sun with more subtle coloring
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
     const sunMaterial = new THREE.MeshBasicMaterial({
       color: 0xFFAA5A,
       transparent: true,
-      opacity: 0.4
+      opacity: 0.2  // Reduced opacity
     });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sun);
 
-    // Create nodes (representing features)
+    // Create nodes with more subtle appearance
     const nodes: THREE.Mesh[] = [];
     const nodeConnections: THREE.Line[] = [];
     const nodeCount = 6;
@@ -39,7 +39,7 @@ const NetworkAnimation = () => {
       const nodeMaterial = new THREE.MeshBasicMaterial({
         color: 0xC84B31,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.3  // Reduced opacity
       });
       const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
       
@@ -50,7 +50,7 @@ const NetworkAnimation = () => {
       nodes.push(node);
       scene.add(node);
 
-      // Create connections between nodes
+      // Create connections with more subtle appearance
       const lineGeometry = new THREE.BufferGeometry().setFromPoints([
         node.position,
         sun.position
@@ -58,7 +58,7 @@ const NetworkAnimation = () => {
       const lineMaterial = new THREE.LineBasicMaterial({
         color: 0xFFAA5A,
         transparent: true,
-        opacity: 0.2
+        opacity: 0.1  // Reduced opacity
       });
       const line = new THREE.Line(lineGeometry, lineMaterial);
       nodeConnections.push(line);
@@ -73,12 +73,12 @@ const NetworkAnimation = () => {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // Rotate sun
-      sun.rotation.y += 0.005;
+      // Slower rotation for more subtle movement
+      sun.rotation.y += 0.002;
       
-      // Animate nodes
+      // Animate nodes with slower movement
       nodes.forEach((node, i) => {
-        const time = frame * 0.02 + i;
+        const time = frame * 0.01 + i;  // Reduced speed
         node.position.y = Math.sin(time * 0.5) * 5;
         
         // Update connection lines
@@ -114,7 +114,7 @@ const NetworkAnimation = () => {
   return (
     <div 
       ref={containerRef} 
-      className="w-full h-full pointer-events-none"
+      className="fixed inset-0 w-full h-full pointer-events-none opacity-50"
       style={{ zIndex: 0 }}
     />
   );
