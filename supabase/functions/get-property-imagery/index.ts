@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -37,39 +36,52 @@ serve(async (req) => {
       throw propertyError;
     }
 
-    if (!property) {
-      throw new Error('Property not found');
+    // List all files in the property's folder
+    const { data: files, error: listError } = await supabase.storage
+      .from('property-images')
+      .list(propertyId);
+
+    if (listError) {
+      throw listError;
     }
 
-    // Define image types to process
-    const singleImageTypes = ['DSM', 'RGB', 'Mask', 'AnnualFlux', 'FluxOverRGB', 'MonthlyFluxCompositeGIF'];
-    const arrayImageTypes = ['MonthlyFlux12', 'MonthlyFluxComposites'];
-
+    // Define the image types we're looking for
+    const imageTypes = ['DSM', 'RGB', 'Mask', 'AnnualFlux', 'FluxOverRGB', 'MonthlyFluxCompositeGIF'];
+    const arrayTypes = ['MonthlyFlux12', 'MonthlyFluxComposites'];
+    
     const signedUrls: Record<string, string | string[]> = {};
 
     // Process single image types
-    for (const type of singleImageTypes) {
-      const imagePath = `${propertyId}/${type}.png`;
-      const { data } = await supabase.storage
-        .from('property-images')
-        .createSignedUrl(imagePath, 3600); // 1 hour expiry
-
-      if (data?.signedUrl) {
-        signedUrls[type] = data.signedUrl;
+    for (const type of imageTypes) {
+      const matchingFile = files.find(f => f.name.startsWith(`${type}_`));
+      if (matchingFile) {
+        const { data } = await supabase.storage
+          .from('property-images')
+          .createSignedUrl(`${propertyId}/${matchingFile.name}`, 3600);
+        
+        if (data?.signedUrl) {
+          signedUrls[type] = data.signedUrl;
+        }
       }
     }
 
     // Process array image types
-    for (const type of arrayImageTypes) {
-      const signedUrlPromises = Array.from({ length: 12 }, (_, i) => 
-        supabase.storage
-          .from('property-images')
-          .createSignedUrl(`${propertyId}/${type}_${i + 1}.png`, 3600)
-          .then(({ data }) => data?.signedUrl)
-      );
+    for (const type of arrayTypes) {
+      const matchingFiles = files
+        .filter(f => f.name.startsWith(`${type}_`))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-      const urls = await Promise.all(signedUrlPromises);
-      signedUrls[type] = urls.filter(Boolean) as string[];
+      if (matchingFiles.length > 0) {
+        const urlPromises = matchingFiles.map(file =>
+          supabase.storage
+            .from('property-images')
+            .createSignedUrl(`${propertyId}/${file.name}`, 3600)
+            .then(({ data }) => data?.signedUrl)
+        );
+
+        const urls = await Promise.all(urlPromises);
+        signedUrls[type] = urls.filter(Boolean) as string[];
+      }
     }
 
     console.log('Successfully generated signed URLs for property:', propertyId);
