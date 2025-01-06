@@ -101,7 +101,7 @@ serve(async (req) => {
         success: true, 
         urls: signedUrls,
         status: property.status,
-        imageryStatus: allImagesPresent ? 'completed' : property.imagery_status
+        imagery_status: allImagesPresent ? 'completed' : property.imagery_status
       }),
       { 
         headers: { 

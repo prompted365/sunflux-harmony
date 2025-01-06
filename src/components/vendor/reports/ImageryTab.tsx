@@ -22,7 +22,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     },
     refetchInterval: (data) => {
       // Refetch every 10 seconds if imagery is still being processed
-      return data?.imageryStatus === 'pending' ? 10000 : false;
+      return data?.imagery_status === 'pending' ? 10000 : false;
     }
   });
 
@@ -58,7 +58,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  if (imagery.imageryStatus === 'pending') {
+  if (imagery.imagery_status === 'pending') {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
