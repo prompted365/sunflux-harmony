@@ -30,27 +30,12 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     enabled: !!propertyId
   });
 
-  // Set up realtime updates
+  // Set up realtime updates for storage changes
   useImageryUpdates(propertyId, queryClient);
 
   if (isLoading) return <LoadingAlert />;
   if (error) return <ErrorAlert />;
   if (!data) return <ErrorAlert message="No data available" />;
-
-  if (data.property.imagery_status === 'pending') {
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Imagery processing is in progress. This may take a few minutes.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (data.property.imagery_status === 'failed') {
-    return <ErrorAlert message="Failed to process imagery. Please try again later." />;
-  }
 
   // Get all available single images from the signed URLs
   const availableImages = Object.entries(data.urls || {})

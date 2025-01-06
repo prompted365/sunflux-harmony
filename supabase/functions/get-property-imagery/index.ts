@@ -49,49 +49,27 @@ serve(async (req) => {
 
     // Process single image types
     for (const type of singleImageTypes) {
-      const imagePath = property[type];
-      if (imagePath) {
-        const { data: { signedUrl }, error } = await supabase
-          .storage
-          .from('property-images')
-          .createSignedUrl(imagePath, 3600); // 1 hour expiry
+      const imagePath = `${propertyId}/${type}.png`;
+      const { data } = await supabase.storage
+        .from('property-images')
+        .createSignedUrl(imagePath, 3600); // 1 hour expiry
 
-        if (!error && signedUrl) {
-          signedUrls[type] = signedUrl;
-        }
+      if (data?.signedUrl) {
+        signedUrls[type] = data.signedUrl;
       }
     }
 
     // Process array image types
     for (const type of arrayImageTypes) {
-      const imagePaths = property[type];
-      if (Array.isArray(imagePaths) && imagePaths.length > 0) {
-        const signedUrlPromises = imagePaths.map(path => 
-          supabase.storage
-            .from('property-images')
-            .createSignedUrl(path, 3600)
-            .then(({ data }) => data?.signedUrl)
-        );
+      const signedUrlPromises = Array.from({ length: 12 }, (_, i) => 
+        supabase.storage
+          .from('property-images')
+          .createSignedUrl(`${propertyId}/${type}_${i + 1}.png`, 3600)
+          .then(({ data }) => data?.signedUrl)
+      );
 
-        const urls = await Promise.all(signedUrlPromises);
-        signedUrls[type] = urls.filter(Boolean) as string[];
-      }
-    }
-
-    // Check if all required images are present and update status if needed
-    const requiredImages = ['DSM', 'RGB', 'Mask', 'AnnualFlux', 'FluxOverRGB', 'MonthlyFluxCompositeGIF'];
-    const allImagesPresent = requiredImages.every(type => property[type]);
-
-    if (allImagesPresent && property.imagery_status === 'pending') {
-      console.log('All images present, updating imagery status to completed');
-      const { error: updateError } = await supabase
-        .from('properties')
-        .update({ imagery_status: 'completed' })
-        .eq('id', propertyId);
-
-      if (updateError) {
-        console.error('Error updating imagery status:', updateError);
-      }
+      const urls = await Promise.all(signedUrlPromises);
+      signedUrls[type] = urls.filter(Boolean) as string[];
     }
 
     console.log('Successfully generated signed URLs for property:', propertyId);
@@ -100,8 +78,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         urls: signedUrls,
-        status: property.status,
-        imagery_status: allImagesPresent ? 'completed' : property.imagery_status
+        property
       }),
       { 
         headers: { 

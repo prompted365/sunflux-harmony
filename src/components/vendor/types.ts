@@ -9,8 +9,6 @@ export interface Property {
   vendor_id: string | null;
   user_id: string;
   status: string;
-  imagery_status: string | null;
-  imagery_processed_at: string | null;
   building_insights_jsonb: any | null;
   created_at: string;
   updated_at: string;

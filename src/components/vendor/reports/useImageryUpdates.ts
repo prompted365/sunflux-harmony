@@ -9,15 +9,16 @@ export const useImageryUpdates = (propertyId: string, queryClient: QueryClient) 
   useEffect(() => {
     if (!propertyId) return;
 
+    // Listen to storage changes in the property-images bucket
     const channel = supabase
-      .channel('imagery-updates')
+      .channel('storage-changes')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'properties',
-          filter: `id=eq.${propertyId}`,
+          event: '*',
+          schema: 'storage',
+          table: 'objects',
+          filter: `path=like.${propertyId}/%`,
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['property-imagery', propertyId] });
