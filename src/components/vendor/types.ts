@@ -3,24 +3,38 @@ export interface Property {
   address: string;
   city: string;
   state: string;
-  status: string | null;
-  building_insights_jsonb?: any;
-  latest_imagery_folder?: string | null;
-  imagery_processed_at?: string | null;
-  imagery_status?: string | null;
-  DSM?: string | null;
-  RGB?: string | null;
-  Mask?: string | null;
-  AnnualFlux?: string | null;
-  FluxOverRGB?: string | null;
-  MonthlyFluxCompositeGIF?: string | null;
-  MonthlyFlux12?: string[] | null;
-  MonthlyFluxComposites?: string[] | null;
+  zip_code: string;
+  latitude: number;
+  longitude: number;
+  vendor_id: string | null;
+  user_id: string;
+  status: string;
+  imagery_status: string | null;
+  imagery_processed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  solar_calculations?: SolarCalculation[];
+}
+
+export interface SolarCalculation {
+  id: string;
+  property_id: string;
+  status: 'pending' | 'processing' | 'completed';
+  system_size?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ImageryResponse {
-  success: boolean;
-  urls: Record<string, string | string[]>;
-  status: string;
   property: Property;
+  urls: {
+    DSM?: string;
+    RGB?: string;
+    Mask?: string;
+    AnnualFlux?: string;
+    FluxOverRGB?: string;
+    MonthlyFluxCompositeGIF?: string;
+    MonthlyFlux12?: string[];
+    MonthlyFluxComposites?: string[];
+  };
 }

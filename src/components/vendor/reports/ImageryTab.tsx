@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { ImageryResponse, Property } from "../types";
+import { ImageryResponse } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ImageItem } from "./ImageItem";
 
 interface ImageryTabProps {
   propertyId: string;
@@ -18,7 +19,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-property-imagery', {
-        body: { propertyId }
+        body: { property_id: propertyId }
       });
 
       if (error) throw error;
@@ -38,9 +39,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
           table: 'properties',
           filter: `id=eq.${propertyId}`,
         },
-        (payload) => {
-          console.log('Property updated:', payload);
-          // Refetch imagery data when property is updated
+        () => {
           refetch();
           toast({
             title: "New imagery available",
@@ -55,45 +54,33 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     };
   }, [propertyId, refetch, toast]);
 
-  // Helper function to get display name for image type
-  const getDisplayName = (type: string) => {
-    const displayNames: Record<string, string> = {
-      RGB: 'Satellite View',
-      DSM: 'Surface Model',
-      Mask: 'Roof Mask Analysis',
-      AnnualFlux: 'Annual Solar Analysis',
-      FluxOverRGB: 'Solar Analysis Overlay',
-      MonthlyFluxCompositeGIF: 'Monthly Solar Analysis'
-    };
-    return displayNames[type] || type;
-  };
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <ImageItem key={i} url="" title="" isLoading />
+        ))}
       </div>
     );
   }
 
-  if (!data?.success) {
+  if (data.property.imagery_status === 'pending') {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load imagery data.
+          Imagery processing is in progress. This may take a few minutes.
         </AlertDescription>
       </Alert>
     );
   }
 
-  if (!data?.property?.imagery_status || data.property.imagery_status === 'pending') {
+  if (data.property.imagery_status === 'failed') {
     return (
-      <Alert>
+      <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Solar imagery is being processed. This may take a few minutes.
-          Current status: {data?.status || 'initializing'}
+          Failed to process imagery. Please try again later.
         </AlertDescription>
       </Alert>
     );
@@ -101,40 +88,28 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
 
   // Get all available single images from the signed URLs
   const availableImages = Object.entries(data.urls || {})
-    .filter(([type]) => !Array.isArray(data.urls[type]))
+    .filter(([type, url]) => typeof url === 'string' && !Array.isArray(url))
     .map(([type, url]) => ({
+      type,
       url: url as string,
-      displayName: getDisplayName(type),
-      type
+      title: type.replace(/([A-Z])/g, ' $1').trim() // Add spaces before capital letters
     }));
 
-  if (!availableImages.length) {
+  if (availableImages.length === 0) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          No imagery is available yet for this property.
-          The system is still processing the solar analysis.
+          No imagery available yet.
         </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {availableImages.map((image, index) => (
-        <Card key={index} className="overflow-hidden">
-          <div className="aspect-video relative">
-            <img
-              src={image.url}
-              alt={`Solar analysis - ${image.displayName}`}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
-          <div className="p-4">
-            <p className="text-sm font-medium">{image.displayName}</p>
-          </div>
-        </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {availableImages.map(({ type, url, title }) => (
+        <ImageItem key={type} url={url} title={title} />
       ))}
     </div>
   );
