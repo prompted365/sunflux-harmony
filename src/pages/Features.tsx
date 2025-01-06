@@ -7,16 +7,18 @@ const Features = () => {
     <div className="min-h-screen bg-background relative">
       <NetworkAnimation />
       
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-primary/10 to-transparent pt-24 pb-16">
+      {/* Hero Section with Animated Image */}
+      <div className="relative z-30 mb-16 pt-24">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-6">
-            AI-Powered Features for Solar Success
-          </h1>
-          <p className="text-lg text-center text-gray-600 max-w-2xl mx-auto">
-            Our intelligent agents work tirelessly to streamline your solar operations,
-            connecting every aspect of your business through advanced automation.
-          </p>
+          <div className="animate-roll-down animation-delay-500 origin-top">
+            <div className="flex flex-col items-center justify-center max-w-5xl mx-auto">
+              <img 
+                src="/lovable-uploads/da9ca488-640a-4b34-a841-e110e22aeb36.png"
+                alt="Putting power back into your hands"
+                className="w-full max-w-4xl mx-auto animate-fade-in drop-shadow-[0px_10px_50px_rgba(255,255,255,0.5)] filter"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
