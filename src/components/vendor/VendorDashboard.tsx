@@ -26,25 +26,31 @@ const VendorDashboard = () => {
   });
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Add New Property</h2>
-          <PropertySubmissionForm onSuccess={refetch} />
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          <section className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-2xl font-bold mb-6">Add New Property</h2>
+            <PropertySubmissionForm onSuccess={refetch} />
+          </section>
           
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Your Properties</h2>
+          <section className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-2xl font-bold mb-6">Your Properties</h2>
             <PropertyList
               properties={properties || []}
               selectedPropertyId={selectedPropertyId}
               onSelectProperty={setSelectedPropertyId}
             />
-          </div>
+          </section>
         </div>
 
-        <div>
-          {selectedPropertyId && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          {selectedPropertyId ? (
             <ReportViewer propertyId={selectedPropertyId} />
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              Select a property to view its report
+            </div>
           )}
         </div>
       </div>

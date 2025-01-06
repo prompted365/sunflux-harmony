@@ -69,129 +69,129 @@ const VendorInputs = () => {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-2xl font-bold mb-4">Vendor Inputs</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-6">
           Manage your solar panel catalog and installation specifications.
         </p>
+
+        <Tabs defaultValue="panels" className="space-y-6">
+          <TabsList className="bg-muted/10">
+            <TabsTrigger value="panels">Solar Panels</TabsTrigger>
+            <TabsTrigger value="installation">Installation</TabsTrigger>
+            <TabsTrigger value="addons">Add-ons</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="panels">
+            <Card>
+              <CardHeader>
+                <CardTitle>Add New Panel</CardTitle>
+                <CardDescription>
+                  Add a new solar panel model to your catalog.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Panel Model</Label>
+                      <Input
+                        value={panel.panel_model}
+                        onChange={(e) =>
+                          setPanel({ ...panel, panel_model: e.target.value })
+                        }
+                        placeholder="e.g., SunPower X22-360"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Vendor Name</Label>
+                      <Input
+                        value={panel.vendor_name}
+                        onChange={(e) =>
+                          setPanel({ ...panel, vendor_name: e.target.value })
+                        }
+                        placeholder="e.g., SunPower"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label>Rated Power (W)</Label>
+                      <Input
+                        type="number"
+                        value={panel.rated_power}
+                        onChange={(e) =>
+                          setPanel({ ...panel, rated_power: e.target.value })
+                        }
+                        placeholder="e.g., 360"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Efficiency (%)</Label>
+                      <Input
+                        type="number"
+                        value={panel.efficiency}
+                        onChange={(e) =>
+                          setPanel({ ...panel, efficiency: e.target.value })
+                        }
+                        placeholder="e.g., 22.8"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Price ($)</Label>
+                      <Input
+                        type="number"
+                        value={panel.price}
+                        onChange={(e) =>
+                          setPanel({ ...panel, price: e.target.value })
+                        }
+                        placeholder="e.g., 300"
+                      />
+                    </div>
+                  </div>
+
+                  <Button onClick={handleAddPanel} disabled={loading} className="w-full">
+                    Add Panel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="installation">
+            <Card>
+              <CardHeader>
+                <CardTitle>Installation Costs</CardTitle>
+                <CardDescription>
+                  Define your installation costs and labor rates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Coming soon: Installation cost management.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="addons">
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Products</CardTitle>
+                <CardDescription>
+                  Manage additional products like batteries and inverters.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Coming soon: Add-on product management.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs defaultValue="panels">
-        <TabsList>
-          <TabsTrigger value="panels">Solar Panels</TabsTrigger>
-          <TabsTrigger value="installation">Installation</TabsTrigger>
-          <TabsTrigger value="addons">Add-ons</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="panels">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Panel</CardTitle>
-              <CardDescription>
-                Add a new solar panel model to your catalog.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Panel Model</Label>
-                    <Input
-                      value={panel.panel_model}
-                      onChange={(e) =>
-                        setPanel({ ...panel, panel_model: e.target.value })
-                      }
-                      placeholder="e.g., SunPower X22-360"
-                    />
-                  </div>
-                  <div>
-                    <Label>Vendor Name</Label>
-                    <Input
-                      value={panel.vendor_name}
-                      onChange={(e) =>
-                        setPanel({ ...panel, vendor_name: e.target.value })
-                      }
-                      placeholder="e.g., SunPower"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Rated Power (W)</Label>
-                    <Input
-                      type="number"
-                      value={panel.rated_power}
-                      onChange={(e) =>
-                        setPanel({ ...panel, rated_power: e.target.value })
-                      }
-                      placeholder="e.g., 360"
-                    />
-                  </div>
-                  <div>
-                    <Label>Efficiency (%)</Label>
-                    <Input
-                      type="number"
-                      value={panel.efficiency}
-                      onChange={(e) =>
-                        setPanel({ ...panel, efficiency: e.target.value })
-                      }
-                      placeholder="e.g., 22.8"
-                    />
-                  </div>
-                  <div>
-                    <Label>Price ($)</Label>
-                    <Input
-                      type="number"
-                      value={panel.price}
-                      onChange={(e) =>
-                        setPanel({ ...panel, price: e.target.value })
-                      }
-                      placeholder="e.g., 300"
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={handleAddPanel} disabled={loading}>
-                  Add Panel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="installation">
-          <Card>
-            <CardHeader>
-              <CardTitle>Installation Costs</CardTitle>
-              <CardDescription>
-                Define your installation costs and labor rates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Coming soon: Installation cost management.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="addons">
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Products</CardTitle>
-              <CardDescription>
-                Manage additional products like batteries and inverters.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Coming soon: Add-on product management.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
