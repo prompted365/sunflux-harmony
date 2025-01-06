@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { ImageryResponse } from "../types";
 
 interface ImageryTabProps {
   propertyId: string;
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
-  const { data: imagery, isLoading } = useQuery({
+  const { data: imagery, isLoading } = useQuery<ImageryResponse>({
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-property-imagery', {

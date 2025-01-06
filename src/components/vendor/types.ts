@@ -25,3 +25,10 @@ export interface Property {
     building_specs: any;
   }>;
 }
+
+interface ImageryResponse {
+  success: boolean;
+  urls: Record<string, string | string[]>;
+  status: string;
+  imageryStatus: string;
+}
