@@ -12,7 +12,11 @@ import { submitProperty } from "./property/PropertySubmission"
 import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 
-const PropertyForm = () => {
+interface PropertyFormProps {
+  onSuccess?: () => void;
+}
+
+const PropertyForm = ({ onSuccess }: PropertyFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const {
@@ -38,10 +42,32 @@ const PropertyForm = () => {
     setLoading(true);
 
     try {
-      // First create the user account
+      // First check if user already exists
+      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
+        email: signupData.email,
+        password: signupData.password,
+      });
+
+      if (existingUser?.user) {
+        toast({
+          title: "Account already exists",
+          description: "Please use the login form instead.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Create the user account
       const { data: authData, error: signupError } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
+        options: {
+          data: {
+            is_vendor: true,
+            communication_opt_in: signupData.communicationOptIn,
+          }
+        }
       });
 
       if (signupError) throw signupError;
@@ -49,19 +75,6 @@ const PropertyForm = () => {
       if (!authData.user) {
         throw new Error("Failed to create account");
       }
-
-      // Create vendor profile
-      const { error: vendorError } = await supabase
-        .from('vendor_profiles')
-        .insert([{
-          id: authData.user.id,
-          communication_opt_in: signupData.communicationOptIn,
-          account_tier: 'trial',
-          trial_reports_remaining: 1,
-          trial_reports_reset_date: new Date().toISOString(),
-        }]);
-
-      if (vendorError) throw vendorError;
 
       // Submit the property
       const property = await submitProperty(formData, toast);
@@ -103,8 +116,13 @@ const PropertyForm = () => {
           zipCode: "",
         });
 
-        // Redirect to vendor portal
-        navigate("/vendor");
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Default navigation
+          navigate("/vendor");
+        }
       }
     } catch (error: any) {
       console.error("Submission error:", error);

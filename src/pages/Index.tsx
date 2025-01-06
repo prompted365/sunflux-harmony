@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import PropertyForm from "@/components/PropertyForm";
 import SunsetAnimation from "@/components/SunsetAnimation";
 import AgentFlowAnimation from "@/components/AgentFlowAnimation";
 
@@ -23,7 +22,6 @@ const Index = () => {
       <div className="container mx-auto px-4 py-12">
         <Hero />
         <SunsetAnimation />
-        <PropertyForm />
         <AgentFlowAnimation />
       </div>
     </div>
