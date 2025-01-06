@@ -3,7 +3,6 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import SunsetAnimation from "@/components/SunsetAnimation";
 import AgentFlowAnimation from "@/components/AgentFlowAnimation";
-import NetworkAnimation from "@/components/NetworkAnimation";
 
 const Index = () => {
   useEffect(() => {
@@ -26,12 +25,8 @@ const Index = () => {
       <div className="relative z-10">
         <Navigation />
         <div className="container mx-auto px-4 py-12">
-          <Hero />
-          {/* Network Animation positioned under Hero */}
-          <div className="relative -mt-16 mb-16">
-            <NetworkAnimation />
-          </div>
           <SunsetAnimation />
+          <Hero />
           <AgentFlowAnimation />
         </div>
       </div>
