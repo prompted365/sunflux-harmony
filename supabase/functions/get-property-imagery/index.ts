@@ -78,6 +78,22 @@ serve(async (req) => {
       }
     }
 
+    // Check if all required images are present and update status if needed
+    const requiredImages = ['DSM', 'RGB', 'Mask', 'AnnualFlux', 'FluxOverRGB', 'MonthlyFluxCompositeGIF'];
+    const allImagesPresent = requiredImages.every(type => property[type]);
+
+    if (allImagesPresent && property.imagery_status === 'pending') {
+      console.log('All images present, updating imagery status to completed');
+      const { error: updateError } = await supabase
+        .from('properties')
+        .update({ imagery_status: 'completed' })
+        .eq('id', propertyId);
+
+      if (updateError) {
+        console.error('Error updating imagery status:', updateError);
+      }
+    }
+
     console.log('Successfully generated signed URLs for property:', propertyId);
 
     return new Response(
@@ -85,7 +101,7 @@ serve(async (req) => {
         success: true, 
         urls: signedUrls,
         status: property.status,
-        imageryStatus: property.imagery_status
+        imageryStatus: allImagesPresent ? 'completed' : property.imagery_status
       }),
       { 
         headers: { 
