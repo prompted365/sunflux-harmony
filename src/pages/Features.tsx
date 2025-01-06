@@ -1,10 +1,12 @@
 import { List, Zap, Clock, FileText, Sun, Users, ChartBar, Rocket } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import NetworkAnimation from "@/components/NetworkAnimation";
+import Navigation from "@/components/Navigation";
 
 const Features = () => {
   return (
     <div className="min-h-screen bg-background relative">
+      <Navigation />
       <NetworkAnimation />
       
       {/* Hero Section with Animated Image */}

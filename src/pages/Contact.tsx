@@ -1,9 +1,11 @@
 import { Mail, Phone, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Navigation from "@/components/Navigation";
 
 const Contact = () => {
   return (
     <div className="min-h-screen bg-background pt-24">
+      <Navigation />
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-8">Get in Touch</h1>
