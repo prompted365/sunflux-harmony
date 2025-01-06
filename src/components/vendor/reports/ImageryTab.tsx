@@ -3,14 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { ImageryResponse } from "../types";
+import { ImageryResponse, Property } from "../types";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageryTabProps {
   propertyId: string;
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
-  const { data, isLoading } = useQuery<ImageryResponse>({
+  const { toast } = useToast();
+  
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-property-imagery', {
@@ -18,13 +22,38 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
       });
 
       if (error) throw error;
-      return data;
-    },
-    refetchInterval: (data) => {
-      if (!data?.property?.imagery_status) return false;
-      return data.property.imagery_status === 'pending' ? 10000 : false;
+      return data as ImageryResponse;
     }
   });
+
+  // Subscribe to property changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('imagery-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'properties',
+          filter: `id=eq.${propertyId}`,
+        },
+        (payload) => {
+          console.log('Property updated:', payload);
+          // Refetch imagery data when property is updated
+          refetch();
+          toast({
+            title: "New imagery available",
+            description: "Solar analysis images have been updated.",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [propertyId, refetch, toast]);
 
   // Helper function to get display name for image type
   const getDisplayName = (type: string) => {
@@ -71,7 +100,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
   }
 
   // Get all available single images from the signed URLs
-  const availableImages = Object.entries(data.urls)
+  const availableImages = Object.entries(data.urls || {})
     .filter(([type]) => !Array.isArray(data.urls[type]))
     .map(([type, url]) => ({
       url: url as string,
