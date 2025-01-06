@@ -6,6 +6,7 @@ import { AlertCircle, FileText, Sun, Wind, Ruler } from "lucide-react";
 import { Property } from "../types";
 import { Badge } from "@/components/ui/badge";
 import ImageryTab from "./ImageryTab";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LineChart,
   Line,
