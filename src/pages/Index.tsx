@@ -22,16 +22,15 @@ const Index = () => {
       {/* Background Gradient */}
       <div className="fixed inset-0 bg-gradient-to-b from-secondary/10 to-background -z-20" />
       
-      {/* Background Network Animation */}
-      <div className="fixed inset-0 -z-10">
-        <NetworkAnimation />
-      </div>
-      
       {/* Main Content */}
       <div className="relative z-10">
         <Navigation />
         <div className="container mx-auto px-4 py-12">
           <Hero />
+          {/* Network Animation positioned under Hero */}
+          <div className="relative -mt-16 mb-16">
+            <NetworkAnimation />
+          </div>
           <SunsetAnimation />
           <AgentFlowAnimation />
         </div>
