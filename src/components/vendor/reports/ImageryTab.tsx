@@ -1,21 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { ImageryResponse } from "../types";
+import { ImageryResponse } from "./types";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { ImageItem } from "./ImageItem";
+import { LoadingAlert } from "./LoadingAlert";
+import { ErrorAlert } from "./ErrorAlert";
+import { useImageryUpdates } from "./useImageryUpdates";
 
 interface ImageryTabProps {
   propertyId: string;
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
-  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
       if (!propertyId) throw new Error('Property ID is required');
@@ -30,44 +30,12 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     enabled: !!propertyId
   });
 
-  // Subscribe to property changes
-  useEffect(() => {
-    if (!propertyId) return;
+  // Set up realtime updates
+  useImageryUpdates(propertyId, queryClient);
 
-    const channel = supabase
-      .channel('imagery-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'properties',
-          filter: `id=eq.${propertyId}`,
-        },
-        () => {
-          refetch();
-          toast({
-            title: "New imagery available",
-            description: "Solar analysis images have been updated.",
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [propertyId, refetch, toast]);
-
-  if (isLoading || !data) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <ImageItem key={i} url="" title="" isLoading />
-        ))}
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingAlert />;
+  if (error) return <ErrorAlert />;
+  if (!data) return <ErrorAlert message="No data available" />;
 
   if (data.property.imagery_status === 'pending') {
     return (
@@ -81,14 +49,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
   }
 
   if (data.property.imagery_status === 'failed') {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to process imagery. Please try again later.
-        </AlertDescription>
-      </Alert>
-    );
+    return <ErrorAlert message="Failed to process imagery. Please try again later." />;
   }
 
   // Get all available single images from the signed URLs
