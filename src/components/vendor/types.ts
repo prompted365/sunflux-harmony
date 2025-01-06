@@ -30,5 +30,7 @@ export interface ImageryResponse {
   success: boolean;
   urls: Record<string, string | string[]>;
   status: string;
-  imagery_status: string;
+  property: {
+    imagery_status: string;
+  };
 }
