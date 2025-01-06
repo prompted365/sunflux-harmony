@@ -2,16 +2,30 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface ImageryTabProps {
   propertyId: string;
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
+  const { data: property } = useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", propertyId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const { data: images, isLoading, error } = useQuery({
     queryKey: ['property-images', propertyId],
-    enabled: !!propertyId,
+    enabled: !!propertyId && property?.status === 'completed',
     queryFn: async () => {
       // List all files in the property's folder
       const { data: folders, error: folderError } = await supabase
@@ -76,12 +90,24 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     return displayNames[type] || type;
   };
 
+  if (property?.status !== 'completed') {
+    return (
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Solar imagery is being processed. This may take a few minutes.
+          Current status: {property?.status || 'initializing'}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (isLoading) {
-    return <div className="animate-pulse space-y-4">
-      {[1, 2].map(i => (
-        <Card key={i} className="aspect-video bg-gray-200" />
-      ))}
-    </div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (error) {
@@ -94,7 +120,10 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
   if (!images?.length) {
     return <Alert>
       <AlertCircle className="h-4 w-4" />
-      <AlertDescription>No imagery available for this property.</AlertDescription>
+      <AlertDescription>
+        No imagery is available yet for this property. 
+        The system is still processing the solar analysis.
+      </AlertDescription>
     </Alert>;
   }
 
