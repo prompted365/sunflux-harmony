@@ -17,7 +17,6 @@ export interface ImageryResponse {
 }
 
 export interface ImageItemProps {
-  type: string;
   url: string;
   title: string;
 }

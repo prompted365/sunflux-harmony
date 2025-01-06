@@ -56,7 +56,6 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
   const availableImages = Object.entries(data.urls || {})
     .filter(([type, url]) => typeof url === 'string' && !Array.isArray(url))
     .map(([type, url]) => ({
-      type,
       url: url as string,
       title: type.replace(/([A-Z])/g, ' $1').trim() // Add spaces before capital letters
     }));
@@ -74,8 +73,8 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {availableImages.map(({ type, url, title }) => (
-        <ImageItem key={type} url={url} title={title} />
+      {availableImages.map(({ url, title }) => (
+        <ImageItem key={title} url={url} title={title} />
       ))}
     </div>
   );
