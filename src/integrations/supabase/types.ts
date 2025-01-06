@@ -368,12 +368,22 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          AnnualFlux: string | null
+          building_insights_jsonb: Json | null
           city: string
           created_at: string
+          DSM: string | null
+          FluxOverRGB: string | null
           id: string
           latitude: number | null
           longitude: number | null
+          Mask: string | null
+          MonthlyFlux12: string[] | null
+          MonthlyFluxCompositeGIF: string | null
+          MonthlyFluxComposites: string[] | null
+          RGB: string | null
           state: string
+          status: string | null
           updated_at: string
           user_id: string
           vendor_id: string | null
@@ -381,12 +391,22 @@ export type Database = {
         }
         Insert: {
           address: string
+          AnnualFlux?: string | null
+          building_insights_jsonb?: Json | null
           city: string
           created_at?: string
+          DSM?: string | null
+          FluxOverRGB?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          Mask?: string | null
+          MonthlyFlux12?: string[] | null
+          MonthlyFluxCompositeGIF?: string | null
+          MonthlyFluxComposites?: string[] | null
+          RGB?: string | null
           state: string
+          status?: string | null
           updated_at?: string
           user_id: string
           vendor_id?: string | null
@@ -394,12 +414,22 @@ export type Database = {
         }
         Update: {
           address?: string
+          AnnualFlux?: string | null
+          building_insights_jsonb?: Json | null
           city?: string
           created_at?: string
+          DSM?: string | null
+          FluxOverRGB?: string | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          Mask?: string | null
+          MonthlyFlux12?: string[] | null
+          MonthlyFluxCompositeGIF?: string | null
+          MonthlyFluxComposites?: string[] | null
+          RGB?: string | null
           state?: string
+          status?: string | null
           updated_at?: string
           user_id?: string
           vendor_id?: string | null
