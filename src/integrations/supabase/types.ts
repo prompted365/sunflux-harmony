@@ -348,6 +348,9 @@ export type Database = {
           DSM: string | null
           FluxOverRGB: string | null
           id: string
+          imagery_processed_at: string | null
+          imagery_status: string | null
+          latest_imagery_folder: string | null
           latitude: number | null
           longitude: number | null
           Mask: string | null
@@ -371,6 +374,9 @@ export type Database = {
           DSM?: string | null
           FluxOverRGB?: string | null
           id?: string
+          imagery_processed_at?: string | null
+          imagery_status?: string | null
+          latest_imagery_folder?: string | null
           latitude?: number | null
           longitude?: number | null
           Mask?: string | null
@@ -394,6 +400,9 @@ export type Database = {
           DSM?: string | null
           FluxOverRGB?: string | null
           id?: string
+          imagery_processed_at?: string | null
+          imagery_status?: string | null
+          latest_imagery_folder?: string | null
           latitude?: number | null
           longitude?: number | null
           Mask?: string | null
