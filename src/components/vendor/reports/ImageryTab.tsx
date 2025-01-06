@@ -9,17 +9,19 @@ interface ImageryTabProps {
 }
 
 const ImageryTab = ({ propertyId }: ImageryTabProps) => {
-  const { data: property, isLoading: propertyLoading } = useQuery({
-    queryKey: ['property', propertyId],
+  const { data: imagery, isLoading } = useQuery({
+    queryKey: ['property-imagery', propertyId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("id", propertyId)
-        .single();
+      const { data, error } = await supabase.functions.invoke('get-property-imagery', {
+        body: { propertyId }
+      });
 
       if (error) throw error;
       return data;
+    },
+    refetchInterval: (data) => {
+      // Refetch every 10 seconds if status is not completed
+      return data?.status !== 'completed' ? 10000 : false;
     }
   });
 
@@ -36,29 +38,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     return displayNames[type] || type;
   };
 
-  // Get all available imagery for the property
-  const getAvailableImagery = () => {
-    if (!property) return [];
-
-    const imageTypes = [
-      'DSM',
-      'RGB',
-      'Mask',
-      'AnnualFlux',
-      'FluxOverRGB',
-      'MonthlyFluxCompositeGIF'
-    ];
-
-    return imageTypes
-      .filter(type => property[type as keyof typeof property])
-      .map(type => ({
-        url: property[type as keyof typeof property] as string,
-        displayName: getDisplayName(type),
-        type
-      }));
-  };
-
-  if (propertyLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -66,30 +46,37 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
     );
   }
 
-  if (!property) {
+  if (!imagery?.success) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Property not found.
+          Failed to load imagery data.
         </AlertDescription>
       </Alert>
     );
   }
 
-  if (property.status !== 'completed') {
+  if (imagery.status !== 'completed') {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           Solar imagery is being processed. This may take a few minutes.
-          Current status: {property.status || 'initializing'}
+          Current status: {imagery.status || 'initializing'}
         </AlertDescription>
       </Alert>
     );
   }
 
-  const availableImages = getAvailableImagery();
+  // Get all available single images
+  const availableImages = Object.entries(imagery.urls)
+    .filter(([type]) => !Array.isArray(imagery.urls[type]))
+    .map(([type, url]) => ({
+      url: url as string,
+      displayName: getDisplayName(type),
+      type
+    }));
 
   if (!availableImages.length) {
     return (
