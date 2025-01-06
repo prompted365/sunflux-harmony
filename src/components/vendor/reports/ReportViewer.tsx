@@ -73,6 +73,35 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
 
   const solarPotential = buildingInsights.solarPotential;
   
+  // Calculate roof segment summaries
+  const roofSegments = solarPotential?.roofSegmentStats || [];
+  const segmentCount = roofSegments.length;
+  
+  const averagePitch = roofSegments.reduce((acc, segment) => 
+    acc + segment.pitchDegrees, 0) / segmentCount;
+    
+  const averageHeight = roofSegments.reduce((acc, segment) => 
+    acc + segment.planeHeightAtCenterMeters, 0) / segmentCount;
+    
+  const pitchVariance = roofSegments.reduce((acc, segment) => 
+    acc + Math.pow(segment.pitchDegrees - averagePitch, 2), 0) / segmentCount;
+  
+  const pitchConsistencyRating = pitchVariance < 5 ? "High" : 
+    pitchVariance < 15 ? "Medium" : "Low";
+
+  // Determine orientation distribution
+  const orientations = roofSegments.reduce((acc, segment) => {
+    const azimuth = segment.azimuthDegrees;
+    if (azimuth > 315 || azimuth <= 45) acc.north++;
+    else if (azimuth > 45 && azimuth <= 135) acc.east++;
+    else if (azimuth > 135 && azimuth <= 225) acc.south++;
+    else acc.west++;
+    return acc;
+  }, { north: 0, east: 0, south: 0, west: 0 });
+
+  const optimalOrientation = Object.entries(orientations)
+    .reduce((a, b) => a[1] > b[1] ? a : b)[0];
+
   // Generate monthly production data for the chart
   const monthlyProductionData = solarPotential?.solarPanelConfigs?.[0]?.roofSegmentSummaries.map((segment: any, index: number) => ({
     month: new Date(2024, index).toLocaleString('default', { month: 'short' }),
@@ -144,10 +173,39 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
         </TabsContent>
 
         <TabsContent value="analysis">
+          <Card className="p-6 mb-6">
+            <h3 className="font-semibold mb-4">Building Analysis Summary</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Roof Complexity</p>
+                <p className="font-medium">{segmentCount} Segments</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Pitch Consistency: {pitchConsistencyRating}
+                </p>
+              </div>
+              
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Average Measurements</p>
+                <p className="font-medium">{averagePitch.toFixed(1)}° Pitch</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {averageHeight.toFixed(1)}m Height
+                </p>
+              </div>
+              
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Optimal Orientation</p>
+                <p className="font-medium capitalize">{optimalOrientation}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {orientations.south} South-facing segments
+                </p>
+              </div>
+            </div>
+          </Card>
+
           <Card className="p-6">
             <h3 className="font-semibold mb-4">Roof Segment Analysis</h3>
             <div className="space-y-4">
-              {solarPotential.roofSegmentStats.map((segment: any, index: number) => (
+              {solarPotential.roofSegmentStats.slice(0, 6).map((segment: any, index: number) => (
                 <div key={index} className="border-b pb-4">
                   <h4 className="font-medium">Segment {index + 1}</h4>
                   <div className="grid grid-cols-2 gap-4 mt-2">
@@ -170,6 +228,11 @@ export const ReportViewer = ({ propertyId }: ReportViewerProps) => {
                   </div>
                 </div>
               ))}
+              {solarPotential.roofSegmentStats.length > 6 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  +{solarPotential.roofSegmentStats.length - 6} more segments
+                </p>
+              )}
             </div>
           </Card>
         </TabsContent>
