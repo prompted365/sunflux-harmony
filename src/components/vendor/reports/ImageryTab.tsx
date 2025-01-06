@@ -40,20 +40,30 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
       if (folderError) throw folderError;
       console.log('Available folders:', folders?.map(f => f.name));
 
-      // Find the folder that starts with our property ID
-      const propertyFolder = folders?.find(f => f.name.startsWith(propertyId));
-      if (!propertyFolder) {
+      // Find all folders that start with our property ID
+      const matchingFolders = folders?.filter(f => f.name.startsWith(propertyId)) || [];
+      console.log('Matching folders:', matchingFolders);
+
+      if (matchingFolders.length === 0) {
         console.log('No folder found for property:', propertyId);
         return [];
       }
 
-      console.log('Found property folder:', propertyFolder.name);
+      // Sort folders by timestamp (descending) and take the most recent one
+      const sortedFolders = matchingFolders.sort((a, b) => {
+        const aTimestamp = parseInt(a.name.split('_')[1] || '0');
+        const bTimestamp = parseInt(b.name.split('_')[1] || '0');
+        return bTimestamp - aTimestamp;
+      });
 
-      // List files in the property folder
+      const mostRecentFolder = sortedFolders[0];
+      console.log('Using most recent folder:', mostRecentFolder.name);
+
+      // List files in the most recent property folder
       const { data: files, error: filesError } = await supabase
         .storage
         .from('property-images')
-        .list(propertyFolder.name);
+        .list(mostRecentFolder.name);
 
       if (filesError) throw filesError;
       console.log('Files found in folder:', files);
@@ -64,7 +74,7 @@ const ImageryTab = ({ propertyId }: ImageryTabProps) => {
           const { data: { signedUrl } } = await supabase
             .storage
             .from('property-images')
-            .createSignedUrl(`${propertyFolder.name}/${file.name}`, 3600);
+            .createSignedUrl(`${mostRecentFolder.name}/${file.name}`, 3600);
 
           // Determine image type from filename
           const type = file.name.split('_')[0].toLowerCase();
