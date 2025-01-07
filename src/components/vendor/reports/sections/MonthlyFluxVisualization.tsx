@@ -35,9 +35,12 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
           return;
         }
 
-        // Construct the public URL directly
-        const publicUrl = `${supabase.getPublicUrl('property-images').data.publicUrl}/${propertyId}/${gifFile.name}`;
-        setGifUrl(publicUrl);
+        // Get the public URL using the correct method
+        const { data } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(`${propertyId}/${gifFile.name}`);
+
+        setGifUrl(data.publicUrl);
 
       } catch (error) {
         console.error('Error fetching monthly flux GIF:', error);
