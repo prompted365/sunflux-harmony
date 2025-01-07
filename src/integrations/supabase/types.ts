@@ -36,103 +36,6 @@ export type Database = {
         }
         Relationships: []
       }
-      client_usage: {
-        Row: {
-          annual_consumption: number
-          created_at: string
-          id: string
-          monthly_bill: number
-          updated_at: string
-          user_id: string
-          utility_rate_structure: string
-        }
-        Insert: {
-          annual_consumption: number
-          created_at?: string
-          id?: string
-          monthly_bill: number
-          updated_at?: string
-          user_id: string
-          utility_rate_structure: string
-        }
-        Update: {
-          annual_consumption?: number
-          created_at?: string
-          id?: string
-          monthly_bill?: number
-          updated_at?: string
-          user_id?: string
-          utility_rate_structure?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_usage_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      data_layers: {
-        Row: {
-          annual_flux_url: string | null
-          calculation_id: string
-          created_at: string
-          dsm_url: string | null
-          hourly_shade_urls: string[] | null
-          id: string
-          imagery_date: string | null
-          imagery_processed_date: string | null
-          imagery_quality: string | null
-          mask_url: string | null
-          monthly_flux_url: string | null
-          processed_at: string | null
-          raw_response: Json | null
-          rgb_url: string | null
-        }
-        Insert: {
-          annual_flux_url?: string | null
-          calculation_id: string
-          created_at?: string
-          dsm_url?: string | null
-          hourly_shade_urls?: string[] | null
-          id?: string
-          imagery_date?: string | null
-          imagery_processed_date?: string | null
-          imagery_quality?: string | null
-          mask_url?: string | null
-          monthly_flux_url?: string | null
-          processed_at?: string | null
-          raw_response?: Json | null
-          rgb_url?: string | null
-        }
-        Update: {
-          annual_flux_url?: string | null
-          calculation_id?: string
-          created_at?: string
-          dsm_url?: string | null
-          hourly_shade_urls?: string[] | null
-          id?: string
-          imagery_date?: string | null
-          imagery_processed_date?: string | null
-          imagery_quality?: string | null
-          mask_url?: string | null
-          monthly_flux_url?: string | null
-          processed_at?: string | null
-          raw_response?: Json | null
-          rgb_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "data_layers_calculation_id_fkey"
-            columns: ["calculation_id"]
-            isOneToOne: false
-            referencedRelation: "solar_calculations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       incentives: {
         Row: {
           created_at: string
@@ -196,35 +99,6 @@ export type Database = {
         }
         Relationships: []
       }
-      integration_feature_votes: {
-        Row: {
-          created_at: string
-          feature_type: string
-          id: string
-          vendor_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          feature_type: string
-          id?: string
-          vendor_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          feature_type?: string
-          id?: string
-          vendor_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_feature_votes_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "vendor_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       panels: {
         Row: {
           created_at: string
@@ -272,44 +146,6 @@ export type Database = {
           warranty?: Json
         }
         Relationships: []
-      }
-      processing_jobs: {
-        Row: {
-          calculation_id: string | null
-          created_at: string
-          error_message: string | null
-          id: string
-          result_url: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          calculation_id?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          result_url?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          calculation_id?: string | null
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          result_url?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "processing_jobs_calculation_id_fkey"
-            columns: ["calculation_id"]
-            isOneToOne: false
-            referencedRelation: "solar_calculations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
@@ -428,35 +264,6 @@ export type Database = {
           },
         ]
       }
-      reports: {
-        Row: {
-          calculation_id: string
-          created_at: string
-          file_path: string
-          id: string
-        }
-        Insert: {
-          calculation_id: string
-          created_at?: string
-          file_path: string
-          id?: string
-        }
-        Update: {
-          calculation_id?: string
-          created_at?: string
-          file_path?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reports_calculation_id_fkey"
-            columns: ["calculation_id"]
-            isOneToOne: false
-            referencedRelation: "solar_calculations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       roi_results: {
         Row: {
           co2_offset: number
@@ -547,59 +354,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "solar_calculations_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solar_configurations: {
-        Row: {
-          created_at: string
-          energy_cost_per_kwh: number | null
-          id: string
-          installation_cost_per_watt: number | null
-          is_using_defaults: boolean | null
-          monthly_bill: number | null
-          panel_capacity_watts: number | null
-          panel_height_meters: number | null
-          panel_width_meters: number | null
-          property_id: string
-          updated_at: string
-          visible_layers: Json | null
-        }
-        Insert: {
-          created_at?: string
-          energy_cost_per_kwh?: number | null
-          id?: string
-          installation_cost_per_watt?: number | null
-          is_using_defaults?: boolean | null
-          monthly_bill?: number | null
-          panel_capacity_watts?: number | null
-          panel_height_meters?: number | null
-          panel_width_meters?: number | null
-          property_id: string
-          updated_at?: string
-          visible_layers?: Json | null
-        }
-        Update: {
-          created_at?: string
-          energy_cost_per_kwh?: number | null
-          id?: string
-          installation_cost_per_watt?: number | null
-          is_using_defaults?: boolean | null
-          monthly_bill?: number | null
-          panel_capacity_watts?: number | null
-          panel_height_meters?: number | null
-          panel_width_meters?: number | null
-          property_id?: string
-          updated_at?: string
-          visible_layers?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solar_configurations_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
