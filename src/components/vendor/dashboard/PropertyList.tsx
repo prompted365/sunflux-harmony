@@ -13,10 +13,12 @@ export const PropertyList = ({
   properties,
   selectedPropertyId,
   onSelectProperty,
+  onSuccess,
 }: {
   properties: Property[] | undefined;
   selectedPropertyId: string | null;
   onSelectProperty: (id: string) => void;
+  onSuccess?: () => void;
 }) => {
   const queryClient = useQueryClient();
 
@@ -48,6 +50,27 @@ export const PropertyList = ({
 
   return (
     <div className="relative">
+      <div className="absolute -top-14 left-0">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button size="icon" className="rounded-full w-12 h-12 shadow-lg">
+              <Plus className="h-6 w-6" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Add New Property</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4">
+              <PropertySubmissionForm onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['vendor-properties'] });
+                if (onSuccess) onSuccess();
+              }} />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
+
       <ScrollArea className="h-[600px] pr-4">
         <div className="space-y-4 p-1">
           {properties?.map((property) => (
@@ -101,26 +124,6 @@ export const PropertyList = ({
           ))}
         </div>
       </ScrollArea>
-
-      <div className="absolute bottom-4 right-4">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button size="icon" className="rounded-full w-12 h-12 shadow-lg">
-              <Plus className="h-6 w-6" />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Add New Property</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4">
-              <PropertySubmissionForm onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ['vendor-properties'] });
-              }} />
-            </div>
-          </DrawerContent>
-        </Drawer>
-      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { PropertySubmissionForm } from "./PropertySubmissionForm";
 import { PropertyList } from "./dashboard/PropertyList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,16 +29,12 @@ const VendorDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-8">
           <section className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-2xl font-bold mb-6">Add New Property</h2>
-            <PropertySubmissionForm onSuccess={refetch} />
-          </section>
-          
-          <section className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-2xl font-bold mb-6">Your Properties</h2>
             <PropertyList
               properties={properties || []}
               selectedPropertyId={selectedPropertyId}
               onSelectProperty={setSelectedPropertyId}
+              onSuccess={refetch}
             />
           </section>
         </div>
