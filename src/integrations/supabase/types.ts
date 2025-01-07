@@ -542,45 +542,66 @@ export type Database = {
       vendor_profiles: {
         Row: {
           account_tier: string | null
+          business_address: string | null
+          business_description: string | null
           bypass_trial_limits: boolean | null
           communication_opt_in: boolean | null
           company_name: string | null
           created_at: string
           id: string
           logo_url: string | null
+          phone: string | null
           primary_color: string | null
           secondary_color: string | null
+          service_regions: string[] | null
+          solar_specialties: string[] | null
           trial_reports_remaining: number | null
           trial_reports_reset_date: string | null
           updated_at: string
+          website_url: string | null
+          year_established: number | null
         }
         Insert: {
           account_tier?: string | null
+          business_address?: string | null
+          business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string
           id: string
           logo_url?: string | null
+          phone?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          service_regions?: string[] | null
+          solar_specialties?: string[] | null
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
+          website_url?: string | null
+          year_established?: number | null
         }
         Update: {
           account_tier?: string | null
+          business_address?: string | null
+          business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
           company_name?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
+          phone?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          service_regions?: string[] | null
+          solar_specialties?: string[] | null
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
+          website_url?: string | null
+          year_established?: number | null
         }
         Relationships: [
           {
