@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PropertyFormBottom from "@/components/PropertyFormBottom";
 import { useNavigate } from "react-router-dom";
+import Navigation from "@/components/Navigation";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 pt-24 px-4">
+      <Navigation />
       {!hasProperties && (
         <PropertyFormBottom onSuccess={() => navigate("/vendor")} />
       )}
