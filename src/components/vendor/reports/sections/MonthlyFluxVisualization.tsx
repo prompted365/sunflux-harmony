@@ -71,11 +71,11 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Monthly Solar Exposure</h3>
-      <div className="relative aspect-video">
+      <div className="relative aspect-video w-full overflow-hidden rounded-md">
         <img 
           src={gifUrl} 
           alt="Monthly Solar Exposure Animation" 
-          className="w-full h-full object-cover rounded-md"
+          className="w-full h-full object-contain"
           onError={() => setError('Failed to load the animation')}
         />
       </div>
