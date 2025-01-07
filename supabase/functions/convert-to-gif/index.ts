@@ -38,11 +38,12 @@ serve(async (req) => {
 
     console.log('Found files:', files?.map(f => f.name))
 
-    // Find MonthlyFluxComposite files with exactly one underscore
+    // Find files that contain MonthlyFluxComposite and exactly one underscore
     const compositeFiles = files?.filter(f => {
-      // Match pattern: MonthlyFluxComposite_NUMBERS.extension
-      const pattern = /^MonthlyFluxComposite_\d+\.[^_]+$/
-      return pattern.test(f.name)
+      // Count underscores in the filename
+      const underscoreCount = (f.name.match(/_/g) || []).length;
+      // Check if filename contains MonthlyFluxComposite and has exactly one underscore
+      return f.name.includes('MonthlyFluxComposite') && underscoreCount === 1;
     })
 
     if (!compositeFiles?.length) {
