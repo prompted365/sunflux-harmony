@@ -22,8 +22,8 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
 
         if (listError) throw listError;
 
-        // Find any GIF file in the folder
-        const gifFile = files?.find(f => f.name.toLowerCase().endsWith('.gif'));
+        // Find the MonthlyFluxComposite file
+        const gifFile = files?.find(f => f.name.includes('MonthlyFluxComposite'));
         
         if (!gifFile) {
           setError('No monthly flux animation found for this property');
