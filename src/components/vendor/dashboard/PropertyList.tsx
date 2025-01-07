@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PropertySubmissionForm } from "../PropertySubmissionForm";
+import { Card } from "@/components/ui/card";
 
 export const PropertyList = ({
   properties,
@@ -77,65 +78,67 @@ export const PropertyList = ({
       </div>
 
       <ScrollArea className="h-[calc(100vh-16rem)]">
-        <div className="space-y-3 p-6">
+        <div className="grid grid-cols-1 gap-4 p-6">
           {properties?.map((property) => (
-            <div
+            <Card
               key={property.id}
-              className="flex items-center gap-2"
+              className={`transition-all duration-200 ${
+                selectedPropertyId === property.id 
+                  ? 'ring-2 ring-primary/20 shadow-lg' 
+                  : 'hover:shadow-md'
+              }`}
             >
-              <Button
-                variant={selectedPropertyId === property.id ? "default" : "outline"}
-                className={`w-full justify-start transition-all duration-200 rounded-xl p-4 ${
-                  selectedPropertyId === property.id 
-                    ? 'shadow-md bg-primary/10 hover:bg-primary/20 border-primary/20' 
-                    : 'hover:bg-gray-50 border-gray-200'
-                }`}
-                onClick={() => onSelectProperty(property.id)}
-              >
-                <div className="flex items-center w-full gap-4">
-                  <div className={`rounded-lg p-2 ${
-                    selectedPropertyId === property.id 
-                      ? 'bg-primary/10' 
-                      : 'bg-gray-100'
-                  }`}>
-                    <Home className={`h-5 w-5 ${
+              <div className="flex items-center justify-between p-4">
+                <Button
+                  variant="ghost"
+                  className="flex-1 h-auto p-2 justify-start hover:bg-transparent"
+                  onClick={() => onSelectProperty(property.id)}
+                >
+                  <div className="flex items-center w-full gap-4">
+                    <div className={`rounded-lg p-2 ${
                       selectedPropertyId === property.id 
-                        ? 'text-primary' 
-                        : 'text-gray-500'
-                    }`} />
-                  </div>
-                  <div className="flex flex-col items-start gap-1 flex-grow min-w-0">
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <p className="font-semibold text-gray-900 truncate">
-                        {property.address}
-                      </p>
-                      <Badge 
-                        variant="outline"
-                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${getStatusColor(property.status || 'pending')}`}
-                      >
-                        {property.status || 'pending'}
-                      </Badge>
+                        ? 'bg-primary/10' 
+                        : 'bg-gray-100'
+                    }`}>
+                      <Home className={`h-5 w-5 ${
+                        selectedPropertyId === property.id 
+                          ? 'text-primary' 
+                          : 'text-gray-500'
+                      }`} />
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                      <span className="truncate">{property.city}, {property.state}</span>
+                    <div className="flex flex-col items-start gap-1 flex-grow min-w-0">
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <p className="font-semibold text-gray-900 truncate">
+                          {property.address}
+                        </p>
+                        <Badge 
+                          variant="outline"
+                          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${getStatusColor(property.status || 'pending')}`}
+                        >
+                          {property.status || 'pending'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                        <span className="truncate">{property.city}, {property.state}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="flex-shrink-0 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-xl"
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to delete this property?')) {
-                    deletePropertyMutation(property.id);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="flex-shrink-0 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-xl ml-2"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this property?')) {
+                      deletePropertyMutation(property.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
           ))}
           
           {properties?.length === 0 && (
