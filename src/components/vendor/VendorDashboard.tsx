@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { Property } from "./types";
 import { ReportViewer } from "./reports/ReportViewer";
+import { FileText } from "lucide-react"; // Add this import
 
 const VendorDashboard = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
