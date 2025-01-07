@@ -75,13 +75,6 @@ const Navigation = () => {
             <Building2 className="w-4 h-4" />
             <span>Vendor Portal</span>
           </Link>
-          <Link 
-            to="/contact" 
-            className="flex items-center space-x-2 text-muted hover:text-primary transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            <span>Contact</span>
-          </Link>
           <Button 
             variant="default" 
             className="bg-solar-gradient hover:opacity-90 transition-opacity"
