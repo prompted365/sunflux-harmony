@@ -102,10 +102,7 @@ const SolarResultCard = ({ calc }: SolarResultCardProps) => {
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogTitle>Solar Installation Report</DialogTitle>
-                <ReportPreview 
-                  calc={calc} 
-                  propertyAddress={calc.building_specs?.address || "Property Address Unavailable"}
-                />
+                <ReportPreview calculationId={calc.id} />
               </DialogContent>
             </Dialog>
           </>

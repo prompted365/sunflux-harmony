@@ -1,30 +1,66 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import PropertyFormBottom from "@/components/PropertyFormBottom";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
-import PropertyForm from "@/components/PropertyForm";
-import SunsetAnimation from "@/components/SunsetAnimation";
-import AgentFlowAnimation from "@/components/AgentFlowAnimation";
+import { Loader } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [hasProperties, setHasProperties] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    // Handle direct navigation to sections via URL hash
-    const hash = window.location.hash;
-    if (hash) {
-      const element = document.getElementById(hash.slice(1));
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+    const checkExistingProperties = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
+
+        // Check if user is a vendor
+        const { data: vendorProfile } = await supabase
+          .from('vendor_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        if (vendorProfile) {
+          navigate("/vendor");
+          return;
+        }
+
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+
+        setHasProperties(properties && properties.length > 0);
+      } catch (error) {
+        console.error("Error checking properties:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, []);
+    };
+
+    checkExistingProperties();
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
       <Navigation />
-      <div className="container mx-auto px-4 py-12">
-        <Hero />
-        <SunsetAnimation />
-        <PropertyForm />
-        <AgentFlowAnimation />
+      <div className="pt-24 px-4">
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <Loader className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          !hasProperties && (
+            <PropertyFormBottom onSuccess={() => navigate("/vendor")} />
+          )
+        )}
       </div>
     </div>
   );

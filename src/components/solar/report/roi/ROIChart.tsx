@@ -1,4 +1,4 @@
-import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 
 interface ROIChartProps {
   timelineData: {
@@ -6,42 +6,36 @@ interface ROIChartProps {
     value: number;
     savings: number;
   }[];
+  breakEvenYear: number;
 }
 
-const ROIChart = ({ timelineData }: ROIChartProps) => {
+const ROIChart = ({ timelineData, breakEvenYear }: ROIChartProps) => {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={timelineData}
-          margin={{ top: 20, right: 30, left: 30, bottom: 20 }}
-        >
-          <XAxis 
-            dataKey="year" 
-            label={{ value: 'Years', position: 'bottom' }}
-          />
-          <YAxis 
-            tickFormatter={(value) => `$${Math.abs(value).toLocaleString()}`}
-            label={{ 
-              value: 'Cumulative Savings ($)', 
-              angle: -90, 
-              position: 'left' 
-            }}
-          />
+        <LineChart data={timelineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="year" />
+          <YAxis />
           <Tooltip 
-            formatter={(value: number) => [`$${Math.abs(value).toLocaleString()}`, 'Net Position']}
-            labelFormatter={(label) => `Year ${label}`}
+            formatter={(value: number) => 
+              new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+              }).format(value)
+            }
           />
-          <ReferenceLine 
-            y={0} 
-            stroke="#666" 
-            strokeDasharray="3 3" 
-            label={{ value: 'Break Even', position: 'right' }}
+          <ReferenceLine
+            x={breakEvenYear}
+            stroke="#10B981"
+            label={{ value: 'Break Even', position: 'top' }}
+            strokeDasharray="3 3"
           />
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#00B2B2"
+            stroke="#2563EB"
             strokeWidth={2}
             dot={false}
           />

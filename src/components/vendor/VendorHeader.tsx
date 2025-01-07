@@ -5,11 +5,11 @@ export const VendorHeader = () => {
   const navigate = useNavigate();
   
   return (
-    <div className="mb-4">
+    <div className="flex items-center justify-between">
       <Button
         variant="outline"
         onClick={() => navigate("/")}
-        className="mb-4"
+        className="text-sm"
       >
         Back to Home
       </Button>

@@ -1,48 +1,86 @@
-import { SolarCalculation } from "./types";
-import HeaderSection from "./report/HeaderSection";
-import SystemSpecifications from "./report/SystemSpecifications";
-import FinancialAnalysis from "./report/FinancialAnalysis";
-import EnvironmentalImpact from "./report/EnvironmentalImpact";
-import ROITimeline from "./report/ROITimeline";
-import NextSteps from "./report/NextSteps";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { ProcessingJob } from "@/types/database";
+import ProcessingStatus from "./report/ProcessingStatus";
+import { Alert, AlertDescription } from "../ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ReportPreviewProps {
-  calc: SolarCalculation;
-  propertyAddress: string;
-  financialConfig?: {
-    monthlyBill: number | null;
-    energyCostPerKwh: number;
-    isUsingDefaults: boolean;
-  };
+  calculationId: string;
 }
 
-const ReportPreview = ({ calc, propertyAddress, financialConfig }: ReportPreviewProps) => {
-  // Only render financial sections if we have financial analysis data
-  const hasFinancialData = calc.financial_analysis && 
-    calc.estimated_production?.yearlyEnergyDcKwh;
+const ReportPreview = ({ calculationId }: ReportPreviewProps) => {
+  const [processingJob, setProcessingJob] = useState<ProcessingJob | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProcessingStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('processing_jobs')
+          .select('*')
+          .eq('calculation_id', calculationId)
+          .single();
+
+        if (error) throw error;
+        
+        // Ensure the status is one of the allowed values
+        const validStatus = ['pending', 'processing', 'completed', 'failed'].includes(data.status) 
+          ? data.status as ProcessingJob['status']
+          : 'pending';
+
+        setProcessingJob({
+          ...data,
+          status: validStatus
+        });
+      } catch (err) {
+        console.error('Error fetching processing status:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch processing status');
+      }
+    };
+
+    const subscription = supabase
+      .channel('processing_status')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'processing_jobs',
+        filter: `calculation_id=eq.${calculationId}`
+      }, payload => {
+        const data = payload.new as ProcessingJob;
+        // Ensure the status is one of the allowed values
+        const validStatus = ['pending', 'processing', 'completed', 'failed'].includes(data.status) 
+          ? data.status as ProcessingJob['status']
+          : 'pending';
+
+        setProcessingJob({
+          ...data,
+          status: validStatus
+        });
+      })
+      .subscribe();
+
+    fetchProcessingStatus();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [calculationId]);
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
-    <div className="space-y-8 p-6">
-      <HeaderSection 
-        propertyAddress={propertyAddress} 
-        buildingSpecs={calc.building_specs || undefined}
-      />
-      <SystemSpecifications calc={calc} />
-      {hasFinancialData && (
-        <>
-          <FinancialAnalysis 
-            calc={calc} 
-            financialConfig={financialConfig}
-          />
-          <ROITimeline 
-            calc={calc}
-            financialConfig={financialConfig}
-          />
-        </>
-      )}
-      <EnvironmentalImpact calc={calc} />
-      <NextSteps />
-    </div>
+    <ProcessingStatus 
+      status={processingJob?.status || 'pending'} 
+      error={processingJob?.error_message} 
+    />
   );
 };
 

@@ -18,9 +18,13 @@ export const VendorLayout = ({ children, activeSection, onSectionChange }: Vendo
             activeSection={activeSection} 
             onSectionChange={onSectionChange} 
           />
-          <main className="flex-1 p-6 pt-16">
-            <VendorHeader />
-            {children}
+          <main className="flex-1 overflow-auto">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <VendorHeader />
+              <div className="mt-6">
+                {children}
+              </div>
+            </div>
           </main>
         </div>
       </SidebarProvider>

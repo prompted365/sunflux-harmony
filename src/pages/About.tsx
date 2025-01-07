@@ -4,6 +4,7 @@ import SunAnimation from "@/components/SunAnimation";
 import MissionSection from "@/components/about/MissionSection";
 import IntegrationSection from "@/components/about/IntegrationSection";
 import AICapabilities from "@/components/about/AICapabilities";
+import NetworkAnimation from "@/components/NetworkAnimation";
 
 const About = () => {
   return (
@@ -14,7 +15,10 @@ const About = () => {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">About SunLink.ai</h1>
             <div className="relative">
-              <SunAnimation />
+              <NetworkAnimation />
+              <div className="relative mb-8">
+                <SunAnimation />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none" />
             </div>
           </div>

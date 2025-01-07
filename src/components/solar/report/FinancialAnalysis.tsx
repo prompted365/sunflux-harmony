@@ -15,13 +15,20 @@ interface FinancialAnalysisProps {
     energyCostPerKwh: number;
     isUsingDefaults: boolean;
   };
+  roiResults?: {
+    payback_period: number;
+    npv: number;
+    irr: number;
+    lifetime_production: number;
+    co2_offset: number;
+  } | null;
 }
 
-const FinancialAnalysis = ({ calc, financialConfig }: FinancialAnalysisProps) => {
+const FinancialAnalysis = ({ calc, financialConfig, roiResults }: FinancialAnalysisProps) => {
   if (!calc.financial_analysis) return null;
 
   const utilityRate = financialConfig?.energyCostPerKwh || 0.15;
-  const monthlyBill = financialConfig?.monthlyBill || 200; // Default monthly bill
+  const monthlyBill = financialConfig?.monthlyBill || 200;
   const initialProduction = calc.estimated_production?.yearlyEnergyDcKwh || 0;
   const installationCost = calc.financial_analysis.initialCost;
   const federalIncentive = calc.financial_analysis.federalIncentive;
@@ -35,7 +42,7 @@ const FinancialAnalysis = ({ calc, financialConfig }: FinancialAnalysisProps) =>
     federalIncentive
   );
 
-  const paybackPeriod = calculatePaybackPeriod(
+  const paybackPeriod = roiResults?.payback_period || calculatePaybackPeriod(
     installationCost,
     monthlyBill,
     initialProduction,
