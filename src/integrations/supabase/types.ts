@@ -71,6 +71,47 @@ export type Database = {
           },
         ]
       }
+      financing_options: {
+        Row: {
+          calculation_id: string | null
+          created_at: string
+          id: string
+          interest_rate_percentage: number | null
+          loan_amount_usd: number | null
+          loan_term_years: number | null
+          monthly_repayment_usd: number | null
+          updated_at: string
+        }
+        Insert: {
+          calculation_id?: string | null
+          created_at?: string
+          id?: string
+          interest_rate_percentage?: number | null
+          loan_amount_usd?: number | null
+          loan_term_years?: number | null
+          monthly_repayment_usd?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calculation_id?: string | null
+          created_at?: string
+          id?: string
+          interest_rate_percentage?: number | null
+          loan_amount_usd?: number | null
+          loan_term_years?: number | null
+          monthly_repayment_usd?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_options_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incentives: {
         Row: {
           created_at: string
@@ -413,10 +454,13 @@ export type Database = {
       solar_calculations: {
         Row: {
           building_specs: Json | null
+          building_stats: Json | null
           created_at: string
           estimated_production: Json | null
           financial_analysis: Json | null
+          financial_metrics: Json | null
           id: string
+          installation_specs: Json | null
           irradiance_data: Json | null
           panel_config: Json | null
           panel_layout: Json | null
@@ -424,13 +468,17 @@ export type Database = {
           status: string
           system_size: number | null
           updated_at: string
+          utility_context: Json | null
         }
         Insert: {
           building_specs?: Json | null
+          building_stats?: Json | null
           created_at?: string
           estimated_production?: Json | null
           financial_analysis?: Json | null
+          financial_metrics?: Json | null
           id?: string
+          installation_specs?: Json | null
           irradiance_data?: Json | null
           panel_config?: Json | null
           panel_layout?: Json | null
@@ -438,13 +486,17 @@ export type Database = {
           status?: string
           system_size?: number | null
           updated_at?: string
+          utility_context?: Json | null
         }
         Update: {
           building_specs?: Json | null
+          building_stats?: Json | null
           created_at?: string
           estimated_production?: Json | null
           financial_analysis?: Json | null
+          financial_metrics?: Json | null
           id?: string
+          installation_specs?: Json | null
           irradiance_data?: Json | null
           panel_config?: Json | null
           panel_layout?: Json | null
@@ -452,6 +504,7 @@ export type Database = {
           status?: string
           system_size?: number | null
           updated_at?: string
+          utility_context?: Json | null
         }
         Relationships: [
           {
@@ -497,6 +550,56 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_incentives: {
+        Row: {
+          administrative_area: string | null
+          calculation_id: string | null
+          carbon_offset_value_usd: number | null
+          created_at: string
+          federal_credit_usd: number | null
+          id: string
+          region_code: string | null
+          state_incentives_usd: number | null
+          statistical_area: string | null
+          total_incentives_usd: number | null
+          updated_at: string
+        }
+        Insert: {
+          administrative_area?: string | null
+          calculation_id?: string | null
+          carbon_offset_value_usd?: number | null
+          created_at?: string
+          federal_credit_usd?: number | null
+          id?: string
+          region_code?: string | null
+          state_incentives_usd?: number | null
+          statistical_area?: string | null
+          total_incentives_usd?: number | null
+          updated_at?: string
+        }
+        Update: {
+          administrative_area?: string | null
+          calculation_id?: string | null
+          carbon_offset_value_usd?: number | null
+          created_at?: string
+          federal_credit_usd?: number | null
+          id?: string
+          region_code?: string | null
+          state_incentives_usd?: number | null
+          statistical_area?: string | null
+          total_incentives_usd?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_incentives_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
             referencedColumns: ["id"]
           },
         ]
