@@ -147,6 +147,41 @@ export type Database = {
         }
         Relationships: []
       }
+      processing_jobs: {
+        Row: {
+          calculation_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_jobs_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "solar_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company: string | null
@@ -354,6 +389,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "solar_calculations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solar_configurations: {
+        Row: {
+          created_at: string
+          energy_cost_per_kwh: number
+          id: string
+          is_using_defaults: boolean | null
+          monthly_bill: number | null
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          energy_cost_per_kwh: number
+          id?: string
+          is_using_defaults?: boolean | null
+          monthly_bill?: number | null
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          energy_cost_per_kwh?: number
+          id?: string
+          is_using_defaults?: boolean | null
+          monthly_bill?: number | null
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solar_configurations_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"

@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSolarAPI } from "@/lib/solar-sdk";
-import { toast } from "@/hooks/use-toast";
+import { ProcessingJob, SolarConfiguration } from "@/types/database";
 
 export const calculateSolar = async (
   propertyId: string, 
