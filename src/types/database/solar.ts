@@ -18,7 +18,7 @@ export interface SolarCalculation {
 export interface ProcessingJob {
   id: string;
   calculation_id: string;
-  status: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   error_message: string | null;
   created_at: string;
   updated_at: string;
