@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2 } from "lucide-react";
+import { Trash2, Home, MapPin } from "lucide-react";
 import { Property } from "../types";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,7 +54,7 @@ export const PropertyList = ({
 
   return (
     <ScrollArea className="h-[600px] pr-4">
-      <div className="space-y-2">
+      <div className="space-y-3">
         {properties?.map((property) => (
           <div
             key={property.id}
@@ -62,28 +62,38 @@ export const PropertyList = ({
           >
             <Button
               variant={selectedPropertyId === property.id ? "default" : "outline"}
-              className="w-full justify-start"
+              className={`w-full justify-start transition-all duration-200 ${
+                selectedPropertyId === property.id 
+                  ? 'shadow-md bg-primary/10 hover:bg-primary/20' 
+                  : 'hover:bg-gray-50'
+              }`}
               onClick={() => onSelectProperty(property.id)}
             >
-              <div className="flex flex-col items-start gap-1">
-                <p className="font-medium">{property.address}</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-muted-foreground">
+              <div className="flex items-center w-full">
+                <div className="mr-3">
+                  <Home className="h-5 w-5 text-primary/70" />
+                </div>
+                <div className="flex flex-col items-start gap-1 flex-grow">
+                  <div className="flex items-center justify-between w-full">
+                    <p className="font-semibold text-gray-800">{property.address}</p>
+                    <Badge 
+                      variant="outline"
+                      className={`ml-2 ${getStatusColor(property.status)}`}
+                    >
+                      {property.status || 'pending'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <MapPin className="h-3 w-3 mr-1" />
                     {property.city}, {property.state}
-                  </p>
-                  <Badge 
-                    variant="outline"
-                    className={getStatusColor(property.status)}
-                  >
-                    {property.status || 'pending'}
-                  </Badge>
+                  </div>
                 </div>
               </div>
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="flex-shrink-0 text-destructive hover:text-destructive/90"
+              className="flex-shrink-0 text-destructive hover:text-destructive/90 hover:bg-destructive/10 transition-colors"
               onClick={() => {
                 if (window.confirm('Are you sure you want to delete this property?')) {
                   deleteProperty.mutate(property.id);
