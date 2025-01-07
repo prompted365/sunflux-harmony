@@ -13,28 +13,63 @@ export type Database = {
         Row: {
           addon_type: string
           capacity: number | null
+          category: string | null
+          compatibility_specs: Json | null
           cost: number
           created_at: string
+          description: string | null
+          efficiency_rating: number | null
           id: number
+          installation_requirements: Json | null
+          manufacturer: string | null
+          model_number: string | null
           updated_at: string
+          vendor_id: string | null
+          warranty_years: number | null
         }
         Insert: {
           addon_type: string
           capacity?: number | null
+          category?: string | null
+          compatibility_specs?: Json | null
           cost: number
           created_at?: string
+          description?: string | null
+          efficiency_rating?: number | null
           id?: number
+          installation_requirements?: Json | null
+          manufacturer?: string | null
+          model_number?: string | null
           updated_at?: string
+          vendor_id?: string | null
+          warranty_years?: number | null
         }
         Update: {
           addon_type?: string
           capacity?: number | null
+          category?: string | null
+          compatibility_specs?: Json | null
           cost?: number
           created_at?: string
+          description?: string | null
+          efficiency_rating?: number | null
           id?: number
+          installation_requirements?: Json | null
+          manufacturer?: string | null
+          model_number?: string | null
           updated_at?: string
+          vendor_id?: string | null
+          warranty_years?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "addons_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incentives: {
         Row: {
@@ -69,35 +104,67 @@ export type Database = {
       installation_costs: {
         Row: {
           created_at: string
+          equipment_cost: number | null
           id: number
           installation_cost_model: string
           labor_cost: number
           local_installation_cost: number
+          maximum_project_size: number | null
+          minimum_project_size: number | null
           mounting_system_type: string
+          overhead_cost: number | null
+          permit_cost: number | null
+          profit_margin: number | null
           region: string
+          roof_type_multiplier: Json | null
           updated_at: string
+          vendor_id: string | null
         }
         Insert: {
           created_at?: string
+          equipment_cost?: number | null
           id?: number
           installation_cost_model: string
           labor_cost: number
           local_installation_cost: number
+          maximum_project_size?: number | null
+          minimum_project_size?: number | null
           mounting_system_type: string
+          overhead_cost?: number | null
+          permit_cost?: number | null
+          profit_margin?: number | null
           region: string
+          roof_type_multiplier?: Json | null
           updated_at?: string
+          vendor_id?: string | null
         }
         Update: {
           created_at?: string
+          equipment_cost?: number | null
           id?: number
           installation_cost_model?: string
           labor_cost?: number
           local_installation_cost?: number
+          maximum_project_size?: number | null
+          minimum_project_size?: number | null
           mounting_system_type?: string
+          overhead_cost?: number | null
+          permit_cost?: number | null
+          profit_margin?: number | null
           region?: string
+          roof_type_multiplier?: Json | null
           updated_at?: string
+          vendor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "installation_costs_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       panels: {
         Row: {
