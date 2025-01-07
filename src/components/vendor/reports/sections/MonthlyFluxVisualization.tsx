@@ -12,43 +12,31 @@ interface MonthlyFluxVisualizationProps {
 const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps) => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const processAndFetchGif = async () => {
       try {
+        setIsLoading(true);
+        setError('');
+
         // First, call the convert-to-gif function
-        const { error: conversionError } = await supabase.functions.invoke('convert-to-gif', {
+        const { data, error: functionError } = await supabase.functions.invoke('convert-to-gif', {
           body: { propertyId }
         });
 
-        if (conversionError) throw conversionError;
-
-        // After conversion, list files to get the GIF
-        const { data: files, error: listError } = await supabase.storage
-          .from('property-images')
-          .list(propertyId);
-
-        if (listError) throw listError;
-
-        // Find the composite GIF file
-        const compositeFile = files?.find(f => {
-          const pattern = /^MonthlyFluxComposite_\d+\.gif$/;
-          return pattern.test(f.name);
-        });
-        
-        if (!compositeFile) {
-          console.log('Available files:', files?.map(f => f.name));
-          throw new Error('No monthly flux animation found for this property');
+        if (functionError) {
+          console.error('Error calling convert-to-gif function:', functionError);
+          throw new Error('Failed to process the visualization');
         }
 
-        // Get the public URL for the GIF
-        const { data } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(`${propertyId}/${compositeFile.name}`);
+        if (!data?.url) {
+          throw new Error('No URL returned from the function');
+        }
 
-        setImageUrl(data.publicUrl);
-
+        setImageUrl(data.url);
+        
       } catch (error) {
         console.error('Error processing monthly flux GIF:', error);
         setError(error.message);
@@ -57,6 +45,8 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
           description: error.message,
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -74,18 +64,31 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
     );
   }
 
-  if (!imageUrl) return null;
+  if (!imageUrl && !isLoading) return null;
 
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Monthly Solar Exposure</h3>
       <div className="relative aspect-video w-full overflow-hidden rounded-md">
-        <img 
-          src={imageUrl} 
-          alt="Monthly Solar Exposure Animation" 
-          className="w-full h-full object-contain"
-          onError={() => setError('Failed to load the animation')}
-        />
+        {isLoading ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <img 
+            src={imageUrl} 
+            alt="Monthly Solar Exposure Animation" 
+            className="w-full h-full object-contain"
+            onError={() => {
+              setError('Failed to load the animation');
+              toast({
+                title: "Error",
+                description: "Failed to load the visualization",
+                variant: "destructive",
+              });
+            }}
+          />
+        )}
       </div>
       <p className="text-sm text-muted-foreground mt-2">
         This animation shows how solar exposure changes throughout the year
