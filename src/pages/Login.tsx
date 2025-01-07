@@ -12,7 +12,8 @@ const Login = () => {
     // Check if user is already logged in
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/vendor");
+        const isVendor = session.user.user_metadata?.is_vendor;
+        navigate(isVendor ? "/vendor" : "/");
       }
     });
   }, [navigate]);

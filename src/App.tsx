@@ -17,12 +17,17 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVendor, setIsVendor] = useState(false);
 
   useEffect(() => {
     // Check initial session
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: { user } } = await supabase.auth.getUser();
+          setIsVendor(user?.user_metadata?.is_vendor || false);
+        }
         setIsAuthenticated(!!session);
       } catch (error) {
         console.error("Session check error:", error);
@@ -35,8 +40,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     checkSession();
 
     // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        const { data: { user } } = await supabase.auth.getUser();
+        setIsVendor(user?.user_metadata?.is_vendor || false);
+      }
     });
 
     return () => {
@@ -49,6 +58,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
+  }
+
+  // Redirect vendors to vendor portal
+  if (isVendor) {
+    return <Navigate to="/vendor" />;
   }
 
   return <>{children}</>;
