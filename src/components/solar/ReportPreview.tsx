@@ -23,7 +23,16 @@ const ReportPreview = ({ calculationId }: ReportPreviewProps) => {
           .single();
 
         if (error) throw error;
-        setProcessingJob(data);
+        
+        // Ensure the status is one of the allowed values
+        const validStatus = ['pending', 'processing', 'completed', 'failed'].includes(data.status) 
+          ? data.status as ProcessingJob['status']
+          : 'pending';
+
+        setProcessingJob({
+          ...data,
+          status: validStatus
+        });
       } catch (err) {
         console.error('Error fetching processing status:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch processing status');
@@ -38,7 +47,16 @@ const ReportPreview = ({ calculationId }: ReportPreviewProps) => {
         table: 'processing_jobs',
         filter: `calculation_id=eq.${calculationId}`
       }, payload => {
-        setProcessingJob(payload.new as ProcessingJob);
+        const data = payload.new as ProcessingJob;
+        // Ensure the status is one of the allowed values
+        const validStatus = ['pending', 'processing', 'completed', 'failed'].includes(data.status) 
+          ? data.status as ProcessingJob['status']
+          : 'pending';
+
+        setProcessingJob({
+          ...data,
+          status: validStatus
+        });
       })
       .subscribe();
 

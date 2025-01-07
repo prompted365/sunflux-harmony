@@ -40,14 +40,26 @@ export const usePropertySubmission = () => {
           data: {
             is_vendor: true,
             communication_opt_in: signupData.communicationOptIn,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/vendor`
         }
       });
 
-      if (signupError) throw signupError;
+      if (signupError) {
+        throw signupError;
+      }
 
       if (!authData.user) {
         throw new Error("Failed to create account");
+      }
+
+      // Show confirmation message if email verification is required
+      if (!authData.session) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link. Please check your email to verify your account.",
+        });
+        return true;
       }
 
       // Wait a moment for the user record to be fully created
