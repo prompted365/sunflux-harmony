@@ -15,45 +15,17 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
   useEffect(() => {
     const fetchGifUrl = async () => {
       try {
-        // Get the folder path that contains the timestamp
-        const folderPath = propertyId.includes('_') 
-          ? propertyId.split('_')[0] 
-          : propertyId;
-
-        // List all files in the property's folder
-        const { data: files, error: listError } = await supabase.storage
-          .from('property-images')
-          .list(folderPath);
-
-        if (listError) throw listError;
-
-        // Find the GIF file (it should be the only GIF in the folder)
-        const gifFile = files?.find(f => f.name.toLowerCase().endsWith('.gif'));
-        
-        if (!gifFile) {
-          setError('No monthly flux animation found for this property');
-          return;
-        }
-
-        // Try to get the public URL first
-        const publicUrl = supabase.storage
-          .from('property-images')
-          .getPublicUrl(`${folderPath}/${gifFile.name}`);
-
-        if (publicUrl.data?.publicUrl) {
-          setGifUrl(publicUrl.data.publicUrl);
-          return;
-        }
-
-        // If public URL fails, fall back to signed URL
+        // Get the signed URL for the MonthlyFluxCompositeGIF
         const { data: signedData, error: signedError } = await supabase.storage
           .from('property-images')
-          .createSignedUrl(`${folderPath}/${gifFile.name}`, 3600);
+          .createSignedUrl(`${propertyId}/MonthlyFluxCompositeGIF.gif`, 3600);
 
         if (signedError) throw signedError;
 
         if (signedData?.signedUrl) {
           setGifUrl(signedData.signedUrl);
+        } else {
+          setError('No monthly flux animation found for this property');
         }
       } catch (error) {
         console.error('Error fetching monthly flux GIF:', error);
