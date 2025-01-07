@@ -77,6 +77,8 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
           alt="Monthly Solar Exposure Animation" 
           className="w-full h-full object-contain"
           onError={() => setError('Failed to load the animation')}
+          data-component-name="MonthlyFluxVisualization"
+          data-component-type="image"
         />
       </div>
       <p className="text-sm text-muted-foreground mt-2">
