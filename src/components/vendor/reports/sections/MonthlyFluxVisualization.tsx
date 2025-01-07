@@ -15,17 +15,32 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
   useEffect(() => {
     const fetchGifUrl = async () => {
       try {
-        // Get the signed URL for the MonthlyFluxCompositeGIF
+        // List all files in the property's folder
+        const { data: files, error: listError } = await supabase.storage
+          .from('property-images')
+          .list(propertyId);
+
+        if (listError) throw listError;
+
+        // Find any GIF file in the folder
+        const gifFile = files?.find(f => f.name.toLowerCase().endsWith('.gif'));
+        
+        if (!gifFile) {
+          setError('No monthly flux animation found for this property');
+          return;
+        }
+
+        // Get a signed URL for the GIF
         const { data: signedData, error: signedError } = await supabase.storage
           .from('property-images')
-          .createSignedUrl(`${propertyId}/MonthlyFluxCompositeGIF.gif`, 3600);
+          .createSignedUrl(`${propertyId}/${gifFile.name}`, 3600);
 
         if (signedError) throw signedError;
 
         if (signedData?.signedUrl) {
           setGifUrl(signedData.signedUrl);
         } else {
-          setError('No monthly flux animation found for this property');
+          setError('Failed to generate URL for the animation');
         }
       } catch (error) {
         console.error('Error fetching monthly flux GIF:', error);
