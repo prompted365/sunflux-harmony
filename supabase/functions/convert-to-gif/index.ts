@@ -44,12 +44,30 @@ serve(async (req) => {
       return pattern.test(f.name)
     })
 
-    if (compositeFiles?.length !== 1) {
-      throw new Error(`Expected 1 composite file, found ${compositeFiles?.length}`)
+    if (!compositeFiles?.length) {
+      return new Response(
+        JSON.stringify({ error: 'No composite files found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      )
+    }
+
+    if (compositeFiles.length > 1) {
+      return new Response(
+        JSON.stringify({ error: 'Multiple composite files found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
     const sourceFile = compositeFiles[0]
     console.log('Processing file:', sourceFile.name)
+
+    // If already a GIF, just return success
+    if (sourceFile.name.endsWith('.gif')) {
+      return new Response(
+        JSON.stringify({ success: true, message: 'File is already a GIF' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Download the source file
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -60,38 +78,40 @@ serve(async (req) => {
       throw downloadError
     }
 
-    // Convert to GIF if not already a GIF
-    if (!sourceFile.name.endsWith('.gif')) {
-      const newFileName = `${sourceFile.name.split('.')[0]}.gif`
-      
-      // Upload as GIF
-      const { error: uploadError } = await supabase.storage
+    // Create new filename with .gif extension
+    const newFileName = `${sourceFile.name.split('.')[0]}.gif`
+    
+    // Upload as GIF
+    const { error: uploadError } = await supabase.storage
+      .from('property-images')
+      .upload(`${propertyId}/${newFileName}`, fileData, {
+        contentType: 'image/gif',
+        upsert: true
+      })
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    console.log('Successfully converted and uploaded GIF:', newFileName)
+
+    // Delete the original file if different
+    if (newFileName !== sourceFile.name) {
+      const { error: deleteError } = await supabase.storage
         .from('property-images')
-        .upload(`${propertyId}/${newFileName}`, fileData, {
-          contentType: 'image/gif',
-          upsert: true
-        })
+        .remove([`${propertyId}/${sourceFile.name}`])
 
-      if (uploadError) {
-        throw uploadError
-      }
-
-      console.log('Successfully converted and uploaded GIF:', newFileName)
-
-      // Delete the original file if different
-      if (newFileName !== sourceFile.name) {
-        const { error: deleteError } = await supabase.storage
-          .from('property-images')
-          .remove([`${propertyId}/${sourceFile.name}`])
-
-        if (deleteError) {
-          console.error('Error deleting original file:', deleteError)
-        }
+      if (deleteError) {
+        console.error('Error deleting original file:', deleteError)
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Successfully processed file',
+        fileName: newFileName
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -99,7 +119,10 @@ serve(async (req) => {
     console.error('Error processing file:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        status: 500 
+      }
     )
   }
 })
