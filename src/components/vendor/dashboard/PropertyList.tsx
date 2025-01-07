@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Plus, Trash2, Home, MapPin, FileText } from "lucide-react";
+import { Plus, Trash2, Home, MapPin } from "lucide-react";
 import { Property } from "../types";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,19 +40,19 @@ export const PropertyList = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-500 text-white';
+        return 'bg-primary/90 text-primary-foreground border-primary/20';
       case 'processing':
-        return 'bg-blue-500 text-white';
+        return 'bg-secondary/90 text-secondary-foreground border-secondary/20';
       case 'error':
-        return 'bg-red-500 text-white';
+        return 'bg-destructive/90 text-destructive-foreground border-destructive/20';
       default:
-        return 'bg-yellow-500 text-white';
+        return 'bg-muted/90 text-muted-foreground border-muted/20';
     }
   };
 
   return (
     <div className="relative">
-      <div className="absolute -top-[4.5rem] left-6">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 p-4">
         <Drawer>
           <DrawerTrigger asChild>
             <Button 
@@ -111,7 +111,7 @@ export const PropertyList = ({
                       </p>
                       <Badge 
                         variant="outline"
-                        className={`shrink-0 rounded-lg ${getStatusColor(property.status || 'pending')}`}
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${getStatusColor(property.status || 'pending')}`}
                       >
                         {property.status || 'pending'}
                       </Badge>
