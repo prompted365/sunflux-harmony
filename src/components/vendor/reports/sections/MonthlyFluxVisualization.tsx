@@ -3,55 +3,67 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface MonthlyFluxVisualizationProps {
   propertyId: string;
 }
 
 const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps) => {
-  const [gifUrl, setGifUrl] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchGifUrl = async () => {
+    const processAndFetchGif = async () => {
       try {
-        // List all files in the property's folder
+        // First, call the convert-to-gif function
+        const { error: conversionError } = await supabase.functions.invoke('convert-to-gif', {
+          body: { propertyId }
+        });
+
+        if (conversionError) throw conversionError;
+
+        // After conversion, list files to get the GIF
         const { data: files, error: listError } = await supabase.storage
           .from('property-images')
           .list(propertyId);
 
         if (listError) throw listError;
 
-        // Find the MonthlyFluxComposite file
-        // Pattern: MonthlyFluxComposite_ followed by timestamp
+        // Find the composite GIF file
         const compositeFile = files?.find(f => {
-          const pattern = /^MonthlyFluxComposite_\d+/;
+          const pattern = /^MonthlyFluxComposite_\d+\.gif$/;
           return pattern.test(f.name);
         });
         
         if (!compositeFile) {
           console.log('Available files:', files?.map(f => f.name));
-          setError('No monthly flux animation found for this property');
-          return;
+          throw new Error('No monthly flux animation found for this property');
         }
 
-        // Get the public URL using the correct method
+        // Get the public URL for the GIF
         const { data } = supabase.storage
           .from('property-images')
           .getPublicUrl(`${propertyId}/${compositeFile.name}`);
 
-        setGifUrl(data.publicUrl);
+        setImageUrl(data.publicUrl);
 
       } catch (error) {
-        console.error('Error fetching monthly flux GIF:', error);
-        setError('Failed to load the animation');
+        console.error('Error processing monthly flux GIF:', error);
+        setError(error.message);
+        toast({
+          title: "Error loading visualization",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     };
 
     if (propertyId) {
-      fetchGifUrl();
+      processAndFetchGif();
     }
-  }, [propertyId]);
+  }, [propertyId, toast]);
 
   if (error) {
     return (
@@ -62,19 +74,17 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
     );
   }
 
-  if (!gifUrl) return null;
+  if (!imageUrl) return null;
 
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Monthly Solar Exposure</h3>
       <div className="relative aspect-video w-full overflow-hidden rounded-md">
         <img 
-          src={gifUrl} 
+          src={imageUrl} 
           alt="Monthly Solar Exposure Animation" 
           className="w-full h-full object-contain"
           onError={() => setError('Failed to load the animation')}
-          data-component-name="MonthlyFluxVisualization"
-          data-component-type="image"
         />
       </div>
       <p className="text-sm text-muted-foreground mt-2">
