@@ -175,11 +175,6 @@ const AgentFlowAnimation = () => {
     <div className="relative w-full">
       <div ref={containerRef} className="w-full h-64 mb-8" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#C84B31]/60 via-[#FEC6A1]/30 to-transparent pointer-events-none" />
-      <div className="text-center mt-4">
-        <p className="text-lg text-gray-600">
-          Our AI agents handle this workflow automatically. This demo lets you experience the process firsthand.
-        </p>
-      </div>
     </div>
   );
 };
