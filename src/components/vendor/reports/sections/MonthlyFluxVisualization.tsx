@@ -34,18 +34,10 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
           return;
         }
 
-        // Get a signed URL for the GIF
-        const { data: signedData, error: signedError } = await supabase.storage
-          .from('property-images')
-          .createSignedUrl(`${propertyId}/${gifFile.name}`, 3600);
+        // Construct the public URL directly
+        const publicUrl = `${supabase.supabaseUrl}/storage/v1/object/public/property-images/${propertyId}/${gifFile.name}`;
+        setGifUrl(publicUrl);
 
-        if (signedError) throw signedError;
-
-        if (signedData?.signedUrl) {
-          setGifUrl(signedData.signedUrl);
-        } else {
-          setError('Failed to generate URL for the animation');
-        }
       } catch (error) {
         console.error('Error fetching monthly flux GIF:', error);
         setError('Failed to load the monthly flux animation');
