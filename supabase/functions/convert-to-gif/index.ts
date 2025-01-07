@@ -38,9 +38,10 @@ serve(async (req) => {
 
     console.log('Found files:', files?.map(f => f.name))
 
-    // Find MonthlyFluxComposite files
+    // Find MonthlyFluxComposite files with exactly one underscore
     const compositeFiles = files?.filter(f => {
-      const pattern = /^MonthlyFluxComposite_\d+/
+      // Match pattern: MonthlyFluxComposite_NUMBERS.extension
+      const pattern = /^MonthlyFluxComposite_\d+\.[^_]+$/
       return pattern.test(f.name)
     })
 
