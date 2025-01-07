@@ -22,20 +22,21 @@ const MonthlyFluxVisualization = ({ propertyId }: MonthlyFluxVisualizationProps)
 
         if (listError) throw listError;
 
-        // Find the MonthlyFluxComposite file that matches our pattern
-        // Pattern: MonthlyFluxComposite_ followed by numbers only (no additional underscores)
+        // Find the MonthlyFluxComposite GIF file
+        // Pattern: MonthlyFluxComposite_ followed by timestamp and .gif
         const gifFile = files?.find(f => {
-          const pattern = /^MonthlyFluxComposite_\d+(?:\.gif)?$/;
+          const pattern = /^MonthlyFluxComposite_\d+\.gif$/;
           return pattern.test(f.name);
         });
         
         if (!gifFile) {
+          console.log('Available files:', files?.map(f => f.name));
           setError('No monthly flux animation found for this property');
           return;
         }
 
         // Construct the public URL directly
-        const publicUrl = `${supabase.supabaseUrl}/storage/v1/object/public/property-images/${propertyId}/${gifFile.name}`;
+        const publicUrl = `${supabase.getPublicUrl('property-images').data.publicUrl}/${propertyId}/${gifFile.name}`;
         setGifUrl(publicUrl);
 
       } catch (error) {
