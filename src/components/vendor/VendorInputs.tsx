@@ -13,22 +13,22 @@ const VendorInputs = () => {
         </p>
 
         <Tabs defaultValue="panels" className="space-y-6">
-          <TabsList className="bg-muted/10 w-full border-b">
+          <TabsList className="w-full border-b bg-transparent">
             <TabsTrigger 
               value="panels" 
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-accent/30 text-foreground/70 hover:text-foreground"
             >
               Solar Panels
             </TabsTrigger>
             <TabsTrigger 
               value="installation"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-accent/30 text-foreground/70 hover:text-foreground"
             >
               Installation
             </TabsTrigger>
             <TabsTrigger 
               value="addons"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-accent/30 text-foreground/70 hover:text-foreground"
             >
               Add-ons
             </TabsTrigger>
