@@ -1,14 +1,58 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import AgentFlowAnimation from "@/components/AgentFlowAnimation";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Automatically redirect to vendor portal for demo
-    navigate("/vendor");
-  }, [navigate]);
+    const signInWithDemoEmail = async () => {
+      try {
+        // Create a demo user session with email
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'demo@sunlink.ai',
+          password: 'demo123456'
+        });
+
+        if (error) {
+          // If sign in fails, try signing up
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: 'demo@sunlink.ai',
+            password: 'demo123456',
+            options: {
+              data: {
+                is_vendor: true,
+                company_name: 'Demo Company'
+              }
+            }
+          });
+
+          if (signUpError) {
+            toast({
+              title: "Error",
+              description: signUpError.message,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        // Redirect to vendor portal
+        navigate("/vendor");
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
+    signInWithDemoEmail();
+  }, [navigate, toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent relative">
@@ -25,7 +69,7 @@ const Login = () => {
             />
             <h1 className="text-2xl font-bold text-gray-900">Welcome to SunLink.ai</h1>
             <p className="text-gray-600 mt-2">
-              Redirecting to demo...
+              Signing in with demo account...
             </p>
           </div>
         </div>
