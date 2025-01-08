@@ -3,7 +3,12 @@ import * as THREE from 'three';
 import { Sun } from './solar/three/Sun';
 import { setupScene, setupCamera, setupRenderer } from './solar/three/utils';
 
-const AgentFlowAnimation = () => {
+interface AgentFlowAnimationProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const AgentFlowAnimation = ({ className = "", style }: AgentFlowAnimationProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -173,7 +178,7 @@ const AgentFlowAnimation = () => {
 
   return (
     <div className="relative w-full">
-      <div ref={containerRef} className="w-full h-64 mb-8" />
+      <div ref={containerRef} className={`w-full h-64 mb-8 ${className}`} style={style} />
       <div className="absolute inset-0 bg-gradient-to-t from-[#C84B31]/60 via-[#FEC6A1]/30 to-transparent pointer-events-none" />
     </div>
   );
