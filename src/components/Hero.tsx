@@ -1,6 +1,25 @@
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const Hero = () => {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In demo mode, just show a success message
+    toast({
+      title: "Message Received",
+      description: "Thank you for your interest! We'll be in touch soon.",
+    });
+    setFormData({ name: "", email: "", message: "" });
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-secondary/10 to-background pt-16 overflow-hidden">
       {/* Solar Animation Background - Set to lowest z-index */}
@@ -90,6 +109,61 @@ const Hero = () => {
                 className="w-full max-w-4xl mx-auto animate-fade-in drop-shadow-[0px_10px_50px_rgba(255,255,255,0.5)] filter"
               />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Form */}
+      <div className="relative z-30 py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-8">Get in Touch</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  rows={4}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  required
+                />
+              </div>
+              <div className="text-center">
+                <Button type="submit" className="w-full sm:w-auto">
+                  Send Message
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
