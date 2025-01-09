@@ -23,7 +23,7 @@ const PlaceAutocomplete = ({ onPlaceSelect, placeholder, className }: PlaceAutoc
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let autocomplete: google.maps.places.Autocomplete | null = null;
+    let autocomplete: google.maps.Autocomplete | null = null;
 
     const initializeAutocomplete = async () => {
       try {
