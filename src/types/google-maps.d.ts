@@ -2,50 +2,70 @@ declare global {
   interface Window {
     google: typeof google;
   }
-}
 
-declare namespace google.maps {
-  class places {
-    static Autocomplete: {
-      new (
-        inputField: HTMLInputElement,
-        opts?: AutocompleteOptions
-      ): Autocomplete;
-    };
-  }
+  namespace google.maps {
+    class Autocomplete extends google.maps.places.Autocomplete {}
+    
+    namespace places {
+      class Autocomplete {
+        constructor(
+          inputField: HTMLInputElement,
+          opts?: google.maps.places.AutocompleteOptions
+        );
+        addListener(eventName: string, handler: Function): google.maps.MapsEventListener;
+        getPlace(): google.maps.places.PlaceResult;
+      }
+      
+      interface AutocompleteOptions {
+        bounds?: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral;
+        componentRestrictions?: google.maps.places.ComponentRestrictions;
+        fields?: string[];
+        types?: string[];
+      }
 
-  interface AutocompleteOptions {
-    componentRestrictions?: {
-      country: string | string[];
-    };
-    fields?: string[];
-    types?: string[];
-  }
+      interface PlaceResult {
+        address_components?: AddressComponent[];
+        formatted_address?: string;
+        geometry?: {
+          location: google.maps.LatLng;
+          viewport?: google.maps.LatLngBounds;
+        };
+        name?: string;
+        place_id?: string;
+      }
 
-  class Autocomplete {
-    addListener(eventName: string, handler: () => void): void;
-    getPlace(): PlaceResult;
-  }
+      interface AddressComponent {
+        long_name: string;
+        short_name: string;
+        types: string[];
+      }
 
-  interface PlaceResult {
-    address_components?: AddressComponent[];
-    formatted_address?: string;
-    geometry?: {
-      location?: {
-        lat(): number;
-        lng(): number;
-      };
-    };
-  }
+      interface ComponentRestrictions {
+        country: string | string[];
+      }
+    }
 
-  interface AddressComponent {
-    long_name: string;
-    short_name: string;
-    types: string[];
-  }
+    class LatLng {
+      constructor(lat: number, lng: number);
+      lat(): number;
+      lng(): number;
+    }
 
-  namespace event {
-    function clearInstanceListeners(instance: any): void;
+    class LatLngBounds {
+      constructor(sw?: LatLng, ne?: LatLng);
+      extend(point: LatLng): LatLngBounds;
+    }
+
+    interface LatLngBoundsLiteral {
+      east: number;
+      north: number;
+      south: number;
+      west: number;
+    }
+
+    interface MapsEventListener {
+      remove(): void;
+    }
   }
 }
 
