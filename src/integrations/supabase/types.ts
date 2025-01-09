@@ -649,7 +649,6 @@ export type Database = {
           business_description: string | null
           bypass_trial_limits: boolean | null
           communication_opt_in: boolean | null
-          company_name: string | null
           created_at: string
           id: string
           logo_url: string | null
@@ -661,6 +660,7 @@ export type Database = {
           trial_reports_remaining: number | null
           trial_reports_reset_date: string | null
           updated_at: string
+          vendor_name: string | null
           website_url: string | null
           year_established: number | null
         }
@@ -670,7 +670,6 @@ export type Database = {
           business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
-          company_name?: string | null
           created_at?: string
           id: string
           logo_url?: string | null
@@ -682,6 +681,7 @@ export type Database = {
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
+          vendor_name?: string | null
           website_url?: string | null
           year_established?: number | null
         }
@@ -691,7 +691,6 @@ export type Database = {
           business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
-          company_name?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -703,6 +702,7 @@ export type Database = {
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
+          vendor_name?: string | null
           website_url?: string | null
           year_established?: number | null
         }
