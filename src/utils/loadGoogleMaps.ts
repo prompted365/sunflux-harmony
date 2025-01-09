@@ -1,7 +1,8 @@
-export const loadGoogleMaps = (apiKey: string): Promise<typeof google> => {
+export const loadGoogleMaps = (apiKey: string): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (window.google) {
-      resolve(window.google);
+    // If already loaded, resolve immediately
+    if (window.google?.maps) {
+      resolve();
       return;
     }
 
@@ -10,7 +11,7 @@ export const loadGoogleMaps = (apiKey: string): Promise<typeof google> => {
     script.async = true;
     script.defer = true;
 
-    script.onload = () => resolve(window.google);
+    script.onload = () => resolve();
     script.onerror = (err) => reject(err);
 
     document.head.appendChild(script);

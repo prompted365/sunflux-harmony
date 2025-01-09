@@ -6,10 +6,12 @@ declare global {
 
 declare namespace google.maps {
   class places {
-    static Autocomplete: new (
-      inputField: HTMLInputElement,
-      opts?: AutocompleteOptions
-    ) => Autocomplete;
+    static Autocomplete: {
+      new (
+        inputField: HTMLInputElement,
+        opts?: AutocompleteOptions
+      ): Autocomplete;
+    };
   }
 
   interface AutocompleteOptions {
@@ -27,6 +29,7 @@ declare namespace google.maps {
 
   interface PlaceResult {
     address_components?: AddressComponent[];
+    formatted_address?: string;
     geometry?: {
       location?: {
         lat(): number;
