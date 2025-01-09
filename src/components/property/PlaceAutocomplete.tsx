@@ -23,7 +23,7 @@ const PlaceAutocomplete = ({ onPlaceSelect, placeholder, className }: PlaceAutoc
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let autocomplete: google.maps.Autocomplete | null = null;
+    let autocomplete: google.maps.places.Autocomplete | null = null;
 
     const initializeAutocomplete = async () => {
       try {
@@ -39,7 +39,7 @@ const PlaceAutocomplete = ({ onPlaceSelect, placeholder, className }: PlaceAutoc
         if (inputRef.current) {
           autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
             componentRestrictions: { country: 'us' },
-            fields: ['address_components', 'geometry'],
+            fields: ['address_components', 'geometry', 'formatted_address'],
             types: ['address']
           });
 
@@ -47,18 +47,23 @@ const PlaceAutocomplete = ({ onPlaceSelect, placeholder, className }: PlaceAutoc
             const place = autocomplete?.getPlace();
             if (!place?.address_components) return;
 
-            let address = '', city = '', state = '', zipCode = '';
+            let streetNumber = '';
+            let route = '';
+            let city = '';
+            let state = '';
+            let zipCode = '';
             let latitude = place.geometry?.location?.lat();
             let longitude = place.geometry?.location?.lng();
 
+            // Parse address components
             place.address_components.forEach(component => {
               const type = component.types[0];
               switch (type) {
                 case 'street_number':
-                  address = component.long_name + ' ';
+                  streetNumber = component.long_name;
                   break;
                 case 'route':
-                  address += component.long_name;
+                  route = component.long_name;
                   break;
                 case 'locality':
                   city = component.long_name;
@@ -71,6 +76,11 @@ const PlaceAutocomplete = ({ onPlaceSelect, placeholder, className }: PlaceAutoc
                   break;
               }
             });
+
+            // Combine street number and route for full street address
+            const address = streetNumber && route 
+              ? `${streetNumber} ${route}`
+              : place.formatted_address?.split(',')[0] || ''; // Fallback to first line of formatted address
 
             onPlaceSelect({
               address,
