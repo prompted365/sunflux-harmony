@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     google: typeof google;
@@ -65,6 +66,12 @@ declare global {
 
     interface MapsEventListener {
       remove(): void;
+    }
+
+    namespace event {
+      function clearInstanceListeners(instance: any): void;
+      function addListener(instance: any, eventName: string, handler: Function): MapsEventListener;
+      function removeListener(listener: MapsEventListener): void;
     }
   }
 }
