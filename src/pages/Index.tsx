@@ -12,60 +12,41 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkUserStatus = async () => {
+    const checkProperties = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-
-        // Get user profile
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           navigate("/login");
           return;
         }
 
-        // Check if user is a vendor
-        const { data: vendorProfile, error: vendorError } = await supabase
-          .from('vendor_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
-
-        if (vendorError && vendorError.code !== 'PGRST116') {
-          console.error("Error checking vendor status:", vendorError);
-          return;
-        }
-
-        if (vendorProfile) {
-          // User is a vendor, redirect to vendor portal
-          navigate("/vendor");
-          return;
-        }
-
-        // If not a vendor, check for properties
-        const { data: properties, error: propertiesError } = await supabase
+        // First check for properties
+        const { data: properties } = await supabase
           .from('properties')
           .select('id')
           .eq('user_id', user.id)
           .limit(1);
 
-        if (propertiesError) {
-          console.error("Error checking properties:", propertiesError);
-          return;
-        }
-
         setHasProperties(properties && properties.length > 0);
+
+        // Then check if user is a vendor - only redirect if they have vendor profile
+        const { data: vendorProfile } = await supabase
+          .from('vendor_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (vendorProfile) {
+          navigate("/vendor");
+        }
       } catch (error) {
-        console.error("Error in checkUserStatus:", error);
+        console.error("Error checking properties:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkUserStatus();
+    checkProperties();
   }, [navigate]);
 
   if (isLoading) {
