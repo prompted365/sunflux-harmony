@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -6,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import PlaceAutocomplete from "../property/PlaceAutocomplete";
+import { useNavigate } from "react-router-dom";
 
 interface PropertySubmissionFormProps {
   onSuccess?: () => void;
@@ -13,7 +15,9 @@ interface PropertySubmissionFormProps {
 
 export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     address: "",
     city: "",
@@ -23,8 +27,46 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
     longitude: null as number | null,
   });
 
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        console.error("Auth error:", error);
+        navigate("/login");
+        return;
+      }
+      setAuthenticated(true);
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/login");
+      }
+      setAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!authenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to submit properties",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -35,6 +77,8 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
       if (!user) {
         throw new Error("You must be logged in to submit a property");
       }
+
+      console.log("Submitting property with user:", user.id);
 
       // Insert the property
       const { data: property, error: insertError } = await supabase
@@ -52,7 +96,10 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        throw insertError;
+      }
 
       toast({
         title: "Success",
@@ -102,6 +149,10 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
       longitude: place.longitude || null,
     });
   };
+
+  if (!authenticated) {
+    return null;
+  }
 
   return (
     <Card className="p-6">
