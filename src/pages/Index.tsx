@@ -20,7 +20,7 @@ const Index = () => {
           return;
         }
 
-        // First check for properties
+        // Only check for properties, no vendor redirect
         const { data: properties } = await supabase
           .from('properties')
           .select('id')
@@ -28,17 +28,6 @@ const Index = () => {
           .limit(1);
 
         setHasProperties(properties && properties.length > 0);
-
-        // Then check if user is a vendor - only redirect if they have vendor profile
-        const { data: vendorProfile } = await supabase
-          .from('vendor_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (vendorProfile) {
-          navigate("/vendor");
-        }
       } catch (error) {
         console.error("Error checking properties:", error);
       } finally {
