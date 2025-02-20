@@ -649,6 +649,7 @@ export type Database = {
           business_description: string | null
           bypass_trial_limits: boolean | null
           communication_opt_in: boolean | null
+          company_name: string | null
           created_at: string
           id: string
           logo_url: string | null
@@ -660,7 +661,6 @@ export type Database = {
           trial_reports_remaining: number | null
           trial_reports_reset_date: string | null
           updated_at: string
-          vendor_name: string | null
           website_url: string | null
           year_established: number | null
         }
@@ -670,6 +670,7 @@ export type Database = {
           business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
+          company_name?: string | null
           created_at?: string
           id: string
           logo_url?: string | null
@@ -681,7 +682,6 @@ export type Database = {
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
-          vendor_name?: string | null
           website_url?: string | null
           year_established?: number | null
         }
@@ -691,6 +691,7 @@ export type Database = {
           business_description?: string | null
           bypass_trial_limits?: boolean | null
           communication_opt_in?: boolean | null
+          company_name?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -702,7 +703,6 @@ export type Database = {
           trial_reports_remaining?: number | null
           trial_reports_reset_date?: string | null
           updated_at?: string
-          vendor_name?: string | null
           website_url?: string | null
           year_established?: number | null
         }
@@ -721,157 +721,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      bytea_to_text: {
-        Args: {
-          data: string
-        }
-        Returns: string
-      }
-      http: {
-        Args: {
-          request: Database["public"]["CompositeTypes"]["http_request"]
-        }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
-      http_delete:
-        | {
-            Args: {
-              uri: string
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-        | {
-            Args: {
-              uri: string
-              content: string
-              content_type: string
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-      http_get:
-        | {
-            Args: {
-              uri: string
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-        | {
-            Args: {
-              uri: string
-              data: Json
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-      http_head: {
-        Args: {
-          uri: string
-        }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
-      http_header: {
-        Args: {
-          field: string
-          value: string
-        }
-        Returns: Database["public"]["CompositeTypes"]["http_header"]
-      }
-      http_list_curlopt: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          curlopt: string
-          value: string
-        }[]
-      }
-      http_patch: {
-        Args: {
-          uri: string
-          content: string
-          content_type: string
-        }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
-      http_post:
-        | {
-            Args: {
-              uri: string
-              content: string
-              content_type: string
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-        | {
-            Args: {
-              uri: string
-              data: Json
-            }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-          }
-      http_put: {
-        Args: {
-          uri: string
-          content: string
-          content_type: string
-        }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
-      http_reset_curlopt: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      http_set_curlopt: {
-        Args: {
-          curlopt: string
-          value: string
-        }
-        Returns: boolean
-      }
-      text_to_bytea: {
-        Args: {
-          data: string
-        }
-        Returns: string
-      }
-      urlencode:
-        | {
-            Args: {
-              data: Json
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              string: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              string: string
-            }
-            Returns: string
-          }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      http_header: {
-        field: string | null
-        value: string | null
-      }
-      http_request: {
-        method: unknown | null
-        uri: string | null
-        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
-        content_type: string | null
-        content: string | null
-      }
-      http_response: {
-        status: number | null
-        content_type: string | null
-        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
-        content: string | null
-      }
+      [_ in never]: never
     }
   }
 }

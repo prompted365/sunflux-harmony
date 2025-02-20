@@ -1,13 +1,11 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import PlaceAutocomplete from "../property/PlaceAutocomplete";
-import { useNavigate } from "react-router-dom";
 
 interface PropertySubmissionFormProps {
   onSuccess?: () => void;
@@ -15,61 +13,29 @@ interface PropertySubmissionFormProps {
 
 export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     address: "",
     city: "",
     state: "",
     zipCode: "",
-    latitude: null as number | null,
-    longitude: null as number | null,
   });
-
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session) {
-        console.error("Auth error:", error);
-        navigate("/login");
-        return;
-      }
-      setAuthenticated(true);
-    };
-
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        navigate("/login");
-      }
-      setAuthenticated(!!session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!authenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to submit properties",
-        variant: "destructive",
-      });
-      navigate("/login");
-      return;
-    }
-
     setLoading(true);
 
     try {
+      // First geocode the address
+      const { data: coordinates, error: geocodeError } = await supabase.functions.invoke(
+        'geocode-address',
+        {
+          body: formData
+        }
+      );
+
+      if (geocodeError) throw geocodeError;
+
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
@@ -77,8 +43,6 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
       if (!user) {
         throw new Error("You must be logged in to submit a property");
       }
-
-      console.log("Submitting property with user:", user.id);
 
       // Insert the property
       const { data: property, error: insertError } = await supabase
@@ -88,18 +52,15 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
           city: formData.city,
           state: formData.state,
           zip_code: formData.zipCode,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
           user_id: user.id,
           vendor_id: user.id // Since this is in the vendor portal
         })
         .select()
         .single();
 
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       toast({
         title: "Success",
@@ -112,8 +73,6 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
         city: "",
         state: "",
         zipCode: "",
-        latitude: null,
-        longitude: null,
       });
 
       if (onSuccess) {
@@ -131,37 +90,50 @@ export const PropertySubmissionForm = ({ onSuccess }: PropertySubmissionFormProp
     }
   };
 
-  const handlePlaceSelect = (place: {
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    latitude?: number;
-    longitude?: number;
-  }) => {
-    setFormData({
-      ...formData,
-      address: place.address,
-      city: place.city,
-      state: place.state,
-      zipCode: place.zipCode,
-      latitude: place.latitude || null,
-      longitude: place.longitude || null,
-    });
-  };
-
-  if (!authenticated) {
-    return null;
-  }
-
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="address">Property Address</Label>
-          <PlaceAutocomplete
-            onPlaceSelect={handlePlaceSelect}
-            placeholder="Enter the property address"
+          <Label htmlFor="address">Street Address</Label>
+          <Input
+            id="address"
+            value={formData.address}
+            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+            required
+            placeholder="123 Main St"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            value={formData.city}
+            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+            required
+            placeholder="San Francisco"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="state">State</Label>
+          <Input
+            id="state"
+            value={formData.state}
+            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+            required
+            placeholder="CA"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="zipCode">ZIP Code</Label>
+          <Input
+            id="zipCode"
+            value={formData.zipCode}
+            onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
+            required
+            placeholder="94105"
           />
         </div>
 
